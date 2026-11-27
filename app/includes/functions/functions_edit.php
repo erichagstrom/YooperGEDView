@@ -449,8 +449,8 @@ function print_indi_form($nextaction, $famid, $linenum='', $namerec='', $famtag=
 		else
 			$famrec=find_family_record($famid, PGV_GED_ID);
 		$parents=find_parents_in_record($famrec);
-		$father_name=get_gedcom_value('NAME', 0, find_person_record($parents['HUSB'], PGV_GED_ID));
-		$mother_name=get_gedcom_value('NAME', 0, find_person_record($parents['WIFE'], PGV_GED_ID));
+		$father_name=get_gedcom_value('NAME', 0, find_person_record(($parents ? $parents['HUSB'] : null), PGV_GED_ID));
+		$mother_name=get_gedcom_value('NAME', 0, find_person_record(($parents ? $parents['WIFE'] : null), PGV_GED_ID));
 		// We'll need the spouse/child's name to set the spouse/parent's surname
 		if (isset($pgv_changes[$pid."_".PGV_GEDCOM]))
 			$prec=find_updated_record($pid, PGV_GED_ID);
@@ -1148,7 +1148,7 @@ if (substr($tag, 0, strpos($tag, "CENS"))) {
 	if ($upperlevel) $element_id=$upperlevel."_".$fact; // ex: BIRT_DATE | DEAT_DATE ...
 
 	// field value
-	$islink = (substr($value, 0, 1)=="@" and substr($value, 0, 2)!="@#");
+	$islink = (substr((string)$value, 0, 1)=="@" and substr((string)$value, 0, 2)!="@#");
 	if ($islink) $value=trim(trim(substr($tag, strlen($fact)+3)), " @\r");
 	else $value=trim(substr($tag, strlen($fact)+3));
 	if ($fact=='REPO' || $fact=='SOUR' || $fact=='OBJE' || $fact=='FAMC')
@@ -1569,7 +1569,7 @@ if (substr($tag, 0, strpos($tag, "CENS"))) {
 		else if (($cols>20 || $fact=="NPFX") && $readOnly=='') print_specialchar_link($element_id, false);
 	}
 	// MARRiage TYPE : hide text field and show a selection list
-	if ($fact=="TYPE" and $tags[0]=="MARR") {
+	if ($fact=="TYPE" and isset($tags[0]) and $tags[0]=="MARR") {
 		echo "<script type='text/javascript'>";
 		echo "document.getElementById('", $element_id, "').style.display='none'";
 		echo "</script>";
@@ -1619,7 +1619,7 @@ if (substr($tag, 0, strpos($tag, "CENS"))) {
 					$level2_checked='';
 
 				}
-				if (strpos($bdm, 'B')!==false) {
+				if (strpos((string)$bdm, 'B')!==false) {
 					echo '&nbsp;<input type="checkbox" name="SOUR_INDI" ', $level1_checked, ' value="Y" />';
 					echo $pgv_lang['individual'];
 					if (preg_match_all('/('.PGV_REGEX_TAG.')/', $QUICK_REQUIRED_FACTS, $matches)) {
@@ -1631,7 +1631,7 @@ if (substr($tag, 0, strpos($tag, "CENS"))) {
 						}
 					}
 				}
-				if (strpos($bdm, 'D')!==false) {
+				if (strpos((string)$bdm, 'D')!==false) {
 					if (preg_match_all('/('.PGV_REGEX_TAG.')/', $QUICK_REQUIRED_FACTS, $matches)) {
 						foreach ($matches[1] as $match) {
 							if (in_array($match, explode('|', PGV_EVENTS_DEAT))) {
@@ -1641,7 +1641,7 @@ if (substr($tag, 0, strpos($tag, "CENS"))) {
 						}
 					}
 				}
-				if (strpos($bdm, 'M')!==false) {
+				if (strpos((string)$bdm, 'M')!==false) {
 					echo '&nbsp;<input type="checkbox" name="SOUR_FAM" ', $level1_checked, ' value="Y" />';
 					echo $pgv_lang["family"];
 					if (preg_match_all('/('.PGV_REGEX_TAG.')/', $QUICK_REQUIRED_FAMFACTS, $matches)) {

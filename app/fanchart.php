@@ -217,7 +217,7 @@ function print_fan_chart($treeid, $fanw=640, $fandeg=270) {
 					if (strpos($indirec, "\n1 SEX F")!==false) $bg=$bgcolorF;
 					elseif (strpos($indirec, "\n1 SEX M")!==false) $bg=$bgcolorM;
 				}
-				ImageFilledArc($image, $cx, $cy, $rx, $rx, $deg1, $deg2, $bg, IMG_ARC_PIE);
+				ImageFilledArc($image, (int)$cx, (int)$cy, (int)$rx, (int)$rx, (int)$deg1, (int)$deg2, $bg, IMG_ARC_PIE);
 				$person =Person::getInstance($pid);
 				$name   =$person->getFullName();
 				$addname=$person->getAddName();
@@ -271,7 +271,7 @@ function print_fan_chart($treeid, $fanw=640, $fandeg=270) {
 				if ($sosa==1) $ty-=$mr/2;
 
 				// print text
-				ImageTtfText($image, (double)$fanChart['size'], $tangle, $tx, $ty, $color, $fanChart['font'], $text);
+				ImageTtfText($image, (double)$fanChart['size'], $tangle, (int)$tx, (int)$ty, $color, $fanChart['font'], $text);
 
 				$imagemap .= "<area shape=\"poly\" coords=\"";
 				// plot upper points
@@ -398,7 +398,7 @@ function print_fan_chart($treeid, $fanw=640, $fandeg=270) {
 	echo $imagemap;
 
 	if (!empty($SERVER_URL)) {
-		ImageStringUp($image, 1, $fanw-10, $fanh/3, $SERVER_URL, $color);
+		ImageStringUp($image, 1, (int)($fanw-10), (int)($fanh/3), $SERVER_URL, $color);
 	} else {
 		// PGV banner ;-)
 		ImageStringUp($image, 1, $fanw-10, $fanh/3, PGV_PHPGEDVIEW_URL, $color);

@@ -2091,10 +2091,10 @@ if (isset($_REQUEST['action'])) $action = $_REQUEST['action'];
 //------------------------------------------------------------------------------
 case 'editname':
 	$gedlines = explode("\n", trim($gedrec));
-	$fields = explode(' ', $gedlines[$linenum]);
+	$fields = explode(' ', (isset($gedlines[$linenum]) ? $gedlines[$linenum] : ''));
 	$glevel = $fields[0];
 	$i = $linenum+1;
-	$namerec = $gedlines[$linenum];
+	$namerec = (isset($gedlines[$linenum]) ? $gedlines[$linenum] : '');
 	while (($i<count($gedlines))&&($gedlines[$i][0]>$glevel)) {
 		$namerec.="\n".$gedlines[$i];
 		$i++;

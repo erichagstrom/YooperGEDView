@@ -723,7 +723,7 @@ function get_gedcom_value($tag, $level, $gedrec, $truncate='', $convert=true) {
 	$tags = explode(':', $tag);
 	$origlevel = $level;
 	if ($level==0) {
-		$level = 1 + $gedrec[0];	// non-numeric level of incoming record should be treated as zero
+		$level = 1 + (int)substr((string)$gedrec, 0, 1);	// non-numeric level of incoming record should be treated as zero
 									// (see PHP manual topic "String conversion to numbers")
 	}
 
@@ -3688,7 +3688,7 @@ function encrypt($string, $key='') {
 function decrypt($string, $key='') {
 	if (empty($key)) $key = session_id();
 
-	if (substr($string, 0, 1)!='*') return $string;		// Input is not a valid encrypted string
+	if (substr((string)$string, 0, 1)!='*') return $string;		// Input is not a valid encrypted string
 	$string = base64_decode(strtr(substr($string, 1), '-_!', '+/='));
 
 	$result = '';

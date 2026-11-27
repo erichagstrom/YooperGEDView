@@ -153,6 +153,7 @@ function processEventsList($eventsList) {
 function getIndiBirthIcalEvent($indi){
 	global $pgv_lang, $icalType;
 
+	if (!$indi) return '';
 	if ($indi->isDead() && $icalType == 'lr') return '';
 
 	$birthDate = $indi->getBirthDate();

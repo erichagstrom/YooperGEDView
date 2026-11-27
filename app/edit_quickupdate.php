@@ -1686,12 +1686,12 @@ foreach($indifacts as $f=>$fact) {
 		if (!in_array($fact_tag, $nondatefacts)) { ?>
 			<td class="optionbox">
 				<input type="hidden" name="DESCS[]" value="<?php echo htmlspecialchars($desc, ENT_COMPAT, 'UTF-8'); ?>" />
-				<input type="text" dir="ltr" tabindex="<?php echo $tabkey; $tabkey++;?>" size="15" name="DATES[]" id="DATE<?php echo $f; ?>" onblur="valid_date(this);" value="<?php echo PrintReady(htmlspecialchars($date, ENT_COMPAT, 'UTF-8')); ?>" />&nbsp;<?php print_calendar_popup("DATE$f");?>
+				<input type="text" dir="ltr" tabindex="<?php echo $tabkey; $tabkey++;?>" size="15" name="DATES[]" id="DATE<?php echo $f; ?>" onblur="valid_date(this);" value="<?php echo PrintReady(htmlspecialchars((string)$date, ENT_COMPAT, 'UTF-8')); ?>" />&nbsp;<?php print_calendar_popup("DATE$f");?>
 			</td>
 		<?php }
 		if (empty($temp) && (!in_array($fact_tag, $nonplacfacts))) { ?>
 			<td class="optionbox">
-				<input type="text" size="35" tabindex="<?php echo $tabkey; $tabkey++; ?>" name="PLACS[]" id="place<?php echo $f; ?>" value="<?php echo PrintReady(htmlspecialchars($plac, ENT_COMPAT, 'UTF-8')); ?>" />
+				<input type="text" size="35" tabindex="<?php echo $tabkey; $tabkey++; ?>" name="PLACS[]" id="place<?php echo $f; ?>" value="<?php echo PrintReady(htmlspecialchars((string)$plac, ENT_COMPAT, 'UTF-8')); ?>" />
 				<?php print_findplace_link("place$f"); ?>
 				<input type="hidden" name="TEMPS[]" value="" />
 			</td>
@@ -2615,7 +2615,7 @@ for($j=1; $j<=count($cfams); $j++) {
 	<tr><td class="topbottombar" colspan="4">
 <?php
 	echo $pgv_lang['father'], ' ';
-	$person=Person::getInstance($parents['HUSB']);
+	$person=Person::getInstance(($parents ? $parents['HUSB'] : null));
 	if ($person) {
 		$fatherrec = $person->getGedcomRecord();
 		$child_surname = "";
@@ -2631,7 +2631,7 @@ for($j=1; $j<=count($cfams); $j++) {
 		echo $pgv_lang["unknown"];
 	}
 	echo "</td></tr>";
-	echo "<tr><td class=\"descriptionbox\">", $pgv_lang["enter_pid"], "</td><td  class=\"optionbox\" colspan=\"3\"><input type=\"text\" size=\"10\" name=\"FATHER[$i]\" id=\"FATHER$i\" value=\"", $parents['HUSB'], "\" />";
+	echo "<tr><td class=\"descriptionbox\">", $pgv_lang["enter_pid"], "</td><td  class=\"optionbox\" colspan=\"3\"><input type=\"text\" size=\"10\" name=\"FATHER[$i]\" id=\"FATHER$i\" value=\"", ($parents ? $parents['HUSB'] : ''), "\" />";
 	print_findindi_link("FATHER$i", "");
 	echo "</td></tr>";
 ?>
@@ -2753,7 +2753,7 @@ for($j=1; $j<=count($cfams); $j++) {
 <tr><td class="topbottombar" colspan="4">
 <?php
 	echo $pgv_lang['mother'], ' ';
-	$person=Person::getInstance($parents["WIFE"]);
+	$person=Person::getInstance(($parents ? $parents["WIFE"] : null));
 	if ($person) {
 		$motherrec = $person->getGedcomRecord();
 		if ($person->getSex()=="M") $label = $pgv_lang["father"];
@@ -2766,7 +2766,7 @@ for($j=1; $j<=count($cfams); $j++) {
 		echo $pgv_lang['unknown'];
 	}
 	echo "</td></tr>\n";
-	echo "<tr><td  class=\"descriptionbox\">", $pgv_lang["enter_pid"], "</td><td  class=\"optionbox\" colspan=\"3\"><input type=\"text\" size=\"10\" name=\"MOTHER[$i]\" id=\"MOTHER$i\" value=\"", $parents['WIFE'], "\" />";
+	echo "<tr><td  class=\"descriptionbox\">", $pgv_lang["enter_pid"], "</td><td  class=\"optionbox\" colspan=\"3\"><input type=\"text\" size=\"10\" name=\"MOTHER[$i]\" id=\"MOTHER$i\" value=\"", ($parents ? $parents['WIFE'] : ''), "\" />";
 	print_findindi_link("MOTHER$i", "");
 	?>
 </td></tr>
@@ -2951,9 +2951,9 @@ foreach($famfacts as $f=>$eventObj) {
 			}
 			?>
 		</td>
-		<td class="optionbox"><input type="text" dir="ltr" tabindex="<?php echo $tabkey; $tabkey++;?>" size="15" name="F<?php echo $i; ?>DATES[]" id="F<?php echo $i; ?>DATE<?php echo $f; ?>" onblur="valid_date(this);" value="<?php echo PrintReady(htmlspecialchars($date, ENT_COMPAT, 'UTF-8')); ?>" />&nbsp;<?php print_calendar_popup("F{$i}DATE$f");?></td>
+		<td class="optionbox"><input type="text" dir="ltr" tabindex="<?php echo $tabkey; $tabkey++;?>" size="15" name="F<?php echo $i; ?>DATES[]" id="F<?php echo $i; ?>DATE<?php echo $f; ?>" onblur="valid_date(this);" value="<?php echo PrintReady(htmlspecialchars((string)$date, ENT_COMPAT, 'UTF-8')); ?>" />&nbsp;<?php print_calendar_popup("F{$i}DATE$f");?></td>
 		<?php if (empty($temp) && (!in_array($fact_tag, $nonplacfacts))) { ?>
-			<td class="optionbox"><input size="35" type="text" tabindex="<?php echo $tabkey; $tabkey++; ?>" name="F<?php echo $i; ?>PLACS[]" id="F<?php echo $i; ?>place<?php echo $f; ?>" value="<?php echo PrintReady(htmlspecialchars($plac, ENT_COMPAT, 'UTF-8')); ?>" />
+			<td class="optionbox"><input size="35" type="text" tabindex="<?php echo $tabkey; $tabkey++; ?>" name="F<?php echo $i; ?>PLACS[]" id="F<?php echo $i; ?>place<?php echo $f; ?>" value="<?php echo PrintReady(htmlspecialchars((string)$plac, ENT_COMPAT, 'UTF-8')); ?>" />
 			<?php print_findplace_link("F".$i."place$f"); ?>
 			</td>
 		<?php }

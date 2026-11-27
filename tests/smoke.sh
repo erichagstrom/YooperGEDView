@@ -22,30 +22,24 @@ pass=0; fail=0
 # check <who> <page>: who is "visitor" or "admin" (its cookie file).
 check() {
   local code error
-  code=$(curl -s -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
+  code=$(curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
   error=$(grep -a -m1 -oE '(Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?: .{0,160}' "$work/body" | sed 's#</b>##')
   if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); echo "PASS  $1  $2"
   else fail=$((fail + 1)); echo "FAIL  $1  $2 (HTTP $code) $error"; fi
 }
 
-visitor_pages="index.php login.php?url=index.php indilist.php famlist.php search.php calendar.php individual.php?pid=I1 family.php?famid=F1"
-admin_pages="$visitor_pages
-  sourcelist.php source.php?sid=S1 placelist.php medialist.php pedigree.php?rootid=I8 descendancy.php?pid=I1
-  ancestry.php?rootid=I8 familybook.php?pid=I1 hourglass.php?pid=I3 timeline.php?pids[]=I1 lifespan.php
-  relationship.php?pid1=I8&pid2=I1 statistics.php branches.php?surn=Maki search.php?action=general&query=Maki&srindi=yes
-  admin.php useradmin.php editgedcoms.php edituser.php clippings.php faq.php
-  individual.php?pid=I8 individual.php?pid=I3 family.php?famid=F3"
+pages() { grep -v '^#' "$here/$1" | grep -v '^$'; }
 
-for page in $visitor_pages; do check visitor "$page"; done
+for page in $(pages pages-visitor.txt); do check visitor "$page"; done
 curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" "$base/login.php"
 curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" \
   --data-urlencode "username=admin" --data-urlencode "password=test-admin-password" --data "action=login&url=index.php" "$base/login.php"
-for page in $admin_pages; do check admin "$page"; done
+for page in $(pages pages-visitor.txt) $(pages pages-admin.txt); do check admin "$page"; done
 
 # expect <who> <page> has|lacks <text>: what each kind of user may see.
 expect() {
   local found=lacks
-  curl -s -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" "$base/$2"
+  curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" "$base/$2"
   grep -a -q -- "$4" "$work/body" && found=has
   if [ "$found" = "$3" ]; then pass=$((pass + 1)); echo "PASS  $1  $2 $3 '$4'"
   else fail=$((fail + 1)); echo "FAIL  $1  $2 should $3 '$4'"; fi

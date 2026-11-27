@@ -192,7 +192,7 @@ if ($action=="filter") {
 			if (!filterMedia($media, $filter, "http")) unset($medialist[$key]);
 		}
 	}
-	usort($medialist, "mediasort"); // Reset numbering of medialist array
+	if (isset($medialist) && is_array($medialist)) usort($medialist, "mediasort"); // Reset numbering of medialist array
 }
 if ($search=="yes") {
 	$_SESSION["medialist"] = $medialist;

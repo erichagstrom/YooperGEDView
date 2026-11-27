@@ -1650,7 +1650,7 @@ function PrintReady($text, $InHeaders=false, $trim=true) {
 		$HighlightOK=false;
 	}
 	//-- convert all & to &amp;
-	$text = str_replace("&", "&amp;", $text);
+	$text = str_replace("&", "&amp;", (string)$text);
 	//$text = preg_replace(array("/&/", "/</", "/>/"), array("&amp;", "&lt;", "&gt;"), $text);
 	//-- make sure we didn't double convert existing HTML entities like so:  &foo; to &amp;foo;
 	$text = preg_replace("/&amp;(\w+);/", "&$1;", $text);
@@ -2087,7 +2087,7 @@ function format_fact_date(&$eventObj, $anchor=false, $time=false) {
 	$wife_age=get_gedcom_value('WIFE:AGE', 2, $factrec);
 
 	// Calculated age
-	if (preg_match('/2 DATE (.+)/', $factrec, $match)) {
+	if (preg_match('/2 DATE (.+)/', (string)$factrec, $match)) {
 		$date=new GedcomDate($match[1]);
 		$html.=' '.$date->Display($anchor && !$SEARCH_SPIDER);
 		// time
@@ -2177,7 +2177,7 @@ function format_fact_date(&$eventObj, $anchor=false, $time=false) {
 		// 1 DEAT Y with no DATE => print YES
 		// 1 DEAT N is not allowed
 		// It is not proper GEDCOM form to use a N(o) value with an event tag to infer that it did not happen.
-		$factrec = str_replace("\nPGV_OLD\n", '', $factrec);
+		$factrec = str_replace("\nPGV_OLD\n", '', (string)$factrec);
 		$factrec = str_replace("\nPGV_NEW\n", '', $factrec);
 		$factdetail = explode(' ', trim($factrec));
 		if (isset($factdetail)) if (count($factdetail) == 3) if (strtoupper($factdetail[2]) == 'Y') {

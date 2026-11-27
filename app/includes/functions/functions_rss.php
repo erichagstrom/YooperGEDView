@@ -106,7 +106,7 @@ function getTodaysEvents() {
 	$dataArray[0] = $pgv_lang["on_this_day"];
 	$dataArray[1] = time();
 
-	if (empty($config)) $config = $PGV_BLOCKS["print_todays_events"]["config"];
+	if (empty($config)) $config = isset($PGV_BLOCKS["print_todays_events"]["config"]) ? $PGV_BLOCKS["print_todays_events"]["config"] : array();
 	if (isset($config["filter"])) $filter = $config["filter"];  // "living" or "all"
 	else $filter = "all";
 	if (isset($config["onlyBDM"])) $onlyBDM = $config["onlyBDM"];  // "yes" or "no"
@@ -129,8 +129,8 @@ function getTodaysEvents() {
 function getGedcomStats() {
 	global $pgv_lang, $day, $month, $year, $PGV_BLOCKS, $ALLOW_CHANGE_GEDCOM, $ctype, $COMMON_NAMES_THRESHOLD, $SERVER_URL, $RTLOrd;
 
-	if (empty($config)) $config = $PGV_BLOCKS["print_gedcom_stats"]["config"];
-	if (!isset($config['stat_indi'])) $config = $PGV_BLOCKS["print_gedcom_stats"]["config"];
+	if (empty($config)) $config = isset($PGV_BLOCKS["print_gedcom_stats"]["config"]) ? $PGV_BLOCKS["print_gedcom_stats"]["config"] : array();
+	if (!isset($config['stat_indi'])) $config = isset($PGV_BLOCKS["print_gedcom_stats"]["config"]) ? $PGV_BLOCKS["print_gedcom_stats"]["config"] : array();
 
 	$data = "";
 	$dataArray[0] = $pgv_lang["gedcom_stats"] . " - " . get_gedcom_setting(PGV_GED_ID, 'title');

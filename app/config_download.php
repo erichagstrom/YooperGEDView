@@ -37,6 +37,6 @@ $file=safe_GET('file', PGV_REGEX_NOSCRIPT, 'config.php');
 header('Content-Type: text/plain');
 header('Content-Disposition: attachment; filename="'.$file.'"');
 
-echo $_SESSION[$file];
+echo isset($_SESSION[$file]) ? $_SESSION[$file] : '';
 
 ?>
