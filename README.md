@@ -22,6 +22,9 @@ docker compose up --build --detach --wait
 curl -s -o /dev/null http://127.0.0.1:8080/index.php    # the first request creates the tables
 docker compose exec -T web php bin/yooper install anna --email=anna@example.org < password-file
 ```
+Behind a reverse proxy, set `TRUSTED_PROXY` in `.env` to the proxy's address so that the site learns each
+visitor's own address and whether they came over HTTPS.
+
 `bin/yooper install` creates the first administrator; the password is the first line of its standard input. Then
 sign in at `http://127.0.0.1:8080/login.php` and add a family tree.
 

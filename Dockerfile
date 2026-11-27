@@ -10,9 +10,12 @@ RUN apt-get update \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j"$(nproc)" gd pdo_mysql zip \
  && rm -rf /var/lib/apt/lists/* \
- && a2enmod headers \
+ && a2enmod headers remoteip \
  && sed -ri 's#/var/www/html#/var/www/yooper/app#g' /etc/apache2/sites-available/000-default.conf
 
+# The one address whose word is taken for who the visitor is and whether they used HTTPS: a reverse proxy in
+# front of this container. By default only the container itself. See docker/apache.conf.
+ENV TRUSTED_PROXY=127.0.0.1
 COPY docker/apache.conf /etc/apache2/conf-enabled/zz-yooper.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-yooper.ini
 COPY docker/config.settings.inc docker/build-config.php /usr/local/share/yooper/

@@ -31,6 +31,7 @@ services:
       DB_NAME: yoopergedview
       DB_USER: yoopergedview
       DB_PASSWORD: ${DB_PASSWORD:?}
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-127.0.0.1}
     volumes:
       - index-data:/var/www/yooper/app/index
       - media-data:/var/www/yooper/app/media
