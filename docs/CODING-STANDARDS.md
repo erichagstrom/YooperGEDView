@@ -59,6 +59,7 @@ Two kinds of code live here, with different rules.
 ```bash
 composer check      # syntax, formatting, static analysis of app/
 composer stan-src   # static analysis of src/
+composer test       # unit tests of src/
 tests/smoke.sh
 ```
 CI runs the same commands on every push.
