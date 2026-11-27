@@ -254,7 +254,7 @@ switch ($action) {
 						frm.user_password01.focus();
 						return false;
 					}
-					if (frm.user_password01.value.length < 6) {
+					if (frm.user_password01.value.length < <?php echo \YooperGEDView\Security\PasswordPolicy::MIN_LENGTH; ?>) {
 						alert("<?php print $pgv_lang["passwordlength"]; ?>");
 						frm.user_password01.value = "";
 						frm.user_password02.value = "";
