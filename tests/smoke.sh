@@ -23,7 +23,7 @@ pass=0; fail=0
 check() {
   local code error
   code=$(curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
-  error=$(grep -a -m1 -oE '(Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?: .{0,160}' "$work/body" | sed 's#</b>##')
+  error=$(grep -a -m1 -oE '((Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?|ERROR [0-9]+): .{0,160}' "$work/body" | sed 's#</b>##')
   if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); echo "PASS  $1  $2"
   else fail=$((fail + 1)); echo "FAIL  $1  $2 (HTTP $code) $error"; fi
 }
@@ -80,7 +80,7 @@ expect visitor "$export&privatize_export=none" lacks "0 @I1@ INDI"
 
 # A zipped export is a real zip file holding the tree.
 curl -s -g -L -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/export.zip" "$base/$export&privatize_export=none&zip=yes"
-if php -r '$z = new ZipArchive(); exit($z->open($argv[1]) === true && $z->locateName("sample.ged") !== false ? 0 : 1);' "$work/export.zip"; then
+if unzip -Z1 "$work/export.zip" 2>/dev/null | grep -qx "sample.ged"; then
   pass=$((pass + 1)); echo "PASS  admin  zipped export"
 else
   fail=$((fail + 1)); echo "FAIL  admin  zipped export"

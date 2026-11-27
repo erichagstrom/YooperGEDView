@@ -472,7 +472,8 @@ function file_is_writeable($file) {
  * @see http://us2.php.net/manual/en/function.set-error-handler.php
  */
 function pgv_error_handler($errno, $errstr, $errfile, $errline) {
-	if ((error_reporting() > 0)&&($errno<2048)) {
+	// Since PHP 8 the @ operator no longer sets error_reporting() to 0; it masks out everything but fatal errors.
+	if ((error_reporting() & $errno)&&($errno<2048)) {
 		if (PGV_ERROR_LEVEL==0) {
 			return;
 		}
