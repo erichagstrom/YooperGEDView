@@ -117,7 +117,7 @@ if ($action=='login') {
 		header("Location: ".encode_url($url, false));
 		exit;
 	} else {
-		$message = $pgv_lang["no_login"];
+		$message = signInThrottle()->isBlocked((string)$username, isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', time()) ? $pgv_lang["too_many_logins"] : $pgv_lang["no_login"];
 	}
 } else {
 	$tSERVER_URL = preg_replace(array("'https?://'", "'www.'", "'/$'"), array("","",""), $SERVER_URL);

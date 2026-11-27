@@ -55,6 +55,14 @@ function authenticateUser($user_name, $password, $basic=false) {
 		userLogout(getUserId());
 	}
 
+	// After too many failed attempts, refuse without looking at the password
+	$throttle=signInThrottle();
+	$remote_addr=isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+	if ($throttle->isBlocked((string)$user_name, $remote_addr, time())) {
+		AddToLog(($basic ? 'Basic HTTP Authentication' : 'Login').' Refused, too many failed attempts ->'.$user_name.'<-');
+		return false;
+	}
+
 	// Signing out may have ended the session
 	if (session_status()!==PHP_SESSION_ACTIVE) {
 		session_start();
@@ -77,13 +85,29 @@ function authenticateUser($user_name, $password, $basic=false) {
 				$_SESSION['initiated'] = true;
 				$_SESSION['last_activity'] = time();
 				$_SESSION['pgv_user'] = $user_id;
+				$throttle->recordSuccess((string)$user_name, $remote_addr, time());
 				AddToLog(($basic ? 'Basic HTTP Authentication' :'Login'). ' Successful');
 				return $user_id;
 			}
 		}
 	}
+	$throttle->recordFailure((string)$user_name, $remote_addr, time());
 	AddToLog(($basic ? 'Basic HTTP Authentication' : 'Login').' Failed ->'.$user_name.'<-');
 	return false;
+}
+
+/**
+ * The limit on failed sign-in attempts, which also keeps the record of every attempt
+ * @return \YooperGEDView\Security\SignInThrottle
+ */
+function signInThrottle() {
+	global $TBLPREFIX;
+	static $throttle=null;
+
+	if ($throttle===null) {
+		$throttle=new \YooperGEDView\Security\SignInThrottle(new \YooperGEDView\Security\SignInAttemptRepository(PGV_DB::getPDO(), $TBLPREFIX));
+	}
+	return $throttle;
 }
 
 /**
