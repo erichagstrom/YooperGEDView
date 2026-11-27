@@ -162,6 +162,17 @@ sign_in "$work/csrf-a" admin "test-admin-password"
 if signed_in "$work/csrf-a" && [ "$(post_status "$work/csrf-a" "$before")" = 403 ]; then result ok "the token from before sign-in is refused afterwards"
 else result other "the token from before sign-in is refused afterwards"; fi
 
+# What the browser is told it may do with a page.
+curl -s -o /dev/null -A "$agent" -D "$work/page-headers" "$base/index.php"
+# sends_header <name> <text>: the page's response has this header, once, with this text in it.
+sends_header() { [ "$(grep -i -c "^$1:" "$work/page-headers")" = 1 ] && grep -i "^$1:" "$work/page-headers" | grep -q -- "$2"; }
+if sends_header Content-Security-Policy "default-src 'self'" && sends_header Content-Security-Policy "form-action 'self'"; then result ok "pages carry a content security policy"
+else result other "pages carry a content security policy"; fi
+if sends_header X-Content-Type-Options nosniff && sends_header X-Frame-Options SAMEORIGIN && sends_header Referrer-Policy same-origin; then result ok "pages carry the type, frame and referrer headers"
+else result other "pages carry the type, frame and referrer headers"; fi
+if grep -q -i '^Strict-Transport-Security:' "$work/page-headers"; then result other "a site reached without HTTPS does not ask browsers to insist on it"
+else result ok "a site reached without HTTPS does not ask browsers to insist on it"; fi
+
 # Links from other sites: a signed-in visitor sent to an address with parameters must confirm first.
 # from_elsewhere <cookie file> <header> <page>: fetch a page as a browser coming from another site would.
 from_elsewhere() { curl -s -g -A "$agent" -b "$1" -c "$1" -H "$2" -o "$work/body" "$base/$3"; }
