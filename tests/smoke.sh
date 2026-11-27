@@ -31,13 +31,16 @@ fi
 
 # check <who> <page>: who is "visitor" or "admin" (its cookie file).
 check() {
-  local code error forms fields
+  local code error forms fields outside
   code=$(curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
   error=$(grep -a -m1 -oE '((Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?|ERROR [0-9]+): .{0,160}' "$work/body" | sed 's#</b>##')
   # Every form sent by POST must carry the token against forged requests.
   forms=$(grep -a -o -i -E "<form[^>]*method *= *[\"']?post" "$work/body" | wc -l)
   fields=$(grep -a -o 'name="csrf" value="[0-9a-f]\{64\}"' "$work/body" | wc -l)
   if [ "$forms" != "$fields" ]; then error="$forms forms sent by POST but $fields token fields. $error"; fi
+  # Nothing in a page may be fetched from another site: that tells the other site who is looking at what.
+  outside=$(grep -a -o -i -E "src=[\"']?(https?:)?//[^\"' >]+" "$work/body" | grep -v -F "//127.0.0.1:$port/" | head -n 1)
+  if [ -n "$outside" ]; then error="loads from another site: ${outside:0:100}. $error"; fi
   if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); report "PASS  $1  $2"
   else fail=$((fail + 1)); report "FAIL  $1  $2 (HTTP $code) $error"; fi
 }
