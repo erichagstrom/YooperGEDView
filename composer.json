@@ -1,0 +1,24 @@
+{
+    "name": "yoopergedview/yoopergedview",
+    "description": "YooperGEDView: a modernized fork of PhpGedView 4.3.0",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpstan/phpstan": "^2.1"
+    },
+    "scripts": {
+        "lint": "parallel-lint --exclude vendor --exclude app/client.php app",
+        "stan": "phpstan analyse --memory-limit=2G --no-progress",
+        "check": [
+            "@lint",
+            "@stan"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

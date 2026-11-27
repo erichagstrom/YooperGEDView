@@ -1,0 +1,27 @@
+name: Checks
+on:
+  push:
+    paths-ignore: ['docs/**', '*.md']
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+      - run: composer validate --strict
+      - run: composer install --no-interaction --no-progress
+      - run: composer audit
+      - run: composer lint
+      # Not blocking until the baseline of existing findings is committed (see phpstan.neon).
+      - run: composer stan
+        continue-on-error: true

@@ -1,0 +1,19 @@
+# Static analysis of YooperGEDView's own code, at level 0 to start. Next step: record the existing findings with
+# `composer stan -- --generate-baseline` and include that file here, so that only new problems fail the check.
+parameters:
+    level: 0
+    phpVersion: 80300
+    paths:
+        - app
+    excludePaths:
+        # Bundled third-party libraries, all replaced or removed in Phase 1.
+        - app/tcpdf/*
+        - app/SOAP/*
+        - app/PEAR.php
+        - app/PEAR5.php
+        - app/includes/PHPMailer/*
+        - app/includes/pclzip.lib.php
+        # Language files other than English are removed in Phase 1.
+        - app/languages/*
+        # Does not parse on PHP 8 (SOAP client, removed in Phase 1).
+        - app/client.php
