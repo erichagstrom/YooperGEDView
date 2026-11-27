@@ -8,7 +8,8 @@ $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
     ->exclude(['app', 'vendor'])
     ->ignoreDotFiles(false)
-    ->name('*.php');
+    ->name('*.php')
+    ->name('yooper');
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
