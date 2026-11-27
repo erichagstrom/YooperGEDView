@@ -65,7 +65,7 @@ Done as far as the tests reach. Details and reasons are in `DECISIONS.md`.
 - [x] English only: the other language files are removed
 
 Left over from Phase 1:
-- [ ] Pages and actions the tests do not reach yet: saving edits, accepting changes, uploading media, creating users, sending mail, PDF for reports other than the individual report
+- [ ] Pages and actions the tests do not reach yet: saving edits, accepting changes, uploading media, creating users, sending mail other than the password link, PDF for reports other than the individual report
 - [ ] Comparisons that changed meaning in PHP 8 (see "Known risk" in `DECISIONS.md`); needs the reference site
 - [ ] PHPStan baseline for `app/`, then make that check blocking
 - [x] `bin/yooper install` creates the first administrator, so the container image can set up a new site without the web installer
@@ -75,7 +75,7 @@ Left over from Phase 1:
 ### Phase 2. Security core
 - [x] Passwords: `password_hash` (Argon2id). No old hashes need migrating; every account gets a reset
 - [x] Sessions: Secure, HttpOnly, SameSite cookies; new session id at sign-in; no caller-supplied ids; idle timeout
-- [ ] Password reset by one-time link (today a new password is still sent by mail); changing a password ends the user's other sessions
+- [x] Password reset by one-time link; changing a password ends the user's other sessions
 - [x] Sign-in: limit on failed attempts with a temporary lock, and a record of every sign-in attempt
 - [ ] Audit log of administrator actions in the database (today they go to the log files in `index/`), and a page to read both
 - [x] CSRF token on every POST request, enforced centrally and added to every form as the page goes out
@@ -144,7 +144,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 184 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 195 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
