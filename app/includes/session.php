@@ -352,7 +352,33 @@ if (!$SEARCH_SPIDER && !isset($_SESSION['initiated']) && !isset($_SESSION['SOAP_
 	// An existing session
 }
 
-// Forged requests: anything other than a plain read must send back the session's token (CsrfProtection)
+// Forged requests, part one: many pages change things on a plain link, which the token below does not cover.
+// When another site sends a signed-in visitor to an address that carries parameters, nothing is done until
+// the visitor has confirmed with a click made on this site (CrossSiteRequestPolicy).
+if (!empty($_SESSION['pgv_user']) && !empty($_SERVER['QUERY_STRING']) && isset($_SERVER['REQUEST_URI'], $_SERVER['HTTP_HOST'])) {
+	$cross_site_policy = new \YooperGEDView\Security\CrossSiteRequestPolicy();
+	if ($cross_site_policy->isCrossSite(
+		isset($_SERVER['HTTP_SEC_FETCH_SITE']) ? (string)$_SERVER['HTTP_SEC_FETCH_SITE'] : '',
+		isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : '',
+		(string)$_SERVER['HTTP_HOST']
+	)) {
+		// Only an address on this site may be offered: one "/" at the start, never two
+		$continue_url = preg_match('~^/(?![/\\\\])~', $_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : PGV_SCRIPT_PATH;
+		session_write_close();
+		header('Content-Type: text/html; charset=UTF-8');
+		header('Cache-Control: no-store');
+		header('X-Frame-Options: DENY');
+		echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Continue?</title></head><body>';
+		echo '<p>You are signed in, and another site has sent you to this address:</p>';
+		echo '<p><code>', htmlspecialchars($continue_url, ENT_QUOTES, 'UTF-8'), '</code></p>';
+		echo '<p>If you meant to come here, <a href="', htmlspecialchars($continue_url, ENT_QUOTES, 'UTF-8'), '">continue</a>. ';
+		echo 'If you did not, close this page: nothing has been done.</p></body></html>';
+		exit;
+	}
+	unset($cross_site_policy);
+}
+
+// Forged requests, part two: anything other than a plain read must send back the session's token (CsrfProtection)
 if (!in_array(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET', array('GET', 'HEAD', 'OPTIONS'))) {
 	if (isset($_POST['csrf']) && is_string($_POST['csrf'])) {
 		$csrf_sent = $_POST['csrf'];
