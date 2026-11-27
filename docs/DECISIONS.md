@@ -161,8 +161,20 @@ why, and what the alternative was.
     editor. Add-on modules that load from other sites, such as a maps module, would be stopped too. A site
     that wants one back must add its host to the policy. Ordinary links to other sites are not affected.
 
+45. **The Google chart images are removed, and with them every chart in the program.** 22 places built an
+    address at `chart.apis.google.com` holding names and counts from the tree (see 43). Each now produces
+    nothing. What is lost on screen: nothing that worked, since the service closed in 2019. Affected: the
+    charts in the statistics page and its blocks, the charts under individual and family lists, and the
+    "own charts" plot page, which now shows only its heading. Charts drawn on the site itself are listed for
+    Phase 5. Alternative: write a chart drawer now, which is a new feature and not security work.
+46. **Chart functions in the statistics class still do their counting before returning nothing.** Only the line
+    that made the picture is replaced, to keep the change small. The wasted work goes when the class is
+    rewritten.
+47. **The smoke test fails if any page fetches anything from another site.** It found one more: the language
+    editor loaded a script from Google for a translation helper. That is no longer loaded; the page itself is
+    due for deletion.
+
 ### Left for later in Phase 2
-- The chart code still builds addresses at Google from tree data (see 43).
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).
