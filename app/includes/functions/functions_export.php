@@ -276,7 +276,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 	$head=gedcom_header($gedcom);
 	if ($exportOptions['toANSI']=="yes") {
 		$head=str_replace("UTF-8", "ANSI", $head);
-		$head=utf8_decode($head);
+		$head=mb_convert_encoding($head, 'ISO-8859-1', 'UTF-8');
 	}
 	$head=remove_custom_tags($head, $exportOptions['noCustomTags']);
 
@@ -290,7 +290,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 	foreach ($recs as $rec) {
 		$rec=remove_custom_tags($rec, $exportOptions['noCustomTags']);
 		if ($exportOptions['privatize']!='none') $rec=privatize_gedcom($rec);
-		if ($exportOptions['toANSI']=="yes") $rec=utf8_decode($rec);
+		if ($exportOptions['toANSI']=="yes") $rec=mb_convert_encoding($rec, 'ISO-8859-1', 'UTF-8');
 		$buffer.=reformat_record_export($rec);
 		if (strlen($buffer)>65536) {
 			fwrite($gedout, $buffer);
@@ -305,7 +305,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 	foreach ($recs as $rec) {
 		$rec=remove_custom_tags($rec, $exportOptions['noCustomTags']);
 		if ($exportOptions['privatize']!='none') $rec=privatize_gedcom($rec);
-		if ($exportOptions['toANSI']=="yes") $rec=utf8_decode($rec);
+		if ($exportOptions['toANSI']=="yes") $rec=mb_convert_encoding($rec, 'ISO-8859-1', 'UTF-8');
 		$buffer.=reformat_record_export($rec);
 		if (strlen($buffer)>65536) {
 			fwrite($gedout, $buffer);
@@ -320,7 +320,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 	foreach ($recs as $rec) {
 		$rec=remove_custom_tags($rec, $exportOptions['noCustomTags']);
 		if ($exportOptions['privatize']!='none') $rec=privatize_gedcom($rec);
-		if ($exportOptions['toANSI']=="yes") $rec=utf8_decode($rec);
+		if ($exportOptions['toANSI']=="yes") $rec=mb_convert_encoding($rec, 'ISO-8859-1', 'UTF-8');
 		$buffer.=reformat_record_export($rec);
 		if (strlen($buffer)>65536) {
 			fwrite($gedout, $buffer);
@@ -335,7 +335,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 	foreach ($recs as $rec) {
 		$rec=remove_custom_tags($rec, $exportOptions['noCustomTags']);
 		if ($exportOptions['privatize']!='none') $rec=privatize_gedcom($rec);
-		if ($exportOptions['toANSI']=="yes") $rec=utf8_decode($rec);
+		if ($exportOptions['toANSI']=="yes") $rec=mb_convert_encoding($rec, 'ISO-8859-1', 'UTF-8');
 		$buffer.=reformat_record_export($rec);
 		if (strlen($buffer)>65536) {
 			fwrite($gedout, $buffer);
@@ -351,7 +351,7 @@ function export_gedcom($gedcom, $gedout, $exportOptions) {
 		$rec = convert_media_path($rec, $exportOptions['path'], $exportOptions['slashes']);
 		$rec=remove_custom_tags($rec, $exportOptions['noCustomTags']);
 		if ($exportOptions['privatize']!='none') $rec=privatize_gedcom($rec);
-		if ($exportOptions['toANSI']=="yes") $rec=utf8_decode($rec);
+		if ($exportOptions['toANSI']=="yes") $rec=mb_convert_encoding($rec, 'ISO-8859-1', 'UTF-8');
 		$buffer.=reformat_record_export($rec);
 		if (strlen($buffer)>65536) {
 			fwrite($gedout, $buffer);

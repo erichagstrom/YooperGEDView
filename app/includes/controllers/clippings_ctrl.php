@@ -254,7 +254,7 @@ class ClippingsControllerRoot extends BaseController {
 				$filetext .= "1 PLAC\n2 FORM " . "City, County, State/Province, Country" . "\n";
 				if ($convert == "yes") {
 					$filetext = str_replace("UTF-8", "ANSI", $filetext);
-					$filetext = utf8_decode($filetext);
+					$filetext = mb_convert_encoding($filetext, 'ISO-8859-1', 'UTF-8');
 				}
 
 				$tempUserID = '#ExPoRt#';
@@ -276,7 +276,7 @@ class ClippingsControllerRoot extends BaseController {
 						$record = privatize_gedcom($record);
 						$record = remove_custom_tags($record, $remove);
 						if ($convert == "yes")
-						$record = utf8_decode($record);
+						$record = mb_convert_encoding($record, 'ISO-8859-1', 'UTF-8');
 						switch ($clipping['type']) {
 						case 'indi':
 							$ft = preg_match_all("/1 FAMC @(.*)@/", $record, $match, PREG_SET_ORDER);
@@ -441,7 +441,7 @@ class ClippingsControllerRoot extends BaseController {
 					}
 				}
 				$this->download_data = $gramps_Exp->dom->saveXML();
-				if ($convert) $this->download_data = utf8_decode($this->download_data);
+				if ($convert) $this->download_data = mb_convert_encoding($this->download_data, 'ISO-8859-1', 'UTF-8');
 				$this->media_list = $gramps_Exp->get_all_media();
 				$this->download_clipping();
 			}

@@ -14,7 +14,7 @@
         "spaze/phpstan-disallowed-calls": "^4.0"
     },
     "scripts": {
-        "lint": "parallel-lint --exclude vendor --exclude app/SOAP --exclude app/tcpdf --exclude app/includes/PHPMailer --exclude app/client.php app",
+        "lint": "parallel-lint --exclude vendor --exclude app/tcpdf --exclude app/includes/PHPMailer app",
         "cs": "php-cs-fixer check --diff",
         "cs-fix": "php-cs-fixer fix",
         "stan": "phpstan analyse --memory-limit=2G --no-progress",

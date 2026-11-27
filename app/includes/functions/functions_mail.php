@@ -276,7 +276,7 @@ return $pgvLogo;
 function hex4email ($string,$charset) {
 
 	//-- check if the string has extended characters in it
-	$str = utf8_decode($string);
+	$str = mb_convert_encoding($string, 'ISO-8859-1', 'UTF-8');
 	//-- if the strings are the same no conversion is necessary
 	if ($str==$string) return $string;
 	//-- convert to string into quoted_printable format

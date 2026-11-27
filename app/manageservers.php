@@ -32,7 +32,6 @@ require './config.php';
 require_once PGV_ROOT.'includes/functions/functions.php';
 require_once PGV_ROOT.'includes/functions/functions_edit.php';
 require_once PGV_ROOT.'includes/functions/functions_import.php';
-require_once PGV_ROOT.'includes/classes/class_serviceclient.php';
 
 print_header($pgv_lang["title_manage_servers"]);
 //-- only allow gedcom admins here
@@ -53,7 +52,6 @@ $search_engines = array();
 if (file_exists($INDEX_DIRECTORY."search_engines.php")) {
 	require($INDEX_DIRECTORY.'search_engines.php');
 }
-$remoteServers = get_server_list();
 
 $action = safe_GET('action');
 if (empty($action)) $action = safe_POST('action');
@@ -136,76 +134,6 @@ if ($action=='addBanned' || $action=='addTimedBan' || $action=='addSearch' || $a
 	$action='showForm';
 }
 
-/**
-* Adds a server to the outbound remote linking list
-*/
-if ($action=='addServer') {
-	$serverTitle = safe_POST('serverTitle', '[^<>"%{};]+'); // same as PGV_REGEX_NOSCRIPT, but allow ampersand in title
-	$serverURL = safe_POST('serverURL', PGV_REGEX_URL);
-	$gedcom_id = safe_POST('gedcom_id');
-	$username  = safe_POST('username', PGV_REGEX_USERNAME);
-	$password  = safe_POST('password', PGV_REGEX_PASSWORD);
-
-	if (!$serverTitle=="" || !$serverURL=="") {
-		$errorServer = '';
-		$turl = preg_replace("~^\w+://~", "", $serverURL);
-		//-- check the existing server list
-		foreach ($remoteServers as $server) {
-			if (stristr($server['url'], $turl)) {
-				if (empty($gedcom_id) || (strpos($server['gedcom'], "_DBID $gedcom_id")!==false)) {
-					$whichFile = $server['name'];
-					$errorServer = print_text("error_remote_duplicate",0,1);
-					break;
-				}
-			}
-		}
-		if (empty($errorServer)) {
-			$gedcom_string = "0 @new@ SOUR\n";
-			$gedcom_string.= "1 TITL ".$serverTitle."\n";
-			$gedcom_string.= "1 URL ".$serverURL."\n";
-			$gedcom_string.= "1 _DBID ".$gedcom_id."\n";
-			$gedcom_string.= "2 _USER ".$username."\n";
-			$gedcom_string.= "2 _PASS ".$password."\n";
-			//-- only allow admin users to see password
-			$gedcom_string.= "3 RESN confidential\n";
-
-			$service = new ServiceClient($gedcom_string);
-			$sid = $service->authenticate();
-			if (empty($sid) || PEAR::isError($sid)) {
-				$errorServer = $pgv_lang["error_siteauth_failed"];
-			} else {
-				$serverID = append_gedrec($gedcom_string);
-				accept_changes($serverID."_".$GEDCOM);
-				$remoteServers = get_server_list(); // refresh the list
-			}
-		}
-	} else $errorServer = $pgv_lang["error_url_blank"];
-
-	$action = 'showForm';
-}
-
-/**
-* Removes a server from the remote linking outbound list
-*/
-if ($action=='deleteServer') {
-	if (!empty($address)) {
-		$sid = $address;
-
-		if (count_linked_indi($sid, 'SOUR', PGV_GED_ID) || count_linked_fam($sid, 'SOUR', PGV_GED_ID)) {
-			$errorDelete = $pgv_lang["error_remove_site_linked"];
-		} else {
-			// No references exist:  it's OK to delete this source
-			if (delete_gedrec($sid)) {
-				accept_changes($sid."_".$GEDCOM);
-			} else {
-				$errorDelete = $pgv_lang["error_remove_site"];
-			}
-		}
-	}
-
-	$remoteServers = get_server_list(); // refresh the list
-	$action = 'showForm';
-}
 
 ?>
 
@@ -379,183 +307,6 @@ function showSite(siteID) {
 	echo '</table></td></tr></table></form></td></tr></table>';
 ?>
 
-<!-- remote server list -->
-<table class="width66" align="center">
-<tr>
-	<td>
-	<form name="serverlistform" action="manageservers.php" method="post">
-	<table class="width100">
-		<tr>
-		<td class="facts_label">
-			<b><?php echo $pgv_lang["label_added_servers"];?></b>
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_value">
-			<table>
-<?php
-	foreach ($remoteServers as $sid=>$server) {
-		$serverTitle = $server['name'];
-		$serverURL = $server['url'];
-		$gedcom_id = get_gedcom_value('_DBID', 1, $server['gedcom']);
-		$username = get_gedcom_value('_USER', 2, $server['gedcom']);
-?>
-			<tr>
-				<td>
-				<button type="submit" onclick="return (confirm('<?php echo $pgv_lang["confirm_delete_source"];?>'))" name="deleteServer" value="<?php echo $sid;?>"><?php echo $pgv_lang["remove"];?></button>
-				&nbsp;&nbsp;
-				<button id="buttonShow_<?php echo $sid;?>" type="button" onclick="showSite('<?php echo $sid;?>');"><?php echo $pgv_lang["show_details"];?></button>
-				&nbsp;&nbsp;
-				<button type="button" onclick="window.open('source.php?sid=<?php echo $sid;?>&ged=<?php echo $GEDCOM;?>')"><?php echo $pgv_lang["title_view_conns"];?></button>
-				&nbsp;&nbsp;
-				<?php echo PrintReady($serverTitle); ?>
-				<div id="siteDetails_<?php echo $sid;?>" style="display:none">
-					<br />
-					<table>
-					<tr>
-						<td class="facts_label width20">
-						<?php print $pgv_lang["id"];?>
-						</td>
-						<td class="facts_value">
-						<?php echo $sid;?>
-						</td>
-					</tr>
-					<tr>
-						<td class="facts_label width20">
-						<?php print $pgv_lang["title"];?>
-						</td>
-						<td class="facts_value">
-						<?php echo PrintReady($serverTitle);?>
-						</td>
-					</tr>
-					<tr>
-						<td class="facts_label width20">
-						<?php print $pgv_lang["label_server_url"];?>
-						</td>
-						<td class="facts_value">
-						<?php echo PrintReady($serverURL);?>
-						</td>
-					</tr>
-					<tr>
-						<td class="facts_label width20">
-						<?php echo $pgv_lang["label_gedcom_id2"];?>
-						</td>
-						<td class="facts_value">
-						<?php echo PrintReady($gedcom_id);?>
-						</td>
-					</tr>
-					<tr>
-						<td class="facts_label width20">
-						<?php print $pgv_lang["label_username_id"];?>
-						</td>
-						<td class="facts_value">
-						<?php echo PrintReady($username);?>
-						</td>
-					</tr>
-					</table>
-					<br />
-				</div>
-				</td>
-			</tr>
-<?php
-			}
-	if (!empty($errorDelete)) {
-		print '<tr><td colspan="2"><span class="warning">';
-		print $errorDelete;
-		print '</span></td></tr>';
-		$errorDelete = '';
-	}
-?>
-			</table>
-		</td>
-		</tr>
-	</table>
-	</form>
-	</td>
-</tr>
-</table>
-
-<!-- Add remote server form -->
-<?php
-if (empty($errorServer)) {
-	$serverTitle = '';
-	$serverURL = '';
-	$gedcom_id = '';
-	$username = '';
-}
-?>
-<form name="addserversform" action="manageservers.php" method="post"">
-<table class="width66" align="center">
-<tr>
-	<td valign="top">
-	<table class="width100">
-		<tr>
-		<td class="facts_label" colspan="2">
-			<?php print_help_link("help_remotesites", "qm"); ?>
-			<b><?php print $pgv_lang["label_new_server"];?></b>
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_label width20">
-			<?php print $pgv_lang["title"];?>
-		</td>
-		<td class="facts_value">
-			<input type="text" size="66" name="serverTitle" value="<?php echo PrintReady($serverTitle);?>" />
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_label width20">
-			<?php print_help_link('link_remote_site_help', 'qm');?>
-			<?php print $pgv_lang["label_server_url"];?>
-		</td>
-		<td class="facts_value">
-			<input type="text" size="66" name="serverURL" value="<?php echo PrintReady($serverURL);?>" />
-			<br /><?php echo $pgv_lang["example"];?>&nbsp;&nbsp;http://www.remotesite.com/phpGedView/genservice.php?wsdl
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_label width20">
-			<?php echo $pgv_lang["label_gedcom_id2"];?>
-		</td>
-		<td class="facts_value">
-			<input type="text" name="gedcom_id" value="<?php echo PrintReady($gedcom_id);?>" />
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_label width20">
-			<?php print $pgv_lang["label_username_id"];?>
-		</td>
-		<td class="facts_value">
-			<input type="text" name="username" value="<?php echo PrintReady($username);?>" />
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_label width20">
-			<?php print $pgv_lang["label_password_id"];?>
-		</td>
-		<td class="facts_value">
-			<input type="password" name="password" />
-		</td>
-		</tr>
-		<tr>
-		<td class="facts_value" align="center" colspan="2">
-			<input type="submit" value="<?php echo $pgv_lang['add'];?>" />
-			<input name="action" type="hidden" value="addServer"/>
-<?php
-	if (!empty($errorServer)) {
-		print '<br /><br /><span class="warning">';
-		print $errorServer;
-		print '</span>';
-		$errorServer = '';
-	}
-?>
-		</td>
-		</tr>
-	</table>
-	</td>
-</tr>
-</table>
-</form>
 <?php
 	print_footer();
 ?>

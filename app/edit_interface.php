@@ -2238,7 +2238,7 @@ case 'al_reorder_media_update': // Update sort using Album Page
 
 	function SwapArray($Array){
 		$Values = array();
-		while (list($Key, $Val) = each($Array))
+		foreach ($Array as $Key => $Val)
 			$Values[$Val] = $Key;
 		return $Values;
 	}

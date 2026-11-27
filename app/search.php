@@ -135,10 +135,6 @@ if ($ENABLE_AUTOCOMPLETE) require PGV_ROOT.'js/autocomplete.js.htm';
 		return true;
 	}
 
-	function open_link(server, pid, indiName){
-		window.open("addsearchlink.php?server="+server+"&pid="+pid+"&indiName="+indiName, "_blank", "top=50,left=50,width=600,height=500,scrollbars=1,scrollable=1,resizable=1");
-		return false;
-	}
 
 //-->
 </script>

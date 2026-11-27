@@ -51,7 +51,7 @@ define('PGV_ERROR_LEVEL', 2); // 0=none, 1=minimal, 2=full
 define('PGV_SCHEMA_VERSION', 14);
 
 // Environmental requirements
-define('PGV_REQUIRED_PHP_VERSION',     '5.2.0'); // 5.2.3 is recommended
+define('PGV_REQUIRED_PHP_VERSION',     '8.3.0');
 define('PGV_REQUIRED_MYSQL_VERSION',   '4.1');   // Not enforced
 define('PGV_REQUIRED_SQLITE_VERSION',  '3.2.6'); // Not enforced, PHP5.2.0/PDO is 3.3.7
 define('PGV_REQUIRED_PRIVACY_VERSION', '3.1');
@@ -137,55 +137,9 @@ if (!isset($DBPORT)) {
 @ini_set('display_errors', '1');
 @error_reporting(0);
 
-// Check configuration issues that affect older versions of PHP
-// We can't use any PHP5 functions until after this point.
-if (version_compare(PHP_VERSION, '6.0.0', '<')) {
-	// PHP too old?
-	if (version_compare(PHP_VERSION, PGV_REQUIRED_PHP_VERSION)<0) {
-		die ('<html><body><p style="color: red;">PhpGedView requires PHP version '.PGV_REQUIRED_PHP_VERSION.' or later.</p><p>Your server is running PHP version '.PHP_VERSION.'.  Please ask your server\'s Administrator to upgrade the PHP installation.</p></body></html>');
-	}
-
-	// register_globals was deprecated in PHP5.3.0 and removed in PHP6.0.0
-	// For servers with this feature enabled in php.ini, check it is not being abused.
-	foreach (array(
-		'DBTYPE', 'DBHOST', 'DBUSER', 'DBPASS', 'DBNAME', 'TBLPREFIX',
-		'INDEX_DIRECTORY', 'AUTHENTICATION_MODULE', 'USE_REGISTRATION_MODULE',
-		'ALLOW_USER_THEMES', 'ALLOW_CHANGE_GEDCOM', 'LOGFILE_CREATE',
-		'PGV_SESSION_SAVE_PATH', 'PGV_SESSION_TIME', 'SERVER_URL', 'LOGIN_URL',
-		'PGV_MEMORY_LIMIT', 'PGV_STORE_MESSAGES', 'PGV_SIMPLE_MAIL',
-		'CONFIGURED', 'MANUAL_SESSON_START', 'REQUIRE_ADMIN_AUTH_REGISTRATION',
-		'COMMIT_COMMAND'
-	) as $var) {
-		if (isset($_REQUEST[$var])) {
-			if (!ini_get('register_globals') || strtolower(ini_get('register_globals'))=='off') {
-				require_once PGV_ROOT.'includes/authentication.php';
-				AddToLog('MSG>Configuration override detected; script terminated.');
-				AddToLog("UA>{$_SERVER['HTTP_USER_AGENT']}<");
-				AddToLog("URI>{$_SERVER['REQUEST_URI']}<");
-			}
-			header('HTTP/1.0 403 Forbidden');
-			die('Invalid request.');
-		}
-	}
-
-	// magic quotes were deprecated in PHP5.3.0 and removed in PHP6.0.0
-	@set_magic_quotes_runtime(0);
-
-	// magic_quotes_gpc can't be disabled at run-time, so clean them up as necessary.
-	if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() ||
-		ini_get('magic_quotes_sybase') && strtolower(ini_get('magic_quotes_sybase'))!='off') {
-		$in = array(&$_GET, &$_POST, &$_REQUEST, &$_COOKIE);
-		while (list($k,$v) = each($in)) {
-			foreach ($v as $key => $val) {
-				if (!is_array($val)) {
-					$in[$k][$key] = stripslashes($val);
-					continue;
-				}
-				$in[] =& $in[$k][$key];
-			}
-		}
-		unset($in);
-	}
+// PHP too old?
+if (version_compare(PHP_VERSION, PGV_REQUIRED_PHP_VERSION)<0) {
+	die ('<html><body><p style="color: red;">This program requires PHP version '.PGV_REQUIRED_PHP_VERSION.' or later.</p><p>Your server is running PHP version '.PHP_VERSION.'.</p></body></html>');
 }
 
 //-- setup execution timer

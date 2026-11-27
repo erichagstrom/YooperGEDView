@@ -27,6 +27,19 @@ why, and what the alternative was.
    to false, which sent every signed-out visitor down the "export in progress" path with empty access levels.
    Fixed in the five places it occurs; the smoke test now checks what a visitor can and cannot see.
 
+9. **Dead PHP 5 start-up code removed** (magic quotes, the `register_globals` guard). It sat inside an
+   "if PHP is older than 6" block and never ran. The minimum PHP version is now 8.3.
+10. **`utf8_encode` / `utf8_decode` replaced by `mb_convert_encoding`** with the same two character sets; they are
+    deprecated since PHP 8.2.
+11. **SOAP web service, PEAR and the Drupal / Mambo / PostNuke bridges removed** (about 14,000 lines). The SOAP
+    library does not parse on PHP 8 and has no maintained successor with the same interface.
+12. **Remote-site links removed with it, in two stages.** They fetched records from other PhpGedView sites over
+    SOAP. Now: the pages for creating links are gone and `ServiceClient::getInstance()` always answers "no such
+    site", which every caller already handled. Later: the callers themselves go when records are rewritten in
+    Phase 3. The `pgv_remotelinks` table and existing `RFN` data are left untouched. Alternative: cut out all
+    callers now, which touches the core record-loading code before there are tests around it.
+13. **"Manage sites" page keeps only IP banning and search-engine lists.**
+
 ### Known risk: comparisons that changed meaning in PHP 8
 Item 8 is one case of a wider change: in PHP 8, `0 == ''` and `0 == 'abc'` are false where PHP 5 said true. Such
 code raises no error or warning; it just takes the other branch. There is no reliable automatic finder. The

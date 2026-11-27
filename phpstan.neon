@@ -8,12 +8,7 @@ parameters:
     excludePaths:
         # Bundled third-party libraries, all replaced or removed in Phase 1.
         - app/tcpdf/*
-        - app/SOAP/*
-        - app/PEAR.php
-        - app/PEAR5.php
         - app/includes/PHPMailer/*
         - app/includes/pclzip.lib.php
         # Language files other than English are removed in Phase 1.
         - app/languages/*
-        # Does not parse on PHP 8 (SOAP client, removed in Phase 1).
-        - app/client.php

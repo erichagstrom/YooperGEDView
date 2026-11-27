@@ -2756,7 +2756,7 @@ function get_theme_names() {
  */
 function filename_decode($filename) {
 	if (DIRECTORY_SEPARATOR=='\\')
-		return utf8_decode($filename);
+		return mb_convert_encoding($filename, 'ISO-8859-1', 'UTF-8');
 	else
 		return $filename;
 }
@@ -2769,7 +2769,7 @@ function filename_decode($filename) {
  */
 function filename_encode($filename) {
 	if (DIRECTORY_SEPARATOR=='\\')
-		return utf8_encode($filename);
+		return mb_convert_encoding($filename, 'UTF-8', 'ISO-8859-1');
 	else
 		return $filename;
 }

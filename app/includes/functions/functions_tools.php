@@ -449,7 +449,7 @@ function is_ansi() {
 function convert_ansi_utf8() {
 	global $fcontents;
 
-	$fcontents = utf8_encode($fcontents);
+	$fcontents = mb_convert_encoding($fcontents, 'UTF-8', 'ISO-8859-1');
 	$fcontents = preg_replace("/1 CHAR (ANSI|ANSEL)/", "1 CHAR UTF-8", $fcontents);
 }
 

@@ -1989,14 +1989,6 @@ class IndividualControllerRoot extends BaseController {
 				</td>
 			</tr>
 <?php } ?>
-			<?php if (PGV_USER_GEDCOM_ADMIN) { ?>
-			<tr>
-				<td class="facts_value">
-				<?php print_help_link("link_remote_help", "qm"); ?>
-				<a href="javascript:;" onclick="return open_link_remote('<?php print $this->pid; ?>');"><?php print $pgv_lang["link_remote"]; ?></a>
-				</td>
-			</tr>
-			<?php } ?>
 		</table>
 		<?php } ?>
 		<br />
