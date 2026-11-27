@@ -8,7 +8,7 @@ declare(strict_types=1);
 // Test credentials only: user "admin", password "test-admin-password". A second user, "legacy", has the same
 // password stored the way PhpGedView 4.3.0 stored it (MD5-crypt), which must no longer be accepted.
 
-use YooperGEDView\Security\PasswordHasher;
+use YooperGEDView\Console\Yooper;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -103,30 +103,40 @@ function formDefaults(string $html, string $formName): array
     return ['action' => $form->getAttribute('action'), 'fields' => $fields];
 }
 
-function createAdministrator(PDO $database, string $name, string $passwordHash): void
+/**
+ * An account whose password is stored the way PhpGedView 4.3.0 stored it, which must no longer be accepted.
+ */
+function createLegacyUser(PDO $database): void
 {
-    $database->prepare('INSERT INTO pgv_user (user_name, password) VALUES (?, ?)')->execute([$name, $passwordHash]);
+    $database->prepare('INSERT INTO pgv_user (user_name, password) VALUES (?, ?)')
+        ->execute([LEGACY_USER, crypt(ADMIN_PASSWORD, '$1$padpadpa$')]);
     $userId = $database->lastInsertId();
-    $settings = [
-        'firstname' => 'Test',
-        'lastname' => ucfirst($name),
-        'canadmin' => 'Y',
-        'email' => $name . '@example.com',
-        'verified' => 'yes',
-        'verified_by_admin' => 'yes',
-        'language' => 'english',
-        'contactmethod' => 'messaging2',
-        'visibleonline' => 'Y',
-        'editaccount' => 'Y',
-        'defaulttab' => '0',
-        'sync_gedcom' => 'N',
-        'relationship_privacy' => 'N',
-        'max_relation_path' => '2',
-        'auto_accept' => 'N',
-    ];
     $insert = $database->prepare('INSERT INTO pgv_user_setting (user_id, setting_name, setting_value) VALUES (?, ?, ?)');
-    foreach ($settings as $name => $value) {
+    foreach (['canadmin' => 'Y', 'verified' => 'yes', 'verified_by_admin' => 'yes'] as $name => $value) {
         $insert->execute([$userId, $name, $value]);
+    }
+}
+
+/**
+ * The administrator is created the way a person setting up a site does it: with "bin/yooper install".
+ */
+function createAdministrator(string $databaseFile): void
+{
+    $password = fopen('php://memory', 'r+');
+    if ($password === false) {
+        fail('cannot hold the password in memory');
+    }
+    fwrite($password, ADMIN_PASSWORD . "\n");
+    rewind($password);
+    $code = (new Yooper(time()))->run(
+        ['install', ADMIN_USER, '--email=admin@example.com', '--first-name=Test', '--last-name=Admin'],
+        ['DB_TYPE' => 'sqlite', 'DB_NAME' => $databaseFile],
+        $password,
+        STDERR,
+        STDERR,
+    );
+    if ($code !== Yooper::OK) {
+        fail('bin/yooper install failed');
     }
 }
 
@@ -150,8 +160,8 @@ if ($cookieJar === false) {
 // The first request makes the program create its tables.
 request($baseUrl . 'index.php', $cookieJar);
 $database = new PDO('sqlite:' . $siteDir . '/index/test.sqlite', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-createAdministrator($database, ADMIN_USER, (new PasswordHasher())->hash(ADMIN_PASSWORD));
-createAdministrator($database, LEGACY_USER, crypt(ADMIN_PASSWORD, '$1$padpadpa$'));
+createAdministrator($siteDir . '/index/test.sqlite');
+createLegacyUser($database);
 
 if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE)) {
     fail('cannot copy the sample tree');

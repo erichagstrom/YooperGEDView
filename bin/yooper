@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// The command-line tool. Run it without arguments to see what it can do.
+
+use YooperGEDView\Console\Yooper;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+if (!is_file(__DIR__ . '/../vendor/autoload.php')) {
+    fwrite(STDERR, "Libraries are missing. Run \"composer install\" first.\n");
+    exit(1);
+}
+require __DIR__ . '/../vendor/autoload.php';
+
+/** @var list<string> $arguments */
+$arguments = array_slice($argv, 1);
+exit((new Yooper(time()))->run($arguments, getenv(), STDIN, STDOUT, STDERR));
