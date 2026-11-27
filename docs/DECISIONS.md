@@ -247,7 +247,45 @@ why, and what the alternative was.
 64. **The test site writes its mail to a file** instead of sending it, so the smoke test can follow the link
     in the message. This is the first test of anything the program mails.
 
+65. **Every `eval` is gone** (13 calls). They fell into five kinds, 66 to 70.
+66. **Report conditions are worked out by an interpreter of their own**
+    (`YooperGEDView\Report\ConditionEvaluator`). The inherited code took a condition from a report file, such
+    as `@AUTH!=''`, pasted the record's values into it as quoted text, and ran the result as PHP. A value in
+    the tree written with PHP's `{${...}}` form ran as code: anyone who could edit one record, or get a GEDCOM
+    file imported, could run anything on the server by having a report printed. Confirmed on the old code
+    with the sample tree: the family report printed the result of a sum written into a source's author. The
+    interpreter reads the condition once, and asks for each `$variable` and `@TAG` as it goes; a value is
+    only ever a value. It understands what the 820 conditions in the bundled reports use (comparisons,
+    `and`/`or`/`!`, brackets, `stristr()`) and nothing else. A condition it cannot read counts as false, as
+    in 19.
+67. **Comparisons in conditions follow PHP 8's rules for `==`**, written out in the interpreter: `"1"`
+    equals `1`, a missing value equals `''`, text that is not a number never equals a number.
+68. **`@fact` in a condition now means what it was meant to.** The old code replaced it by the fact's name as
+    bare text, which PHP 5 happened to read as a word and PHP 8 rejects; so `@fact=='MARR'` had been false
+    since Phase 1, and `@fact:TEMP` never worked. Now `@fact` is the current fact's name and `@fact:TEMP` is
+    that fact's TEMP value. Three conditions in the bundled reports use this.
+69. **A text can name only listed values** (`YooperGEDView\Text\NamedValues`). Language texts hold
+    placeholders such as `#pgv_lang[edit]#` and `#GLOBALS[MEDIA_DIRECTORY]#`, and the same expansion is
+    applied to news items, FAQ entries and HTML blocks, which users write. The old code ran the placeholder
+    as a PHP variable reference, so `GLOBALS[...]` reached every variable in the program, the database
+    password included. Now the language lists, the eleven values the function was given, and the 32
+    `GLOBALS` names that the English language files actually use can be named; anything else is left as it
+    stands. Report files get the same treatment for `pgv_lang[...]` and `factarray[...]`.
+70. **Home-page blocks are called by name, after the name is checked against the list of installed blocks.**
+    The old code built a line of PHP from the block's name, the side and the block number from the request.
+    The checks around it happened to make that safe; it no longer depends on them.
+71. **`update_site_config()` and `update_config()` are deleted.** They rewrote `config.php` and tested the
+    result by running it. Nothing called them once the installer was gone.
+72. **Reports were compared before and after**, since no test knows what a report should look like: all 19
+    reports for three people and two families, with sources and notes on, plus 84 home-page blocks and 11
+    pages with help texts, from the old and the new code. All 209 outputs are the same, apart from a
+    timestamp in the pages.
+73. **The smoke test now runs reports with sources and notes switched on.** It passed `on` where the reports
+    expect `1`, so those sections had never been printed in a test. That turned up one more PHP 8 deprecation
+    in the report engine, fixed here.
+
 ### Left for later in Phase 2
+- An add-on's language file that refers to other `GLOBALS` names in its texts will find them not replaced.
 - The rule for a new password is still the inherited one: six characters or more. `bin/yooper install` asks
   for twelve. One rule for all places is still to be set.
 - The old language strings for the mailed password (`mail04_line03` to `05`, `pwreqinfo`) are unused.
