@@ -91,60 +91,86 @@ switch ($action) {
 		$QUERY_STRING = "";
 		print_header($pgv_lang['lost_pw_reset']);
 		print "<div class=\"center\">";
+		// The answer is the same whether or not there is such a user, so that it does not tell which names exist.
+		// Nothing about the account changes here: the password stays as it is until the link in the message is used.
 		$user_id=get_user_id($user_name);
 		if (!$user_id) {
-			AddToLog("New password requests for user ".$user_name." that does not exist");
-			print "<span class=\"warning\">";
-			print_text("user_not_found");
-			print "</span><br />";
+			AddToLog("New password requested for user ".$user_name." that does not exist");
+		} elseif (get_user_setting($user_id, 'email')=='') {
+			AddToLog("Unable to send a password link to user ".$user_name." because they do not have an email address");
 		} else {
-			if (get_user_setting($user_id, 'email')=='') {
-				AddToLog("Unable to send password to user ".$user_name." because they do not have an email address");
-				print "<span class=\"warning\">";
-				print_text("user_not_found");
-				print "</span><br />";
+			$reset_token=passwordReset()->request((int)$user_id, time());
+			if ($reset_token===null) {
+				AddToLog("Password link for user ".$user_name." not sent: one was sent a moment ago");
 			} else {
-				$passchars = "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-				$user_new_pw = "";
-				$max = strlen($passchars)-1;
-				for($i=0; $i<8; $i++) {
-					$index = random_int(0,$max);
-					$user_new_pw .= $passchars[$index];
-				}
-
-				set_user_password($user_id, (new \YooperGEDView\Security\PasswordHasher())->hash($user_new_pw));
-				set_user_setting($user_id, 'pwrequested', 1);
-
-				// switch language to user settings
-				$oldLanguage = $LANGUAGE;
-				if ($LANGUAGE != get_user_setting($user_id, 'language')) loadLanguage(get_user_setting($user_id, 'language'), true);
-				$newuserName=getUserFullName($user_id);
-
 				$mail_body = "";
-				$mail_body .= str_replace("#user_fullname#", $newuserName, $pgv_lang["mail04_line01"]) . "\r\n\r\n";
+				$mail_body .= str_replace("#user_fullname#", getUserFullName($user_id), $pgv_lang["mail04_line01"]) . "\r\n\r\n";
 				$mail_body .= $pgv_lang["mail04_line02"] . "\r\n\r\n";
-				$mail_body .= $pgv_lang["username"] . ": " . $user_name . "\r\n";
+				$mail_body .= $pgv_lang["username"] . ": " . $user_name . "\r\n\r\n";
+				$mail_body .= $pgv_lang["pw_reset_mail_link"] . "\r\n\r\n";
+				$mail_body .= PGV_SERVER_NAME.PGV_SCRIPT_PATH."login_register.php?action=resetpw&token=".$reset_token . "\r\n\r\n";
+				$mail_body .= $pgv_lang["pw_reset_mail_ignore"] . "\r\n";
 
-				$mail_body .= $pgv_lang["password"] . ": " . $user_new_pw . "\r\n\r\n";
-				$mail_body .= $pgv_lang["mail04_line03"] . "\r\n";
-				$mail_body .= $pgv_lang["mail04_line04"] . "\r\n\r\n";
-				$mail_body .= print_text("mail04_line05", 0, 1) . "\r\n\r\n";
-
-				if ($TEXT_DIRECTION=="rtl") $mail_body .= "<a href=\"".PGV_SERVER_NAME.PGV_SCRIPT_PATH."\">".PGV_SERVER_NAME.PGV_SCRIPT_PATH."</a>";
-				else $mail_body .= PGV_SERVER_NAME.PGV_SCRIPT_PATH;
-
+				// pgvMail() prints what went wrong, addresses included.  Here that goes to the log, not to the page.
 				require_once PGV_ROOT.'includes/functions/functions_mail.php';
-				pgvMail(get_user_setting($user_id, 'email'), $PHPGEDVIEW_EMAIL, str_replace("#SERVER_NAME#", PGV_SERVER_NAME.PGV_SCRIPT_PATH, $pgv_lang["mail04_subject"]), $mail_body);
-
-				?>
-				<table class="center facts_table">
-				<tr><td class="wrap <?php print $TEXT_DIRECTION; ?>"><?php print str_replace("#user[email]#", $user_name, $pgv_lang["pwreqinfo"]);?></td></tr>
-				</table>
-				<?php
-				AddToLog("Password request was sent to user: ".$user_name);
-
-				if ($LANGUAGE != $oldLanguage) loadLanguage($oldLanguage, true);   // Reset language
+				ob_start();
+				$mail_sent=pgvMail(get_user_setting($user_id, 'email'), $PHPGEDVIEW_EMAIL, str_replace("#SERVER_NAME#", PGV_SERVER_NAME.PGV_SCRIPT_PATH, $pgv_lang["mail04_subject"]), $mail_body);
+				$mail_errors=trim(strip_tags(html_entity_decode(ob_get_clean(), ENT_QUOTES, 'UTF-8')));
+				AddToLog($mail_sent ? "Password link was sent to user: ".$user_name : "Password link for user ".$user_name." could not be sent: ".$mail_errors);
+				unset($mail_sent, $mail_errors);
 			}
+			unset($reset_token);
+		}
+		?>
+		<table class="center facts_table">
+		<tr><td class="wrap <?php print $TEXT_DIRECTION; ?>"><?php print $pgv_lang["pw_reset_sent"];?></td></tr>
+		</table>
+		<?php
+		print "</div>";
+		break;
+
+	case "resetpw" :
+	case "setpw" :
+		// The link from the message: choose a new password.  The token works once, for an hour.
+		$QUERY_STRING = "";
+		$reset_token=($action=="setpw") ? safe_POST('token', '[0-9a-f]{64}') : safe_GET('token', '[0-9a-f]{64}');
+		$message="";
+		if ($action=="setpw" && passwordReset()->userFor((string)$reset_token, time())!==null) {
+			if (!$user_password01) {
+				$message=$pgv_lang["passwordlength"];
+			} elseif ($user_password01!=$user_password02) {
+				$message=$pgv_lang["password_mismatch"];
+			} else {
+				$user_id=passwordReset()->complete((string)$reset_token, time());
+				if ($user_id!==null) {
+					set_user_password($user_id, (new \YooperGEDView\Security\PasswordHasher())->hash($user_password01));
+					set_user_setting($user_id, 'pwrequested', '');
+					endOtherSessions($user_id);
+					AddToLog("Password of user ".get_user_name($user_id)." was changed through a link sent by mail");
+					print_header($pgv_lang['pw_reset_title']);
+					print "<div class=\"center\"><table class=\"center facts_table\"><tr><td class=\"wrap ".$TEXT_DIRECTION."\">".$pgv_lang["pw_reset_done"]."<br /><br /><a href=\"login.php\">".$pgv_lang["login"]."</a></td></tr></table></div>";
+					break;
+				}
+			}
+		}
+		print_header($pgv_lang['pw_reset_title']);
+		print "<div class=\"center\">";
+		if (passwordReset()->userFor((string)$reset_token, time())===null) {
+			print "<span class=\"warning\">".$pgv_lang["pw_reset_invalid"]."</span><br /><br /><a href=\"login_register.php?action=pwlost\">".$pgv_lang["lost_pw_reset"]."</a>";
+		} else {
+			?>
+			<form name="setpwform" action="login_register.php" method="post">
+			<input type="hidden" name="action" value="setpw" />
+			<input type="hidden" name="token" value="<?php print $reset_token; ?>" />
+			<span class="warning"><?php print $message?></span>
+			<table class="center facts_table width25">
+				<tr><td class="topbottombar" colspan="2"><?php print $pgv_lang["pw_reset_title"];?></td></tr>
+				<tr><td class="descriptionbox wrap <?php print $TEXT_DIRECTION; ?>"><?php print $pgv_lang["password"]?></td><td class="optionbox <?php print $TEXT_DIRECTION; ?>"><input type="password" name="user_password01" value="" autocomplete="new-password" /></td></tr>
+				<tr><td class="descriptionbox wrap <?php print $TEXT_DIRECTION; ?>"><?php print $pgv_lang["confirm"]?></td><td class="optionbox <?php print $TEXT_DIRECTION; ?>"><input type="password" name="user_password02" value="" autocomplete="new-password" /></td></tr>
+				<tr><td class="topbottombar" colspan="2"><input type="submit" value="<?php print $pgv_lang["pw_reset_title"]; ?>" /></td></tr>
+			</table>
+			</form>
+			<?php
 		}
 		print "</div>";
 		break;

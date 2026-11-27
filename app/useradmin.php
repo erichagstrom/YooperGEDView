@@ -151,6 +151,7 @@ if ($action=='createuser' || $action=='edituser2') {
 				// Change password
 				if ($action=='edituser2' && !empty($pass1)) {
 					set_user_password($user_id, (new \YooperGEDView\Security\PasswordHasher())->hash($pass1));
+					endOtherSessions($user_id);
 					AddToLog("User ->{$oldusername}<- had password changed");
 				}
 				// Change username

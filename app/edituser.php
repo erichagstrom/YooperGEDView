@@ -90,6 +90,7 @@ if ($form_action=='update') {
 			if (!empty($form_pass1)) {
 				AddToLog('User changed password');
 				set_user_password(PGV_USER_ID, (new \YooperGEDView\Security\PasswordHasher())->hash($form_pass1));
+				endOtherSessions(PGV_USER_ID);
 			}
 			$old_firstname=get_user_setting(PGV_USER_ID, 'firstname');
 			$old_lastname =get_user_setting(PGV_USER_ID, 'lastname');

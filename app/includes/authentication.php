@@ -84,6 +84,7 @@ function authenticateUser($user_name, $password, $basic=false) {
 				session_regenerate_id(true);
 				$_SESSION['initiated'] = true;
 				$_SESSION['last_activity'] = time();
+				$_SESSION['signed_in_at'] = time();
 				$_SESSION['pgv_user'] = $user_id;
 				$throttle->recordSuccess((string)$user_name, $remote_addr, time());
 				AddToLog(($basic ? 'Basic HTTP Authentication' :'Login'). ' Successful');
@@ -94,6 +95,28 @@ function authenticateUser($user_name, $password, $basic=false) {
 	$throttle->recordFailure((string)$user_name, $remote_addr, time());
 	AddToLog(($basic ? 'Basic HTTP Authentication' : 'Login').' Failed ->'.$user_name.'<-');
 	return false;
+}
+
+/**
+ * Requests for a new password by one-time link
+ * @return \YooperGEDView\Security\PasswordReset
+ */
+function passwordReset() {
+	global $TBLPREFIX;
+
+	return new \YooperGEDView\Security\PasswordReset(new \YooperGEDView\Security\PasswordResetRepository(PGV_DB::getPDO(), $TBLPREFIX));
+}
+
+/**
+ * Ends every session of a user that began before now: called when their password changes.
+ * The session making the change, if it is theirs, carries on.
+ * @param int $user_id
+ */
+function endOtherSessions($user_id) {
+	set_user_setting($user_id, 'sessions_valid_from', time());
+	if (getUserId()==$user_id) {
+		$_SESSION['signed_in_at'] = time();
+	}
 }
 
 /**
