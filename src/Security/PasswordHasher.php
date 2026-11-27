@@ -30,7 +30,7 @@ final class PasswordHasher
      */
     public function verify(#[SensitiveParameter] string $password, string $hash): bool
     {
-        if (!$this->isArgon2id($hash)) {
+        if (!$this->accepts($hash)) {
             password_hash($password, PASSWORD_ARGON2ID, self::OPTIONS);
 
             return false;
@@ -47,7 +47,10 @@ final class PasswordHasher
         return password_needs_rehash($hash, PASSWORD_ARGON2ID, self::OPTIONS);
     }
 
-    private function isArgon2id(string $hash): bool
+    /**
+     * True for a hash in the one format that is accepted. Any other stored value can never be signed in with.
+     */
+    public function accepts(string $hash): bool
     {
         return password_get_info($hash)['algo'] === PASSWORD_ARGON2ID;
     }

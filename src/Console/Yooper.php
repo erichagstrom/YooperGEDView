@@ -9,6 +9,8 @@ use PDOException;
 use YooperGEDView\Database\ConnectionFactory;
 use YooperGEDView\Security\PasswordHasher;
 use YooperGEDView\Security\PasswordPolicy;
+use YooperGEDView\Upgrade\LegacySiteRepository;
+use YooperGEDView\Upgrade\UpgradeFromPgv;
 use YooperGEDView\User\Administrator;
 use YooperGEDView\User\AdministratorRepository;
 use YooperGEDView\User\UserRepository;
@@ -17,6 +19,7 @@ use YooperGEDView\User\UserRepository;
  * The command-line tool, bin/yooper. "install" creates the first administrator, which the web installer used
  * to do from a page that anyone could reach first. "set-password" gives an existing user a new password, for
  * when the link by mail cannot be used: no mail set up, or an account carried over without a usable password.
+ * "upgrade-from-pgv" prepares a copy of a PhpGedView site for this program.
  */
 final readonly class Yooper
 {
@@ -27,9 +30,13 @@ final readonly class Yooper
     private const string USAGE = <<<'TEXT'
         Usage: bin/yooper install <user-name> --email=<address> [--first-name=<name>] [--last-name=<name>]
                bin/yooper set-password <user-name>
+               bin/yooper upgrade-from-pgv --index=<folder> [--apply]
 
-        install        Creates the site's first administrator.
-        set-password   Gives an existing user a new password and signs them out everywhere.
+        install            Creates the site's first administrator.
+        set-password       Gives an existing user a new password and signs them out everywhere.
+        upgrade-from-pgv   Looks over a copy of a PhpGedView 4.3.0 site (its database, and its "index" folder)
+                           and says what moving it to this program involves. With --apply it makes the
+                           changes that are needed before the program is started on it. Use a copy.
 
         The password is read from standard input, one line, so that it does not show up in the list of
         running programs or in the shell's history:
@@ -62,6 +69,7 @@ final readonly class Yooper
             $message = match ($arguments[0]) {
                 'install' => $this->install($this->administratorFrom(array_slice($arguments, 1)), $environment, $input),
                 'set-password' => $this->setPassword($this->userNameFrom(array_slice($arguments, 1)), $environment, $input),
+                'upgrade-from-pgv' => $this->upgradeFromPgv(array_slice($arguments, 1), $environment),
                 default => throw new InvalidArgumentException('Unknown command "' . $arguments[0] . '".'),
             };
         } catch (InvalidArgumentException $exception) {
@@ -124,6 +132,38 @@ final readonly class Yooper
         $users->setSetting($userId, 'session_mark', bin2hex(random_bytes(8)));
 
         return 'The password of "' . $userName . '" has been changed, and their open sessions are ended.';
+    }
+
+    /**
+     * @param list<string> $arguments
+     * @param array<string, string> $environment
+     */
+    private function upgradeFromPgv(array $arguments, array $environment): string
+    {
+        $index = null;
+        $apply = false;
+        foreach ($arguments as $argument) {
+            if ($argument === '--apply') {
+                $apply = true;
+            } elseif (str_starts_with($argument, '--index=')) {
+                $index = rtrim(substr($argument, 8), '/');
+            } else {
+                throw new InvalidArgumentException('upgrade-from-pgv takes --index=<folder> and, to make changes, --apply.');
+            }
+        }
+        if ($index === null || $index === '') {
+            throw new InvalidArgumentException('Say where the old site\'s index folder is: --index=<folder>.');
+        }
+        if (!is_dir($index)) {
+            throw new CommandFailed('There is no folder at ' . $index . '.');
+        }
+        $prefix = $this->tablePrefix($environment);
+        $database = $this->database($environment);
+        if (!(new AdministratorRepository($database, $prefix))->tablesExist()) {
+            throw new CommandFailed('The database has no user tables. Is this the database of the PhpGedView site?');
+        }
+
+        return implode("\n", (new UpgradeFromPgv(new LegacySiteRepository($database, $prefix), $index))->run($apply));
     }
 
     /**
