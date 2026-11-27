@@ -1935,7 +1935,7 @@ function print_events_list($startjd, $endjd, $events='BIRT MARR DEAT', $only_liv
 }
 
 /**
- * print a chart by age using Google chart API
+ * print a chart by age: prints nothing since the Google chart service closed
  *
  * @param array $data
  * @param string $title
@@ -1971,49 +1971,11 @@ function print_chart_by_age($data, $title) {
 	}
 	if ($count<1) return;
 	$avg = round($avg/$count);
-	$chart_url = "https://chart.apis.google.com/chart?cht=bvs"; // chart type
-	$chart_url .= "&amp;chs=725x150"; // size
-	$chart_url .= "&amp;chbh=3,2,2"; // bvg : 4,1,2
-	$chart_url .= "&amp;chf=bg,s,".$color; //background color
-	$chart_url .= "&amp;chco=0000FF,FFA0CB,FF0000"; // bar color
-	$chart_url .= "&amp;chdl=".$pgv_lang["males"]."|".$pgv_lang["females"]."|".$pgv_lang["avg_age"].": ".$avg; // legend & average age
-	$chart_url .= "&amp;chtt=".urlencode($title); // title
-	$chart_url .= "&amp;chxt=x,y,r"; // axis labels specification
-	$chart_url .= "&amp;chm=V,FF0000,0,".($avg-0.3).",1"; // average age line marker
-	$chart_url .= "&amp;chxl=0:|"; // label
-	for ($age=0; $age<=$agemax; $age+=5) {
-		$chart_url .= $age."|||||"; // x axis
-	}
-	$chart_url .= "|1:||".sprintf("%1.0f", $vmax/$count*100)." %"; // y axis
-	$chart_url .= "|2:||";
-	$step = $vmax;
-	for ($d=intval($vmax); $d>0; $d--) {
-		if ($vmax<($d*10+1) && fmod($vmax, $d)==0) $step = $d;
-	}
-	if ($step==intval($vmax)) {
-		for ($d=intval($vmax-1); $d>0; $d--) {
-			if (($vmax-1)<($d*10+1) && fmod(($vmax-1), $d)==0) $step = $d;
-		}
-	}
-	for ($n=$step; $n<$vmax; $n+=$step) {
-		$chart_url .= $n."|";
-	}
-	$chart_url .= $vmax." / ".$count; // r axis
-	$chart_url .= "&amp;chg=100,".round(100*$step/$vmax, 1).",1,5"; // grid
-	$chart_url .= "&amp;chd=s:"; // data : simple encoding from A=0 to 9=61
-	$CHART_ENCODING61 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for ($age=0; $age<=$agemax; $age++) {
-		$chart_url .= $CHART_ENCODING61[intval(substr_count($data[$age], "M")*61/$vmax)];
-	}
-	$chart_url .= ",";
-	for ($age=0; $age<=$agemax; $age++) {
-		$chart_url .= $CHART_ENCODING61[intval(substr_count($data[$age], "F")*61/$vmax)];
-	}
-	echo "<img src=\"", $chart_url, "\" alt=\"", $title, "\" title=\"", $title, "\" class=\"gchart\" />";
+	// No chart: these were pictures fetched from Google's chart service, which closed in 2019, and asking for them sent data from the tree to Google.
 }
 
 /**
- * print a chart by decade using Google chart API
+ * print a chart by decade: prints nothing since the Google chart service closed
  *
  * @param array $data
  * @param string $title
@@ -2041,43 +2003,7 @@ function print_chart_by_decade($data, $title) {
 		$count += $n;
 	}
 	if ($count<1) return;
-	$chart_url = "https://chart.apis.google.com/chart?cht=bvs"; // chart type
-	$chart_url .= "&amp;chs=360x150"; // size
-	$chart_url .= "&amp;chbh=3,3"; // bvg : 4,1,2
-	$chart_url .= "&amp;chf=bg,s,".$color; //background color
-	$chart_url .= "&amp;chco=0000FF,FFA0CB"; // bar color
-	$chart_url .= "&amp;chtt=".urlencode($title); // title
-	$chart_url .= "&amp;chxt=x,y,r"; // axis labels specification
-	$chart_url .= "&amp;chxl=0:|&lt;|||"; // <1570
-	for ($y=1600; $y<2030; $y+=50) {
-		$chart_url .= $y."|||||"; // x axis
-	}
-	$chart_url .= "|1:||".sprintf("%1.0f", $vmax/$count*100)." %"; // y axis
-	$chart_url .= "|2:||";
-	$step = $vmax;
-	for ($d=intval($vmax); $d>0; $d--) {
-		if ($vmax<($d*10+1) && fmod($vmax, $d)==0) $step = $d;
-	}
-	if ($step==intval($vmax)) {
-		for ($d=intval($vmax-1); $d>0; $d--) {
-			if (($vmax-1)<($d*10+1) && fmod(($vmax-1), $d)==0) $step = $d;
-		}
-	}
-	for ($n=$step; $n<$vmax; $n+=$step) {
-		$chart_url .= $n."|";
-	}
-	$chart_url .= $vmax." / ".$count; // r axis
-	$chart_url .= "&amp;chg=100,".round(100*$step/$vmax, 1).",1,5"; // grid
-	$chart_url .= "&amp;chd=s:"; // data : simple encoding from A=0 to 9=61
-	$CHART_ENCODING61 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for ($y=1570; $y<2030; $y+=10) {
-		$chart_url .= $CHART_ENCODING61[intval(substr_count($data[$y], "M")*61/$vmax)];
-	}
-	$chart_url .= ",";
-	for ($y=1570; $y<2030; $y+=10) {
-		$chart_url .= $CHART_ENCODING61[intval(substr_count($data[$y], "F")*61/$vmax)];
-	}
-	echo "<img src=\"", $chart_url, "\" alt=\"", $title, "\" title=\"", $title, "\" class=\"gchart\" />";
+	// No chart: these were pictures fetched from Google's chart service, which closed in 2019, and asking for them sent data from the tree to Google.
 }
 
 /**
