@@ -5,8 +5,3 @@ parameters:
     phpVersion: 80300
     paths:
         - app
-    excludePaths:
-        # Bundled third-party libraries, all replaced or removed in Phase 1.
-        - app/tcpdf/*
-        - app/includes/PHPMailer/*
-        - app/includes/pclzip.lib.php

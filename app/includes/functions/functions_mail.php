@@ -127,11 +127,13 @@ function pgvMail($to, $from, $subject, $message, $bulkMail=false, $fromFullName=
 	}
 	// if SMTP mail is set active AND we have SMTP settings available, use the PHPMailer classes
 	if ($PGV_SMTP_ACTIVE  && ( $PGV_SMTP_HOST && $PGV_SMTP_PORT ) ) {
-		require_once PGV_ROOT.'includes/PHPMailer/PHPMailerAutoload.php';
-		$mail_object = new PHPMailer();
+		if (!file_exists(PGV_ROOT.'../vendor/autoload.php')) {
+			die('Libraries are missing. Run "composer install" in the folder above the program.');
+		}
+		require_once PGV_ROOT.'../vendor/autoload.php';
+		$mail_object = new \PHPMailer\PHPMailer\PHPMailer();
 		$mail_object->IsSMTP();
 		$mail_object->SetLanguage('en','');		// PHPMailer errors are in English only
-		$mail_object->ShowWikiURL = false;		// Don't show Wiki URL on PHPMailer connect errors
 		if ( $PGV_SMTP_AUTH && ( $PGV_SMTP_AUTH_USER && $PGV_SMTP_AUTH_PASS ) ) {
 			$mail_object->SMTPAuth = $PGV_SMTP_AUTH;
 			$mail_object->Username = $PGV_SMTP_AUTH_USER;

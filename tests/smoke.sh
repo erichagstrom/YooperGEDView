@@ -13,7 +13,7 @@ server=$!
 trap 'kill $server 2>/dev/null; rm -rf "$work"' EXIT
 for _ in $(seq 50); do curl -s -o /dev/null "$base/GPL.txt" && break; sleep 0.2; done
 
-if ! php "$here/provision.php" "$base" "$work/site"; then
+if ! php "$here/provision.php" "$base" "$work/site/app"; then
   echo "FAIL  provisioning"
   exit 1
 fi
@@ -59,6 +59,16 @@ for report in "$here"/../app/reports/*.xml; do
   check admin "reportengine.php?action=run&report=reports/$(basename "$report")&$report_options"
 done
 expect admin "reportengine.php?action=run&report=reports/individual.xml&$report_options" has "Kivela"
+
+# A report as a PDF file. Needs Composer's libraries (composer install).
+if [ -f "$here/../vendor/autoload.php" ]; then
+  pdf_options=${report_options/output=HTML/output=PDF}
+  curl -s -g -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/report.pdf" "$base/reportengine.php?action=run&report=reports/individual.xml&$pdf_options"
+  if [ "$(head -c 5 "$work/report.pdf")" = "%PDF-" ]; then pass=$((pass + 1)); echo "PASS  admin  individual report as PDF"
+  else fail=$((fail + 1)); echo "FAIL  admin  individual report as PDF: $(head -c 300 "$work/report.pdf" | tr -d '\n')"; fi
+else
+  echo "SKIP  admin  individual report as PDF (no vendor/ folder: run composer install)"
+fi
 
 # Exports: a full GEDCOM for the administrator, and living people's details left out of a "visitor" export.
 export="downloadgedcom.php?action=download&ged=sample.ged&filetype=gedcom"

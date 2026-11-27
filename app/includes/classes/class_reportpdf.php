@@ -39,7 +39,10 @@ if (!defined('PGV_PHPGEDVIEW')) {
 define('PGV_CLASS_REPORTPDF_PHP', '');
 
 require_once PGV_ROOT."includes/classes/class_reportbase.php";
-require_once PGV_ROOT."tcpdf/tcpdf.php";
+if (!file_exists(PGV_ROOT.'../vendor/autoload.php')) {
+	die('Libraries are missing. Run "composer install" in the folder above the program.');
+}
+require_once PGV_ROOT.'../vendor/autoload.php';
 
 /**
 * Main PGV Report Class for PDF
