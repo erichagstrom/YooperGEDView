@@ -114,4 +114,5 @@
 2 PLAC Marquette, Marquette, Michigan, USA
 0 @S1@ SOUR
 1 TITL Parish register (invented for tests)
+1 AUTH The clerk {${print(31337*31337)}}
 0 TRLR

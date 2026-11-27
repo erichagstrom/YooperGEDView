@@ -86,13 +86,18 @@ expect visitor "family.php?famid=F3" lacks "June 1970"
 expect visitor "admin.php" lacks "useradmin.php"
 
 # Every report, as a web page.
-report_options="output=HTML&vars[pid]=I1&vars[famid]=F1&vars[sources]=on&vars[notes]=on&vars[pageSize]=A4&vars[maxgen]=3&vars[fonts]=dejavusans"
+report_options="output=HTML&vars[pid]=I1&vars[famid]=F1&vars[sources]=1&vars[notes]=1&vars[pageSize]=A4&vars[maxgen]=3&vars[fonts]=dejavusans"
 report_options="$report_options&vars[name]=&vars[sortby]=NAME&vars[relatives]=child-family&type[pid]=INDI&type[famid]=FAM"
 for name in pid famid sources notes pageSize maxgen fonts name sortby relatives; do report_options="$report_options&varnames[]=$name"; done
 for report in "$here"/../app/reports/*.xml; do
   check admin "reportengine.php?action=run&report=reports/$(basename "$report")&$report_options"
 done
 expect admin "reportengine.php?action=run&report=reports/individual.xml&$report_options" has "Kivela"
+# The sample tree's source has an author written to run as PHP if a report ever makes it part of a line of code.
+# The family report tests that author in a condition. The text must come out as it was written, and not as
+# 982007569, the number it would print if it ran.
+expect admin "reportengine.php?action=run&report=reports/familygroup.xml&$report_options" has "The clerk"
+expect admin "reportengine.php?action=run&report=reports/familygroup.xml&$report_options" lacks "982007569"
 
 # A report as a PDF file.
 pdf_options=${report_options/output=HTML/output=PDF}
