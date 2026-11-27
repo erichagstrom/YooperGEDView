@@ -69,6 +69,7 @@ Left over from Phase 1:
 - [ ] Comparisons that changed meaning in PHP 8 (see "Known risk" in `DECISIONS.md`); needs the reference site
 - [ ] PHPStan baseline for `app/`, then make that check blocking
 - [x] `bin/yooper install` creates the first administrator, so the container image can set up a new site without the web installer
+- [x] Behind a reverse proxy, the container image takes the visitor's address and HTTPS from the proxy, and from nobody else
 - [ ] Pin the base images by digest
 
 ### Phase 2. Security core

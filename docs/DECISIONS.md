@@ -211,11 +211,22 @@ why, and what the alternative was.
     the command to run). Alternative: a styled page, which would need the theme code to run on a site that may
     have no database.
 
+56. **The container image believes one address about who the visitor is: `TRUSTED_PROXY`.** A reverse proxy in
+    front of the site passes the visitor's address in `X-Forwarded-For` and whether they used HTTPS in
+    `X-Forwarded-Proto`. Apache (`mod_remoteip`) takes these only from requests that arrive from that address
+    or range, and ignores them from anyone else, because a visitor can write the same headers. The default is
+    the container itself, so a site with no proxy believes nobody. This closes the gap in 32: without it, all
+    visitors behind a proxy shared one address and one sign-in limit.
+57. **HTTPS at the proxy counts as HTTPS.** With the proxy's word, the session cookie is marked Secure, the
+    browser is told to keep to HTTPS, and the program builds `https://` links. Without this a site behind a
+    proxy that ends TLS would send its cookie unprotected and redirect to `http://` addresses.
+58. **This is Apache configuration in the image, not program code.** A site on another web server must set up
+    the same thing there. The program reads only what the web server tells it.
+
 ### Left for later in Phase 2
 - Help texts and language strings for the deleted pages are still in the language files.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
-- The container image does not restore the client address behind a proxy (see 32).
 - "Lost password" still mails a new password. It should mail a one-time link instead.
 - Changing a password does not end that user's other sessions.
 - Basic HTTP authentication (`?auth=basic`) is still there. It now shares the limit on failed attempts.
