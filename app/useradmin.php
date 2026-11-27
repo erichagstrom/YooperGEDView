@@ -262,7 +262,7 @@ if ($action=="edituser") {
 			frm.firstname.focus();
 			return false;
 		}
-		if ((frm.pass1.value!="")&&(frm.pass1.value.length < 6)) {
+		if ((frm.pass1.value!="")&&(frm.pass1.value.length < <?php echo \YooperGEDView\Security\PasswordPolicy::MIN_LENGTH; ?>)) {
 			alert("<?php echo $pgv_lang["passwordlength"]; ?>");
 			frm.pass1.value = "";
 			frm.pass2.value = "";
@@ -748,7 +748,7 @@ if ($action == "createform") {
 				frm.pass2.focus();
 				return false;
 			}
-			if (frm.pass1.value.length < 6) {
+			if (frm.pass1.value.length < <?php echo \YooperGEDView\Security\PasswordPolicy::MIN_LENGTH; ?>) {
 				alert("<?php echo $pgv_lang["passwordlength"]; ?>");
 				frm.pass1.value = "";
 				frm.pass2.value = "";

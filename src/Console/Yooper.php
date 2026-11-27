@@ -8,12 +8,15 @@ use InvalidArgumentException;
 use PDOException;
 use YooperGEDView\Database\ConnectionFactory;
 use YooperGEDView\Security\PasswordHasher;
+use YooperGEDView\Security\PasswordPolicy;
 use YooperGEDView\User\Administrator;
 use YooperGEDView\User\AdministratorRepository;
+use YooperGEDView\User\UserRepository;
 
 /**
- * The command-line tool, bin/yooper. One command so far: "install" creates the first administrator, which the
- * web installer used to do from a page that anyone could reach first.
+ * The command-line tool, bin/yooper. "install" creates the first administrator, which the web installer used
+ * to do from a page that anyone could reach first. "set-password" gives an existing user a new password, for
+ * when the link by mail cannot be used: no mail set up, or an account carried over without a usable password.
  */
 final readonly class Yooper
 {
@@ -21,13 +24,15 @@ final readonly class Yooper
     public const int FAILED = 1;
     public const int WRONG_USE = 2;
 
-    private const int SHORTEST_PASSWORD = 12;
-
     private const string USAGE = <<<'TEXT'
         Usage: bin/yooper install <user-name> --email=<address> [--first-name=<name>] [--last-name=<name>]
+               bin/yooper set-password <user-name>
 
-        Creates the site's first administrator. The password is read from standard input, one line, so that
-        it does not show up in the list of running programs or in the shell's history:
+        install        Creates the site's first administrator.
+        set-password   Gives an existing user a new password and signs them out everywhere.
+
+        The password is read from standard input, one line, so that it does not show up in the list of
+        running programs or in the shell's history:
 
             bin/yooper install anna --email=anna@example.org < password-file
 
@@ -52,49 +57,18 @@ final readonly class Yooper
 
             return $arguments === [] ? self::WRONG_USE : self::OK;
         }
-        if ($arguments[0] !== 'install') {
-            fwrite($errors, 'Unknown command "' . $arguments[0] . "\".\n\n" . self::USAGE);
-
-            return self::WRONG_USE;
-        }
 
         try {
-            $administrator = $this->administratorFrom(array_slice($arguments, 1));
+            $message = match ($arguments[0]) {
+                'install' => $this->install($this->administratorFrom(array_slice($arguments, 1)), $environment, $input),
+                'set-password' => $this->setPassword($this->userNameFrom(array_slice($arguments, 1)), $environment, $input),
+                default => throw new InvalidArgumentException('Unknown command "' . $arguments[0] . '".'),
+            };
         } catch (InvalidArgumentException $exception) {
             fwrite($errors, $exception->getMessage() . "\n\n" . self::USAGE);
 
             return self::WRONG_USE;
-        }
-
-        try {
-            $repository = new AdministratorRepository(
-                (new ConnectionFactory())->fromEnvironment($environment),
-                $environment['DB_PREFIX'] ?? 'pgv_',
-            );
-            if (!$repository->tablesExist()) {
-                fwrite($errors, "The database has no tables yet. Open the site in a browser once, then run this again.\n");
-
-                return self::FAILED;
-            }
-            if ($repository->administratorExists()) {
-                fwrite($errors, "This site already has an administrator. Further ones are added on the site's own pages.\n");
-
-                return self::FAILED;
-            }
-            if ($repository->userNameIsTaken($administrator->userName)) {
-                fwrite($errors, 'There is already a user called "' . $administrator->userName . "\".\n");
-
-                return self::FAILED;
-            }
-            $line = fgets($input);
-            $password = $line === false ? '' : rtrim($line, "\r\n");
-            if (mb_strlen($password) < self::SHORTEST_PASSWORD) {
-                fwrite($errors, 'The password on standard input must be at least ' . self::SHORTEST_PASSWORD . " characters.\n");
-
-                return self::FAILED;
-            }
-            $repository->create($administrator, (new PasswordHasher())->hash($password), $this->now);
-        } catch (InvalidArgumentException $exception) {
+        } catch (CommandFailed $exception) {
             fwrite($errors, $exception->getMessage() . "\n");
 
             return self::FAILED;
@@ -103,10 +77,105 @@ final readonly class Yooper
 
             return self::FAILED;
         }
-
-        fwrite($output, 'Administrator "' . $administrator->userName . "\" created. Sign in on the site to add a family tree.\n");
+        fwrite($output, $message . "\n");
 
         return self::OK;
+    }
+
+    /**
+     * @param array<string, string> $environment
+     * @param resource $input
+     */
+    private function install(Administrator $administrator, array $environment, $input): string
+    {
+        $repository = new AdministratorRepository($this->database($environment), $this->tablePrefix($environment));
+        if (!$repository->tablesExist()) {
+            throw new CommandFailed('The database has no tables yet. Open the site in a browser once, then run this again.');
+        }
+        if ($repository->administratorExists()) {
+            throw new CommandFailed("This site already has an administrator. Further ones are added on the site's own pages.");
+        }
+        if ($repository->userNameIsTaken($administrator->userName)) {
+            throw new CommandFailed('There is already a user called "' . $administrator->userName . '".');
+        }
+        $repository->create($administrator, (new PasswordHasher())->hash($this->passwordFrom($input)), $this->now);
+
+        return 'Administrator "' . $administrator->userName . '" created. Sign in on the site to add a family tree.';
+    }
+
+    /**
+     * @param array<string, string> $environment
+     * @param resource $input
+     */
+    private function setPassword(string $userName, array $environment, $input): string
+    {
+        $prefix = $this->tablePrefix($environment);
+        $database = $this->database($environment);
+        if (!(new AdministratorRepository($database, $prefix))->tablesExist()) {
+            throw new CommandFailed('The database has no tables yet. Open the site in a browser once, then run this again.');
+        }
+        $users = new UserRepository($database, $prefix);
+        $userId = $users->idOf($userName);
+        if ($userId === null) {
+            throw new CommandFailed('There is no user called "' . $userName . '".');
+        }
+        $users->setPasswordHash($userId, (new PasswordHasher())->hash($this->passwordFrom($input)));
+        // A new mark ends every session the user has open: see endOtherSessions() in the program.
+        $users->setSetting($userId, 'session_mark', bin2hex(random_bytes(8)));
+
+        return 'The password of "' . $userName . '" has been changed, and their open sessions are ended.';
+    }
+
+    /**
+     * @param array<string, string> $environment
+     */
+    private function database(array $environment): \PDO
+    {
+        try {
+            return (new ConnectionFactory())->fromEnvironment($environment);
+        } catch (InvalidArgumentException $exception) {
+            throw new CommandFailed($exception->getMessage(), 0, $exception);
+        }
+    }
+
+    /**
+     * @param array<string, string> $environment
+     */
+    private function tablePrefix(array $environment): string
+    {
+        $prefix = $environment['DB_PREFIX'] ?? 'pgv_';
+        if (preg_match('/^[A-Za-z0-9_]*$/', $prefix) !== 1) {
+            throw new CommandFailed('A table prefix may hold only letters, digits and underscores. Check DB_PREFIX.');
+        }
+
+        return $prefix;
+    }
+
+    /**
+     * @param resource $input
+     */
+    private function passwordFrom($input): string
+    {
+        $line = fgets($input);
+        $password = $line === false ? '' : rtrim($line, "\r\n");
+        $refusal = (new PasswordPolicy())->refusal($password);
+        if ($refusal !== null) {
+            throw new CommandFailed($refusal . ' It is read from standard input.');
+        }
+
+        return $password;
+    }
+
+    /**
+     * @param list<string> $arguments
+     */
+    private function userNameFrom(array $arguments): string
+    {
+        if (count($arguments) !== 1 || str_starts_with($arguments[0], '--')) {
+            throw new InvalidArgumentException('set-password takes one user name and nothing else.');
+        }
+
+        return $arguments[0];
     }
 
     /**

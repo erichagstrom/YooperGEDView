@@ -178,7 +178,7 @@ function checkform(frm) {
 		frm.form_pass1.focus();
 		return false;
 	}
-	if (frm.form_pass1.value.length > 0 && frm.form_pass1.value.length < 6) {
+	if (frm.form_pass1.value.length > 0 && frm.form_pass1.value.length < <?php echo \YooperGEDView\Security\PasswordPolicy::MIN_LENGTH; ?>) {
 		alert("<?php print $pgv_lang['passwordlength'];?>");
 		frm.form_pass1.focus();
 		return false;

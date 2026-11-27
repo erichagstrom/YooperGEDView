@@ -86,6 +86,7 @@ Left over from Phase 1:
 - [x] Pending edits are no longer a PHP file that is run: they are kept as data (`pgv_changes.json`)
 - [ ] Settings out of PHP files: secrets from the environment, the rest in the database. Pending edits into a table. `unserialize` replaced by JSON
 - [x] `bin/yooper install` replaces the web installer for creating the first administrator
+- [x] One rule for a new password in every place it can be set (12 characters); `bin/yooper set-password` for when the link by mail cannot be used
 - [x] Delete `dir_editor.php`, `editlang*.php`, `pgvinfo.php`, `config_download.php`, `install.php`, `usermigrate*.php` (and `changelanguage.php`, which depended on them)
 - [x] Uploads: every file checked by name and by content before any page sees it
 - [ ] Uploads: random stored names, media kept outside the web root and served only through the access check
@@ -126,7 +127,7 @@ behind a reverse proxy with TLS. Phase 3 is the largest piece of work by far. Ro
 ## Upgrade path from PhpGedView 4.3.0
 Goal: anyone with a PhpGedView 4.3.0 site gets to YooperGEDView with one command and no hand editing.
 
-- One command-line tool, `bin/yooper`, with `install` (new site) and `upgrade-from-pgv` (existing site). No web installer: it was one of the weak points.
+- One command-line tool, `bin/yooper`, with `install` (new site), `set-password` (an account whose password cannot be reset by mail) and `upgrade-from-pgv` (existing site, to be written). No web installer: it was one of the weak points.
 - `upgrade-from-pgv` takes the old database and the old `index/` folder and:
   - checks first and changes nothing if anything is unreadable (dry run by default, with a report)
   - keeps the old `pgv_` tables as they are and writes new ones, so going back is possible
@@ -146,7 +147,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 205 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 208 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |

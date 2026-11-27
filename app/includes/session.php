@@ -66,7 +66,6 @@ define('PGV_REGEX_ALPHA',    '[a-zA-Z]+');
 define('PGV_REGEX_ALPHANUM', '[a-zA-Z0-9]+');
 define('PGV_REGEX_BYTES',    '[0-9]+[bBkKmMgG]?');
 define('PGV_REGEX_USERNAME', '[^<>"%{};]+');
-define('PGV_REGEX_PASSWORD', '.{6,}');
 define('PGV_REGEX_NOSCRIPT', '[^<>"&%{};]+');
 define('PGV_REGEX_URL',      '[\/0-9A-Za-z_!~*\'().;?:@&=+$,%#-]+'); // Simple list of valid chars
 define('PGV_REGEX_EMAIL',    '[^\s<>"&%{};@]+@[^\s<>"&%{};@]+');
@@ -300,6 +299,9 @@ if (!file_exists(PGV_ROOT.'../vendor/autoload.php')) {
 	die('Libraries are missing. Run "composer install" in the folder above the program.');
 }
 require_once PGV_ROOT.'../vendor/autoload.php';
+
+// A new password must be this long, wherever it is set (PasswordPolicy).  Not used for signing in.
+define('PGV_REGEX_PASSWORD', '.{'.\YooperGEDView\Security\PasswordPolicy::MIN_LENGTH.','.\YooperGEDView\Security\PasswordPolicy::MAX_LENGTH.'}');
 
 // What the browser may do with pages from this site (SecurityHeaders)
 foreach ((new \YooperGEDView\Security\SecurityHeaders())->forPage(strpos(PGV_SERVER_NAME, 'https://')===0) as $security_header_name=>$security_header_value) {

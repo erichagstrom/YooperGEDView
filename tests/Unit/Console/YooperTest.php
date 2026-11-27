@@ -8,16 +8,22 @@ use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use YooperGEDView\Console\CommandFailed;
 use YooperGEDView\Console\Yooper;
 use YooperGEDView\Database\ConnectionFactory;
 use YooperGEDView\Security\PasswordHasher;
+use YooperGEDView\Security\PasswordPolicy;
 use YooperGEDView\User\Administrator;
 use YooperGEDView\User\AdministratorRepository;
+use YooperGEDView\User\UserRepository;
 
 #[CoversClass(Yooper::class)]
 #[CoversClass(ConnectionFactory::class)]
 #[CoversClass(Administrator::class)]
 #[CoversClass(AdministratorRepository::class)]
+#[CoversClass(UserRepository::class)]
+#[CoversClass(PasswordPolicy::class)]
+#[CoversClass(CommandFailed::class)]
 final class YooperTest extends TestCase
 {
     private const string PASSWORD = 'a long enough password';
@@ -163,6 +169,7 @@ final class YooperTest extends TestCase
         self::assertSame(Yooper::FAILED, $this->yooper(['install', 'anna', '--email=anna@example.org'], ''));
 
         self::assertStringContainsString('at least 12 characters', $this->errors);
+        self::assertStringContainsString('standard input', $this->errors);
         $count = $database->query('SELECT COUNT(*) FROM pgv_user');
         self::assertNotFalse($count);
         self::assertSame(0, (int) $count->fetchColumn());
@@ -246,5 +253,92 @@ final class YooperTest extends TestCase
 
         self::assertSame(Yooper::FAILED, $this->yooper(['install', 'anna', '--email=anna@example.org'], self::PASSWORD . "\n", $environment));
         self::assertStringContainsString('no tables yet', $this->errors);
+    }
+
+    private function storedHash(PDO $database, string $userName): string
+    {
+        $hash = $database->prepare('SELECT password FROM pgv_user WHERE user_name = ?');
+        $hash->execute([$userName]);
+
+        return (string) $hash->fetchColumn();
+    }
+
+    public function testSetPasswordReplacesAPasswordStoredTheOldWay(): void
+    {
+        $database = $this->database();
+        $database->exec("INSERT INTO pgv_user (user_name, password) VALUES ('anna', '\$1\$padpadpa\$oldmd5hash')");
+        $database->exec("INSERT INTO pgv_user (user_name, password) VALUES ('bertil', 'untouched')");
+
+        $code = $this->yooper(['set-password', 'anna']);
+
+        self::assertSame(Yooper::OK, $code, $this->errors);
+        self::assertStringContainsString('The password of "anna" has been changed', $this->output);
+        self::assertTrue((new PasswordHasher())->verify(self::PASSWORD, $this->storedHash($database, 'anna')));
+        self::assertSame('untouched', $this->storedHash($database, 'bertil'));
+        self::assertStringNotContainsString(self::PASSWORD, $this->output . $this->errors);
+    }
+
+    public function testSetPasswordGivesTheUserANewSessionMarkEachTime(): void
+    {
+        $database = $this->database();
+        $database->exec("INSERT INTO pgv_user (user_name, password) VALUES ('anna', 'x')");
+        $database->exec("INSERT INTO pgv_user_setting (user_id, setting_name, setting_value) VALUES (1, 'session_mark', 'before')");
+        $database->exec("INSERT INTO pgv_user_setting (user_id, setting_name, setting_value) VALUES (1, 'email', 'anna@example.org')");
+
+        self::assertSame(Yooper::OK, $this->yooper(['set-password', 'anna']));
+        $first = $this->settings($database)['session_mark'];
+        self::assertSame(Yooper::OK, $this->yooper(['set-password', 'anna']));
+        $second = $this->settings($database);
+
+        self::assertMatchesRegularExpression('/^[0-9a-f]{16}$/', $first);
+        self::assertNotSame('before', $first);
+        self::assertNotSame($first, $second['session_mark']);
+        self::assertSame('anna@example.org', $second['email']);
+        self::assertCount(2, $second);
+    }
+
+    public function testSetPasswordForAUserWhoIsNotThere(): void
+    {
+        $this->database();
+
+        self::assertSame(Yooper::FAILED, $this->yooper(['set-password', 'nobody']));
+        self::assertStringContainsString('There is no user called "nobody"', $this->errors);
+    }
+
+    public function testSetPasswordRefusesAShortPasswordAndChangesNothing(): void
+    {
+        $database = $this->database();
+        $database->exec("INSERT INTO pgv_user (user_name, password) VALUES ('anna', 'as-it-was')");
+
+        self::assertSame(Yooper::FAILED, $this->yooper(['set-password', 'anna'], "too short\n"));
+
+        self::assertStringContainsString('at least 12 characters', $this->errors);
+        self::assertSame('as-it-was', $this->storedHash($database, 'anna'));
+        self::assertArrayNotHasKey('session_mark', $this->settings($database));
+    }
+
+    public function testSetPasswordTakesOneUserNameOnly(): void
+    {
+        self::assertSame(Yooper::WRONG_USE, $this->yooper(['set-password'], self::PASSWORD . "\n", []));
+        self::assertSame(Yooper::WRONG_USE, $this->yooper(['set-password', 'anna', 'bertil'], self::PASSWORD . "\n", []));
+        self::assertSame(Yooper::WRONG_USE, $this->yooper(['set-password', '--email=a@example.org'], self::PASSWORD . "\n", []));
+        self::assertStringContainsString('one user name and nothing else', $this->errors);
+    }
+
+    public function testAPasswordLongerThanAThousandCharactersIsRefused(): void
+    {
+        $this->database();
+
+        self::assertSame(Yooper::FAILED, $this->yooper(['install', 'anna', '--email=anna@example.org'], str_repeat('a', 1001) . "\n"));
+        self::assertStringContainsString('at most 1000 characters', $this->errors);
+    }
+
+    public function testPasswordLengthIsCountedInCharactersNotBytes(): void
+    {
+        $policy = new PasswordPolicy();
+
+        self::assertNotNull($policy->refusal('ääääääääööö'));
+        self::assertNull($policy->refusal('ääääääääöööö'));
+        self::assertNull($policy->refusal(str_repeat('a', 1000)));
     }
 }

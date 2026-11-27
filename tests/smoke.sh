@@ -297,6 +297,8 @@ else result other "asking again straight away sends no second message"; fi
 curl -s -o "$work/body" -A "$agent" -b "$work/lost" -c "$work/lost" "$base/$link"
 if [ -n "$link" ] && grep -a -q 'name="user_password01"' "$work/body"; then result ok "the link in the message offers a new password"
 else result other "the link in the message offers a new password"; fi
+choose_password "${link##*=}" "short-one-1" "short-one-1"
+if grep -a -q "at least 12 characters" "$work/body"; then result ok "a new password shorter than twelve characters is refused"; else result other "a new password shorter than twelve characters is refused"; fi
 choose_password "${link##*=}" "a-new-password-1" "a-different-one-2"
 if grep -a -q "Passwords do not match" "$work/body"; then result ok "two different new passwords are refused"; else result other "two different new passwords are refused"; fi
 choose_password "$(printf 'a%.0s' $(seq 64))" "a-new-password-1" "a-new-password-1"
@@ -310,6 +312,14 @@ sign_in "$work/old" admin "test-admin-password"
 if signed_in "$work/old"; then result other "the old password no longer works"; else result ok "the old password no longer works"; fi
 sign_in "$work/new" admin "a-new-password-1"
 if signed_in "$work/new"; then result ok "the new password works"; else result other "the new password works"; fi
+
+# An administrator who cannot get the link by mail sets the password on the server instead.
+sign_in "$work/before-command" admin "a-new-password-1"
+if echo "set-on-the-command-line" | DB_TYPE=sqlite DB_NAME="$work/site/app/index/test.sqlite" "$here/../bin/yooper" set-password admin > /dev/null; then result ok "bin/yooper set-password runs"
+else result other "bin/yooper set-password runs"; fi
+sign_in "$work/after-command" admin "set-on-the-command-line"
+if signed_in "$work/after-command" && ! signed_in "$work/before-command"; then result ok "the password set on the command line works, and sessions from before it are ended"
+else result other "the password set on the command line works, and sessions from before it are ended"; fi
 
 # Repeat the failures at the end, where they are easy to find.
 grep "^FAIL" "$log" || true
