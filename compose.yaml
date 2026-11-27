@@ -1,0 +1,50 @@
+# Development stack: the program on PHP 8.3 with MariaDB. Listens on localhost only.
+# Copy .env.example to .env and set the two passwords first.
+name: yoopergedview
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: yoopergedview
+      MARIADB_USER: yoopergedview
+      MARIADB_PASSWORD: ${DB_PASSWORD:?}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [backend]
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: yoopergedview
+      DB_USER: yoopergedview
+      DB_PASSWORD: ${DB_PASSWORD:?}
+    volumes:
+      - index-data:/var/www/yooper/app/index
+      - media-data:/var/www/yooper/app/media
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
+    security_opt: [no-new-privileges:true]
+    networks: [backend, frontend]
+
+networks:
+  backend:
+    internal: true
+  frontend:
+
+volumes:
+  db-data:
+  index-data:
+  media-data:

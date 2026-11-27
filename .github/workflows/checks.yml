@@ -45,3 +45,30 @@ jobs:
           coverage: none
       - run: composer install --no-dev --no-interaction --no-progress
       - run: tests/smoke.sh
+
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - run: cp .env.example .env
+      - run: docker compose up --build --detach --wait --wait-timeout 300
+      - name: Static file is served, settings folder and installer are not
+        run: |
+          set -eu
+          status() { curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080/$1"; }
+          test "$(status GPL.txt)" = 200
+          test "$(status index/index.php)" = 403
+          test "$(status includes/session.php)" = 403
+          test "$(status install.php)" = 403
+      - name: The program starts and reaches the database
+        run: |
+          set -eu
+          curl -s -D headers.txt -o body.txt -A "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" http://127.0.0.1:8080/index.php
+          cat headers.txt
+          ! grep -E 'Fatal error|Warning|Deprecated' body.txt
+          grep -qi '^location: install.php' headers.txt
+          docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u"$MARIADB_USER" "$MARIADB_DATABASE" -e "SHOW TABLES"' | grep -q pgv_user
+      - if: failure()
+        run: docker compose logs --tail 80
