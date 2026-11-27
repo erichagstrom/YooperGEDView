@@ -291,6 +291,12 @@ if (!file_exists(PGV_ROOT.'../vendor/autoload.php')) {
 }
 require_once PGV_ROOT.'../vendor/autoload.php';
 
+// What the browser may do with pages from this site (SecurityHeaders)
+foreach ((new \YooperGEDView\Security\SecurityHeaders())->forPage(strpos(PGV_SERVER_NAME, 'https://')===0) as $security_header_name=>$security_header_value) {
+	header($security_header_name.': '.$security_header_value);
+}
+unset($security_header_name, $security_header_value);
+
 // The authentication interface includes logging - which may be to the database
 require_once PGV_ROOT.'includes/authentication.php';
 

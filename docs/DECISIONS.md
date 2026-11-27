@@ -140,7 +140,29 @@ why, and what the alternative was.
     it. The host name compared with `Referer` is the one in the request, so a reverse proxy must pass the
     public host name on.
 
+41. **The program sends its own security headers** (`YooperGEDView\Security\SecurityHeaders`), so they apply
+    under any web server: Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
+    and Strict-Transport-Security when the site is reached over HTTPS (one year, this host only). Apache still
+    sets three of them for the files it serves itself, and drops the program's copies so none goes out twice.
+42. **The content security policy keeps everything on this site but cannot yet forbid inline code.** Scripts,
+    styles, images, frames, plug-ins and form targets must come from the site itself. `'unsafe-inline'` and
+    `'unsafe-eval'` stay for scripts, because the inherited pages write scripts and event handlers into the HTML
+    and Prototype runs code from text; so the policy does not stop a script injected into a page. What it does
+    stop: loading scripts from elsewhere, forms posting elsewhere, a changed base address, framing by other
+    sites. The policy was tried in a real browser on the 113 pages of the smoke test.
+43. **Found by that trial: the statistics charts sent data from the tree to Google.** Six kinds of page
+    (statistics, individual and family lists, source pages) asked `chart.apis.google.com` for chart images, with
+    surnames, given names, couples' names and counts in the address. Google closed that service in 2019, so
+    the charts were already broken pictures; the requests were still being made. The policy now stops the
+    browser from making them. The code that builds those addresses is still there and should be removed or
+    replaced with charts drawn on the site.
+44. **No other site is allowed, so the two features that load from elsewhere stop working:** the ClustrMaps
+    visitor map in the page footer (off unless configured) and the Google translation helper in the language
+    editor. Add-on modules that load from other sites, such as a maps module, would be stopped too. A site
+    that wants one back must add its host to the policy. Ordinary links to other sites are not affected.
+
 ### Left for later in Phase 2
+- The chart code still builds addresses at Google from tree data (see 43).
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).

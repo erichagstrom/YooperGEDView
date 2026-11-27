@@ -72,6 +72,12 @@ jobs:
           head -c 600 body.txt
           if grep -E 'Fatal error|Warning|Deprecated|ERROR [0-9]+:' body.txt; then echo "PHP errors on the page"; exit 1; fi
           grep -qi '^location: install.php' headers.txt || { echo "expected a redirect to the installer"; exit 1; }
+          # The program and Apache both know these headers: each must go out exactly once.
+          for name in Content-Security-Policy X-Content-Type-Options X-Frame-Options Referrer-Policy; do
+            test "$(grep -ic "^$name:" headers.txt)" = 1 || { echo "expected one $name header on a page"; exit 1; }
+          done
+          curl -s -D static-headers.txt -o /dev/null http://127.0.0.1:8080/GPL.txt
+          test "$(grep -ic '^X-Content-Type-Options:' static-headers.txt)" = 1 || { echo "expected one X-Content-Type-Options header on a static file"; exit 1; }
           docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u"$MARIADB_USER" "$MARIADB_DATABASE" -e "SHOW TABLES"' > tables.txt
           grep -q pgv_user tables.txt || { echo "the program did not create its tables"; cat tables.txt; exit 1; }
       # The unit and smoke tests run on SQLite. This runs the same sign-in queries on MariaDB.
