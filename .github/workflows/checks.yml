@@ -88,10 +88,15 @@ jobs:
             curl -s -o body.txt -A "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" \
               --data "action=login&url=index.php&username=ci-admin&password=wrong-password" http://127.0.0.1:8080/login.php
           }
+          # What the page said and what was recorded, for when a check below fails.
+          explain() {
+            grep -o "class='error'.\{0,200\}" body.txt || echo "no message on the page ($(wc -c < body.txt) bytes)"
+            echo "SELECT * FROM pgv_sign_in_attempt" | sql
+          }
           for _ in $(seq 10); do sign_in; done
-          grep -q "Unable to authenticate" body.txt || { echo "expected an ordinary refusal on the tenth attempt"; head -c 600 body.txt; exit 1; }
+          grep -q "Unable to authenticate" body.txt || { echo "expected an ordinary refusal on the tenth attempt"; explain; exit 1; }
           sign_in
-          grep -q "Too many failed attempts" body.txt || { echo "expected the eleventh attempt to be refused by the limit"; head -c 600 body.txt; exit 1; }
+          grep -q "Too many failed attempts" body.txt || { echo "expected the eleventh attempt to be refused by the limit"; explain; exit 1; }
           count=$(echo "SELECT COUNT(*) FROM pgv_sign_in_attempt WHERE user_name = 'ci-admin' AND success = 0" | sql)
           test "$count" = 10 || { echo "expected 10 recorded failures, found $count"; exit 1; }
       - if: failure()
