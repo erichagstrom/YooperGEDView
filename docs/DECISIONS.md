@@ -332,6 +332,37 @@ why, and what the alternative was.
     and above all the administrator of a site just moved from PhpGedView, whose old password no longer
     works. Like `install`, it reads the password from standard input.
 
+## Upgrade path
+
+85. **`bin/yooper upgrade-from-pgv --index=<folder> [--apply]`** (`YooperGEDView\Upgrade\UpgradeFromPgv`) looks
+    over a copy of a PhpGedView 4.3.0 site and reports; with `--apply` it makes the changes that must be made
+    before this program is started on that copy. It came before the rest of the hardening because three ways
+    to run code on the server were found in 4.3.0 (65, 74, 79), and a fix helps a site only once the site
+    runs it.
+86. **It works in place, on a copy.** The roadmap had it keep the old tables and write new ones beside them.
+    This program still uses the same tables as PhpGedView, so there is nothing to write beside: the copy is
+    what makes going back possible. The command says "use a copy" and cannot check that it is one.
+87. **Old password hashes are removed, not just left unused.** They no longer sign anyone in (23), but an
+    MD5-crypt hash can be turned back into its password with modest effort, and people reuse passwords. A
+    copy of the database should not carry them. The stored value becomes `*`.
+88. **No file from the old site is run.** `pgv_changes.php` is taken apart into PHP's own tokens and must
+    consist of the handful of statements PhpGedView wrote there; anything else and the file is refused and
+    left alone, with a note that it may show the old site was tampered with (79). A good file is written
+    out as `pgv_changes.json` and renamed.
+89. **Each tree's settings files are read and anything beyond settings is pointed out, with its line.** The
+    program still loads `*_conf.php` and `*_priv.php` as PHP (until settings move to the database), so code
+    in them would run. The check knows the five functions PhpGedView's own templates call and reports any
+    other call, `include`, `eval`, backticks and the like. It reports; it does not block or edit. It is a
+    reading aid: a determined author could hide code from it, so a file from an untrusted site should be
+    read by a person.
+90. **Languages.** A user set to a removed language sees English with no error, as tested; the command sets
+    such users to English so that their settings say what they get.
+91. **How it is tested, and what that does not cover.** Unit tests run the command on a made-up site built in
+    the test. The smoke test makes its own site look old (MD5-crypt passwords, German, pending edits as PHP),
+    upgrades it, and uses it. Neither is a database written by PhpGedView 4.3.0 itself, on MariaDB, with a
+    real site's years of oddities. That needs the reference site, and before the first real site is moved,
+    a trial on a copy of it.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another

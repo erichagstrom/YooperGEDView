@@ -29,6 +29,19 @@ visitor's own address and whether they came over HTTPS.
 `bin/yooper set-password <user-name>` gives an existing user a new one the same way. Then
 sign in at `http://127.0.0.1:8080/login.php` and add a family tree.
 
+## Moving a PhpGedView 4.3.0 site
+Work on a copy of the site's database and of its `index` folder, never on the site itself.
+```bash
+bin/yooper upgrade-from-pgv --index=/path/to/copy/of/index            # looks, reports, changes nothing
+bin/yooper upgrade-from-pgv --index=/path/to/copy/of/index --apply    # makes the changes
+bin/yooper set-password <administrator> < password-file               # old passwords no longer work
+```
+The database is given through the same environment variables as for `install`. The report says what each user
+has to do, and points out anything in the old site's files that is not what PhpGedView wrote. Before the old site
+is copied, accept or reject its pending changes if you can: fewer things to carry.
+
+This has been tried on made-up sites only. Try it on a copy of a real one before relying on it.
+
 ## Layout
 - `app/`: the program. The first commit that adds it is the untouched upstream release, so
   `git diff <that commit> -- app` shows every change made since.

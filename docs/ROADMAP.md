@@ -127,15 +127,19 @@ behind a reverse proxy with TLS. Phase 3 is the largest piece of work by far. Ro
 ## Upgrade path from PhpGedView 4.3.0
 Goal: anyone with a PhpGedView 4.3.0 site gets to YooperGEDView with one command and no hand editing.
 
-- One command-line tool, `bin/yooper`, with `install` (new site), `set-password` (an account whose password cannot be reset by mail) and `upgrade-from-pgv` (existing site, to be written). No web installer: it was one of the weak points.
-- `upgrade-from-pgv` takes the old database and the old `index/` folder and:
-  - checks first and changes nothing if anything is unreadable (dry run by default, with a report)
-  - keeps the old `pgv_` tables as they are and writes new ones, so going back is possible
-  - reads `config.php`, `*_conf.php`, `*_priv.php`, `pgv_changes.php` as text (never runs them) and stores their values in the database
-  - carries accounts over without passwords; each user sets a new one by a one-time link
-  - leaves media where it is and records each file's checksum
+- One command-line tool, `bin/yooper`, with `install` (new site), `set-password` (an account whose password cannot be reset by mail) and `upgrade-from-pgv` (existing site). No web installer: it was one of the weak points.
+- `upgrade-from-pgv` takes a copy of the old database and of the old `index/` folder. What it does today:
+  - [x] looks first and changes nothing (a report; `--apply` makes the changes)
+  - [x] never runs a file from the old site: `pgv_changes.php` is read as text and carried over as data, and refused if it holds anything but pending changes
+  - [x] removes the old password hashes; each user sets a new password by the one-time link, or an administrator by `set-password`
+  - [x] reads each tree's `*_conf.php` and `*_priv.php` as text and points out anything in them beyond settings
+  - [x] says which old files and features are no longer used
+  - [ ] works in place on the copy; it does not keep the old tables beside new ones, so going back means going back to the original
+  - [ ] the trees' settings stay in their PHP files, which the program still loads, until settings move to the database
+  - [ ] `config.php` is not read: the database settings are given through the environment
+  - [ ] media is left where it is; no checksums are recorded
 - Every later schema change is a numbered migration that runs on start-up, so upgrades between YooperGEDView versions use the same mechanism.
-- The upgrade is tested in CI against a made-up PhpGedView 4.3.0 database (no real family data).
+- The upgrade is tested in CI on a made-up site shaped like one PhpGedView 4.3.0 left (no real family data). It is not yet tested on a database that 4.3.0 itself wrote: that needs the reference site.
 - GEDCOM export and import stays as the fallback route in and out.
 
 ## Test infrastructure
@@ -147,11 +151,12 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 208 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 215 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
-| Upgrade test | `upgrade-from-pgv` on the reference dump, then the smoke and privacy tests on the result | To build with the tool |
+| Upgrade test | `upgrade-from-pgv` on a made-up old site (unit tests), and on the test site made to look old (smoke test): the old password is refused, the administrator gets in with `set-password`, the carried-over pending edit is there | In CI, blocking |
+| Upgrade test on real 4.3.0 data | `upgrade-from-pgv` on the reference dump, then the smoke and privacy tests on the result | To build with the reference site |
 
 ## Who uses what
 - **This repository** is the product: what gets released and deployed.
