@@ -352,7 +352,7 @@ if (!empty($_SERVER['HTTP_USER_AGENT'])) {
 require PGV_ROOT.'includes/session_spider.php';
 
 // Start the php session
-session_set_cookie_params(date('D M j H:i:s T Y', time()+$PGV_SESSION_TIME), PGV_SCRIPT_PATH);
+session_set_cookie_params(0, PGV_SCRIPT_PATH);
 
 if ($PGV_SESSION_TIME>0) {
 	session_cache_expire($PGV_SESSION_TIME/60);

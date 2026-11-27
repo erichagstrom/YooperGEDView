@@ -1,20 +1,46 @@
 #!/usr/bin/env bash
-# Black-box check: every listed page answers 200 and shows no PHP error. Usage: tests/smoke.sh
+# Black-box check on PHP 8.3 with the sample tree: every listed page answers 200 with no PHP error or warning,
+# as a visitor and as the administrator. Usage: tests/smoke.sh
+# Carries on after a failed check so that all results are reported.
 set -uo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 port=${PORT:-8099}
+base="http://127.0.0.1:$port"
+agent="Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0"
 work=$(mktemp -d)
 "$here/serve.sh" "$port" "$work/site" >"$work/server.log" 2>&1 &
 server=$!
 trap 'kill $server 2>/dev/null; rm -rf "$work"' EXIT
-for _ in $(seq 50); do curl -s -o /dev/null "http://127.0.0.1:$port/GPL.txt" && break; sleep 0.2; done
+for _ in $(seq 50); do curl -s -o /dev/null "$base/GPL.txt" && break; sleep 0.2; done
+
+if ! php "$here/provision.php" "$base" "$work/site"; then
+  echo "FAIL  provisioning"
+  exit 1
+fi
 
 pass=0; fail=0
-for page in index.php login.php indilist.php famlist.php search.php calendar.php; do
-  code=$(curl -s -m 60 -A "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" -o "$work/body" -w '%{http_code}' "http://127.0.0.1:$port/$page")
-  error=$(grep -m1 -oE '(Fatal error|Parse error|Warning|Deprecated|Notice)</b>:[^<]{0,160}' "$work/body" | sed 's#</b>##')
-  if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); echo "PASS  $page"
-  else fail=$((fail + 1)); echo "FAIL  $page (HTTP $code) $error"; fi
-done
+# check <who> <page>: who is "visitor" or "admin" (its cookie file).
+check() {
+  local code error
+  code=$(curl -s -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
+  error=$(grep -a -m1 -oE '(Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?: .{0,160}' "$work/body" | sed 's#</b>##')
+  if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); echo "PASS  $1  $2"
+  else fail=$((fail + 1)); echo "FAIL  $1  $2 (HTTP $code) $error"; fi
+}
+
+visitor_pages="index.php login.php indilist.php famlist.php search.php calendar.php individual.php?pid=I1 family.php?famid=F1"
+admin_pages="$visitor_pages
+  sourcelist.php source.php?sid=S1 placelist.php medialist.php pedigree.php?rootid=I8 descendancy.php?pid=I1
+  ancestry.php?rootid=I8 familybook.php?pid=I1 hourglass.php?pid=I3 timeline.php?pids[]=I1 lifespan.php
+  relationship.php?pid1=I8&pid2=I1 statistics.php branches.php?surn=Maki search.php?action=general&query=Maki&srindi=yes
+  admin.php useradmin.php editgedcoms.php edituser.php clippings.php faq.php
+  individual.php?pid=I8 individual.php?pid=I3 family.php?famid=F3"
+
+for page in $visitor_pages; do check visitor "$page"; done
+curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" "$base/login.php"
+curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" \
+  --data-urlencode "username=admin" --data-urlencode "password=test-admin-password" --data "action=login&url=index.php" "$base/login.php"
+for page in $admin_pages; do check admin "$page"; done
+
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

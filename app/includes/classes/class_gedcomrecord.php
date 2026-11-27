@@ -31,15 +31,6 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CLASS_GEDCOMRECORD_PHP', '');
 
-require_once 'includes/classes/class_person.php';
-require_once 'includes/classes/class_family.php';
-require_once 'includes/classes/class_source.php';
-require_once 'includes/classes/class_repository.php';
-require_once 'includes/classes/class_note.php';
-require_once 'includes/classes/class_media.php';
-require_once 'includes/classes/class_event.php';
-require_once 'includes/classes/class_serviceclient.php';
-
 class GedcomRecord {
 	var $xref       =null;  // The record identifier
 	var $type       =null;  // INDI, FAM, etc.
@@ -956,4 +947,13 @@ class GedcomRecord {
 		return $chan_user;
 	}
 }
-?>
+
+// The record classes below extend GedcomRecord, so they are loaded after it is defined.
+require_once 'includes/classes/class_person.php';
+require_once 'includes/classes/class_family.php';
+require_once 'includes/classes/class_source.php';
+require_once 'includes/classes/class_repository.php';
+require_once 'includes/classes/class_note.php';
+require_once 'includes/classes/class_media.php';
+require_once 'includes/classes/class_event.php';
+require_once 'includes/classes/class_serviceclient.php';

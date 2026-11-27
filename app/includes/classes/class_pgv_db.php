@@ -191,7 +191,7 @@ class PGV_DB {
 			self::$RANDOM       ='NEWID';
 			self::$TEXT_TYPE    ='TEXT';
 			self::$LONGTEXT_TYPE='TEXT';
-			self::$DB_ENGINE    ='ENGINE=MyISAM'; /* this should be made configurable, similar to the UTF-8 option */
+			self::$DB_ENGINE    =''; /* this should be made configurable, similar to the UTF-8 option */
 			self::$UTF8_TABLE   ='';
 			break;
 		case 'sqlite':
@@ -234,7 +234,7 @@ class PGV_DB {
 			self::$RANDOM       ='RANDOM()';
 			self::$TEXT_TYPE    ='TEXT';
 			self::$LONGTEXT_TYPE='TEXT';
-			self::$DB_ENGINE    ='ENGINE=MyISAM'; /* this should be made configurable, similar to the UTF-8 option */
+			self::$DB_ENGINE    =''; /* this should be made configurable, similar to the UTF-8 option */
 			self::$UTF8_TABLE   ='';
 			break;
 		case 'firebird': // This DSN has not been tested!
