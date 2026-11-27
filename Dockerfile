@@ -19,6 +19,7 @@ COPY docker/config.settings.inc docker/build-config.php /usr/local/share/yooper/
 WORKDIR /var/www/yooper
 COPY --from=libraries /build/vendor ./vendor
 COPY src/ ./src/
+COPY bin/ ./bin/
 COPY app/ ./app/
 # Settings come from the environment (docker/config.settings.inc). Code is owned by root so the web server
 # cannot change it; only index/ (settings, logs, exports) and media/ (uploads) are writable.

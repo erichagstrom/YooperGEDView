@@ -86,10 +86,10 @@ jobs:
           set -eu
           sql() { docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -N -u"$MARIADB_USER" "$MARIADB_DATABASE"'; }
           echo "SHOW TABLES" | sql | grep -qx pgv_sign_in_attempt || { echo "the sign-in attempts table was not created"; exit 1; }
-          # An administrator whose stored password can never match, so that the sign-in page is reachable.
-          echo "INSERT INTO pgv_user (user_name, password) VALUES ('ci-admin', 'not-a-hash');
-                INSERT INTO pgv_user_setting (user_id, setting_name, setting_value)
-                  SELECT user_id, 'canadmin', 'Y' FROM pgv_user WHERE user_name = 'ci-admin'" | sql
+          # The first administrator, made the way a person setting up a site makes it.
+          echo "ci-only-password-$RANDOM$RANDOM" | docker compose exec -T web php bin/yooper install ci-admin --email=ci-admin@example.org
+          test "$(echo "SELECT COUNT(*) FROM pgv_user_setting WHERE setting_name = 'canadmin' AND setting_value = 'Y'" | sql)" = 1 || { echo "expected one administrator"; exit 1; }
+          if echo "ci-only-password-$RANDOM$RANDOM" | docker compose exec -T web php bin/yooper install second --email=second@example.org; then echo "a second administrator must be refused"; exit 1; fi
           # Load the sign-in page for its token, then send the form.
           sign_in() {
             local agent="Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" csrf
