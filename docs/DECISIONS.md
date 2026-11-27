@@ -122,10 +122,25 @@ why, and what the alternative was.
     filter at each step. File downloads (media, backups, GEDCOM download) bypass the filter. One loss: the
     relationship calculator no longer sends a space now and then to notice that the visitor has gone away.
 
+38. **A signed-in visitor sent by another site to an address with parameters must confirm with a click**
+    (`YooperGEDView\Security\CrossSiteRequestPolicy`, applied in `includes/session.php`). Many inherited pages
+    change things on a plain link: delete, accept or reject, sign out. The token does not cover links, and
+    SameSite=Lax cookies do not either, since a link clicked on another site is an ordinary navigation. Rather
+    than find and convert every such link now, one rule covers them all: the page is not run; a short page shows
+    the address and a "continue" link. The click is made on this site, so the next request goes through.
+    Alternative: SameSite=Strict cookies, which make every arrival from another site look signed out, with no
+    way to carry on; or converting each link to a POST, which belongs with the router in Phase 3.
+39. **How "sent by another site" is told.** From the browser's `Sec-Fetch-Site` header (anything but
+    `same-origin` or `none`); from `Referer` when that header is missing (older browsers). A request with
+    neither is let through: an address typed in, a bookmark, or a program that is not a browser. The gap: an old
+    browser without `Sec-Fetch-Site`, on a link made to send no `Referer`. Browsers released since early 2023
+    all send `Sec-Fetch-Site`.
+40. **What the confirmation step costs.** A signed-in user who follows a link from a mail message or another
+    site to anything but a bare page address sees the extra page once. Visitors who are not signed in never see
+    it. The host name compared with `Referer` is the one in the request, so a reverse proxy must pass the
+    public host name on.
+
 ### Left for later in Phase 2
-- Actions done by GET are not protected by the token: links that delete, accept or reject, and `?logout=1`.
-  SameSite=Lax cookies do not stop these either, since a link clicked on another site is a plain navigation.
-  Each needs to become a POST; they are scattered through the page scripts.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).

@@ -78,7 +78,8 @@ Left over from Phase 1:
 - [x] Sign-in: limit on failed attempts with a temporary lock, and a record of every sign-in attempt
 - [ ] Audit log of administrator actions in the database (today they go to the log files in `index/`), and a page to read both
 - [x] CSRF token on every POST request, enforced centrally and added to every form as the page goes out
-- [ ] Actions that change something by GET (links such as `?action=delete`, `?logout=1`) become POST requests
+- [x] Links that change something (`?action=delete`, `?logout=1` and the like): a signed-in visitor sent to one by another site must confirm first
+- [ ] Those links become POST requests (with the router in Phase 3); the confirmation step then goes
 - [ ] One request object for all input; remove the 779 direct superglobal reads file by file
 - [ ] Remove every `eval`: blocks and reports become classes looked up from a fixed list
 - [ ] Settings out of PHP files: secrets from the environment, the rest in the database. Pending edits (`pgv_changes.php`) into a table. `unserialize` replaced by JSON
@@ -138,7 +139,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the installer and the settings folder | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 171 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 175 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
