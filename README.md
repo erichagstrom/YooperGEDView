@@ -6,8 +6,7 @@ security practice.
 
 **Status: early work. Do not put this on the internet yet.** The program now runs on PHP 8.3, the unmaintained
 bundled libraries are gone, and the security work is under way (passwords, sessions, sign-in limits, forged-request
-protection and security headers are done; settings stored as PHP files, `eval`, uploads and the old admin pages
-are not). See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the plan and [`docs/DECISIONS.md`](docs/DECISIONS.md)
+protection and security headers are done; the old admin pages are deleted; settings stored as PHP files, `eval` and uploads are not done). See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the plan and [`docs/DECISIONS.md`](docs/DECISIONS.md)
 for what was changed and why.
 
 ## Try it

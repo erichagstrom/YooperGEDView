@@ -118,7 +118,7 @@ function saveCachedBlock($block, $index, $content) {
 }
 
 /*
- * Re-worked copy of a similar function in dir_editor.php
+ * Re-worked copy of a similar function in the former dir_editor.php
  *
  * This function, called recursively, deletes all subdirectories and files in those subdirectories
  *

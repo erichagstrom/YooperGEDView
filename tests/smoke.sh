@@ -16,12 +16,12 @@ trap 'kill $server 2>/dev/null; rm -rf "$work"' EXIT
 for _ in $(seq 50); do curl -s -o /dev/null "$base/GPL.txt" && break; sleep 0.2; done
 
 pass=0; fail=0
-# A site with no administrator and no tree yet sends the visitor to the installer, without PHP errors.
+# A site with no administrator yet says how to make one, without PHP errors. There is no web installer.
 first=$(curl -s -m 120 -A "$agent" -D "$work/first-headers" "$base/index.php")
-if grep -qi '^location: install.php' "$work/first-headers" && ! grep -qE 'Fatal error|Warning|Deprecated|ERROR [0-9]+:' <<<"$first"; then
-  pass=$((pass + 1)); report "PASS  visitor  empty site redirects to the installer"
+if grep -q '^HTTP/[0-9.]* 503' "$work/first-headers" && grep -q 'bin/yooper install' <<<"$first" && ! grep -qE 'Fatal error|Warning|Deprecated|ERROR [0-9]+:' <<<"$first"; then
+  pass=$((pass + 1)); report "PASS  visitor  empty site says it needs an administrator"
 else
-  fail=$((fail + 1)); report "FAIL  visitor  empty site redirects to the installer"
+  fail=$((fail + 1)); report "FAIL  visitor  empty site says it needs an administrator"
 fi
 
 if ! php "$here/provision.php" "$base" "$work/site/app"; then
@@ -115,6 +115,12 @@ if unzip -Z1 "$work/export.zip" 2>/dev/null | grep -qx "sample.ged"; then
 else
   fail=$((fail + 1)); report "FAIL  admin  zipped export"
 fi
+
+# The old pages for running the installer, editing files and showing the server's settings are gone.
+for page in install.php dir_editor.php editlang.php editlang_edit.php editlang_edit_settings.php pgvinfo.php config_download.php usermigrate.php usermigrate_cli.php changelanguage.php; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -A "$agent" -b "$work/admin" -c "$work/admin" "$base/$page")
+  if [ "$code" = 404 ]; then pass=$((pass + 1)); report "PASS  admin  $page is gone"; else fail=$((fail + 1)); report "FAIL  admin  $page is gone (HTTP $code)"; fi
+done
 
 # Sign-in and sessions. These come last: the final check signs the administrator out.
 # result <ok|other> <what>: record a check made by hand.

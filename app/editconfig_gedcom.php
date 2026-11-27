@@ -494,8 +494,6 @@ if ($action=="update") {
 	if (!is_writable($whichFile)) {
 		$errors = true;
 		$error_msg .= "<span class=\"error\"><b>".print_text("gedcom_config_write_error", 0, 1)."</b></span><br />";
-		$_SESSION[$gedcom_config]=$configtext;
-		$error_msg .= "<br /><br /><a href=\"".encode_url("config_download.php?file={$gedcom_config}")."\">".$pgv_lang["download_gedconf"]."</a> ".$pgv_lang["upload_to_index"]."$INDEX_DIRECTORY<br /><br />\n";
 	}
 	$fp = @fopen($whichFile, "wb");
 	if (!$fp) {

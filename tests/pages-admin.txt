@@ -43,10 +43,8 @@ edit_privacy.php?ged=sample.ged
 editconfig_gedcom.php?source=&ged=sample.ged
 printlog.php
 gedcheck.php
-pgvinfo.php?action=confighelp
 edit_changes.php
 edit_merge.php
-editlang.php
 expand_view.php?pid=I1
 autocomplete.php?field=INDI&q=Ma
 reportengine.php
@@ -57,9 +55,7 @@ medialist.php?action=filter
 addmedia.php?action=showmediaform
 media.php
 uploadmedia.php
-dir_editor.php
 downloadbackup.php
-config_download.php
 imageview.php?filename=images/gedview.gif
 individual.php?pid=I1&view=preview
 familybook.php?pid=I8

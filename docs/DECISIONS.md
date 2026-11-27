@@ -191,9 +191,28 @@ why, and what the alternative was.
 52. **The tests set up their site with the command.** `tests/provision.php` and the image job in CI both create
     their administrator with it, so every smoke run signs in with an account it made, on SQLite and MariaDB.
 
+53. **The old administration pages are deleted** (13 files, about 5,200 lines):
+    - `install.php`: the web installer. Whoever reached it first on a new site became administrator; later it
+      was the page for editing `config.php` from the browser.
+    - `dir_editor.php`: deleted files in the settings folder from the browser.
+    - `editlang.php`, `editlang_edit.php`, `editlang_edit_settings.php`, `changelanguage.php` and their helpers:
+      edited the language files, which are PHP code, from the browser. `changelanguage.php` was not on the
+      roadmap's list but only worked through the others, and the program is English only.
+    - `pgvinfo.php`: showed `phpinfo()`, which lists the server's settings and environment.
+    - `config_download.php`: handed out settings files as downloads.
+    - `usermigrate.php`, `usermigrate_cli.php` and their controller: exported and imported accounts with
+      their password hashes.
+54. **What an administrator can no longer do from the browser:** change the site's settings in `config.php`
+    (edit the file, or set the environment in the container image), tidy the settings folder, back up
+    accounts to a file, edit translations. The admin page's links to these are removed. Settings move to the
+    database later in Phase 2, with a page of their own.
+55. **A site that is not ready says so in one line of plain text, with status 503**, instead of sending the
+    visitor to the installer: not configured, cannot reach its database, or has no administrator yet (with
+    the command to run). Alternative: a styled page, which would need the theme code to run on a site that may
+    have no database.
+
 ### Left for later in Phase 2
-- `install.php` is still in the program (blocked in the container image). It goes, with the redirect to it
-  from a site that has no administrator, in the deletion of the old admin pages.
+- Help texts and language strings for the deleted pages are still in the language files.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).
