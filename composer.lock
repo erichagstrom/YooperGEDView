@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a1d6d6796d221af2527ccb2ab2c456bc",
+    "content-hash": "8276644e0332b3a434387574f479719c",
     "packages": [
         {
             "name": "phpmailer/phpmailer",
@@ -4807,6 +4807,7 @@
     "platform": {
         "php": ">=8.3",
         "ext-dom": "*",
+        "ext-fileinfo": "*",
         "ext-gd": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
