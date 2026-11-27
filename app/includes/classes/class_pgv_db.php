@@ -415,6 +415,11 @@ class PGV_DB {
 		}
 	}
 
+	// For the new code in src/, which is given the connection instead of reaching for it
+	public static function getPDO() {
+		return self::$pdo;
+	}
+
 	public static function isConnected() {
 		return (self::$pdo instanceof PDO);
 	}

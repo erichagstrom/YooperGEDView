@@ -837,6 +837,7 @@ $pgv_lang["saveandgo"]		= "Save and go to new record";
 $pgv_lang["delete"] 				= "Delete";
 $pgv_lang["edit"]					= "Edit";
 $pgv_lang["no_login"]				= "Unable to authenticate user.";
+$pgv_lang["too_many_logins"]		= "Too many failed attempts.  Please wait 15 minutes and try again.";
 $pgv_lang["basic_realm"]			= "PhpGedView Authentication System";
 $pgv_lang["basic_auth_failure"]		= "You must enter a valid login ID and password to access this resource";
 $pgv_lang["basic_auth"]				= "Basic Authentication";

@@ -17,6 +17,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          extensions: pdo_sqlite
           tools: composer:v2
           coverage: none
       - run: composer validate --strict
@@ -73,5 +74,33 @@ jobs:
           grep -qi '^location: install.php' headers.txt || { echo "expected a redirect to the installer"; exit 1; }
           docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u"$MARIADB_USER" "$MARIADB_DATABASE" -e "SHOW TABLES"' > tables.txt
           grep -q pgv_user tables.txt || { echo "the program did not create its tables"; cat tables.txt; exit 1; }
+      # The unit and smoke tests run on SQLite. This runs the same sign-in queries on MariaDB.
+      - name: Sign-in attempts are recorded and limited on MariaDB
+        run: |
+          set -eu
+          sql() { docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -N -u"$MARIADB_USER" "$MARIADB_DATABASE"'; }
+          echo "SHOW TABLES" | sql | grep -qx pgv_sign_in_attempt || { echo "the sign-in attempts table was not created"; exit 1; }
+          # An administrator whose stored password can never match, so that the sign-in page is reachable.
+          echo "INSERT INTO pgv_user (user_name, password) VALUES ('ci-admin', 'not-a-hash');
+                INSERT INTO pgv_user_setting (user_id, setting_name, setting_value)
+                  SELECT user_id, 'canadmin', 'Y' FROM pgv_user WHERE user_name = 'ci-admin'" | sql
+          sign_in() {
+            curl -s -o body.txt -A "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" \
+              --data "action=login&url=index.php&username=ci-admin&password=wrong-password" http://127.0.0.1:8080/login.php
+          }
+          # What the page said and what was recorded, for when a check below fails.
+          explain() {
+            grep -o "class='error'.\{0,200\}" body.txt || echo "no message on the page ($(wc -c < body.txt) bytes)"
+            echo "SELECT * FROM pgv_sign_in_attempt" | sql
+          }
+          # The tenth failure brings the lock, and the page says so from then on. The eleventh is not recorded.
+          for _ in $(seq 9); do sign_in; done
+          grep -q "Unable to authenticate" body.txt || { echo "expected an ordinary refusal on the ninth attempt"; explain; exit 1; }
+          sign_in
+          grep -q "Too many failed attempts" body.txt || { echo "expected the tenth failure to bring the lock"; explain; exit 1; }
+          sign_in
+          grep -q "Too many failed attempts" body.txt || { echo "expected the eleventh attempt to be refused by the limit"; explain; exit 1; }
+          count=$(echo "SELECT COUNT(*) FROM pgv_sign_in_attempt WHERE user_name = 'ci-admin' AND success = 0" | sql)
+          test "$count" = 10 || { echo "expected 10 recorded failures, found $count"; exit 1; }
       - if: failure()
         run: docker compose logs --tail 12 web

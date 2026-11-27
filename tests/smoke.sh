@@ -138,6 +138,21 @@ if [ -e "$work/site/sessions/sess_$before" ]; then result other "the session fro
 curl -s -o /dev/null -A "$agent" -b "$work/fresh" -c "$work/fresh" "$base/index.php?logout=1"
 if signed_in "$work/fresh"; then result other "signing out ends the session"; else result ok "signing out ends the session"; fi
 
+# Limit on failed attempts: after ten wrong passwords the right one is refused too, and the page says why.
+for _ in $(seq 10); do sign_in "$work/locked" admin "not-the-password"; done
+curl -s -o "$work/body" -A "$agent" -b "$work/locked" -c "$work/locked" \
+  --data-urlencode "username=admin" --data-urlencode "password=test-admin-password" --data "action=login&url=index.php" "$base/login.php"
+if grep -a -q "Too many failed attempts" "$work/body" && ! signed_in "$work/locked"; then result ok "ten failed sign-ins lock the user name"
+else result other "ten failed sign-ins lock the user name"; fi
+sign_in "$work/other" legacy "test-admin-password"
+curl -s -o "$work/body" -A "$agent" -b "$work/other" -c "$work/other" \
+  --data-urlencode "username=legacy" --data-urlencode "password=x-wrong" --data "action=login&url=index.php" "$base/login.php"
+if grep -a -q "Unable to authenticate" "$work/body"; then result ok "another user name is not locked with it"
+else result other "another user name is not locked with it"; fi
+attempts=$(php "$here/failed-sign-ins.php" "$work/site/app/index/test.sqlite" admin)
+if [ "$attempts" = 11 ]; then result ok "failed sign-ins are recorded, refused ones are not counted"
+else result other "failed sign-ins are recorded, refused ones are not counted (found $attempts, expected 11)"; fi
+
 # Idle time-out: wind the administrator's last activity back to long ago; the next request is a visitor's.
 sed -i -E 's/last_activity\|i:[0-9]+;/last_activity|i:1;/' "$work/site/sessions/sess_$(session_id "$work/admin")"
 if signed_in "$work/admin"; then result other "an idle session is signed out"; else result ok "an idle session is signed out"; fi
