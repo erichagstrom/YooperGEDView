@@ -236,8 +236,10 @@ why, and what the alternative was.
 61. **One link per user every five minutes.** Asking again sooner sends nothing, so the page cannot be used
     to flood someone's mailbox. A new link replaces the user's earlier one.
 62. **Changing a password ends that user's other sessions** (`endOtherSessions()`): by the link, on the user's
-    own account page, or by an administrator. Each session notes when it signed in; a session older than the
-    user's last password change is signed out at its next request. The session that made the change carries
+    own account page, or by an administrator. Each user has a random mark that is replaced when the password
+    changes; a session carries the mark it signed in under, and one carrying an older mark is signed out at
+    its next request. A first version compared times instead, and let a session survive when it had signed in
+    during the same second as the change; the test caught that in CI. The session that made the change carries
     on. Why: someone who has got into an account should not stay in after its owner changes the password.
 63. **The mail address check no longer asks DNS whether the domain takes mail.** That lookup made sending
     depend on the network at the moment of the request, refused addresses whenever DNS was slow or missing,

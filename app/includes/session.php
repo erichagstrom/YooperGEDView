@@ -358,8 +358,9 @@ if (!empty($_SESSION['pgv_user']) && $PGV_SESSION_POLICY->isIdle(isset($_SESSION
 }
 $_SESSION['last_activity'] = time();
 
-// A session from before the user's password was last changed is ended
-if (!empty($_SESSION['pgv_user']) && PGV_DB::isConnected() && (int)get_user_setting($_SESSION['pgv_user'], 'sessions_valid_from') > (isset($_SESSION['signed_in_at']) ? (int)$_SESSION['signed_in_at'] : 0)) {
+// A session from before the user's password was last changed is ended: it carries an older mark than the
+// user now has (see endOtherSessions)
+if (!empty($_SESSION['pgv_user']) && PGV_DB::isConnected() && (string)get_user_setting($_SESSION['pgv_user'], 'session_mark')!==(isset($_SESSION['session_mark']) ? (string)$_SESSION['session_mark'] : '')) {
 	$_SESSION = array();
 	session_regenerate_id(true);
 	$_SESSION['initiated'] = true;

@@ -84,7 +84,7 @@ function authenticateUser($user_name, $password, $basic=false) {
 				session_regenerate_id(true);
 				$_SESSION['initiated'] = true;
 				$_SESSION['last_activity'] = time();
-				$_SESSION['signed_in_at'] = time();
+				$_SESSION['session_mark'] = (string)get_user_setting($user_id, 'session_mark');
 				$_SESSION['pgv_user'] = $user_id;
 				$throttle->recordSuccess((string)$user_name, $remote_addr, time());
 				AddToLog(($basic ? 'Basic HTTP Authentication' :'Login'). ' Successful');
@@ -108,14 +108,16 @@ function passwordReset() {
 }
 
 /**
- * Ends every session of a user that began before now: called when their password changes.
- * The session making the change, if it is theirs, carries on.
+ * Ends every other session of a user: called when their password changes.  The user gets a new random
+ * mark; a session that carries any other mark is signed out at its next request.  The session making the
+ * change, if it is theirs, takes the new mark and carries on.
  * @param int $user_id
  */
 function endOtherSessions($user_id) {
-	set_user_setting($user_id, 'sessions_valid_from', time());
+	$session_mark=bin2hex(random_bytes(8));
+	set_user_setting($user_id, 'session_mark', $session_mark);
 	if (getUserId()==$user_id) {
-		$_SESSION['signed_in_at'] = time();
+		$_SESSION['session_mark'] = $session_mark;
 	}
 }
 
