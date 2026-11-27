@@ -93,8 +93,11 @@ jobs:
             grep -o "class='error'.\{0,200\}" body.txt || echo "no message on the page ($(wc -c < body.txt) bytes)"
             echo "SELECT * FROM pgv_sign_in_attempt" | sql
           }
-          for _ in $(seq 10); do sign_in; done
-          grep -q "Unable to authenticate" body.txt || { echo "expected an ordinary refusal on the tenth attempt"; explain; exit 1; }
+          # The tenth failure brings the lock, and the page says so from then on. The eleventh is not recorded.
+          for _ in $(seq 9); do sign_in; done
+          grep -q "Unable to authenticate" body.txt || { echo "expected an ordinary refusal on the ninth attempt"; explain; exit 1; }
+          sign_in
+          grep -q "Too many failed attempts" body.txt || { echo "expected the tenth failure to bring the lock"; explain; exit 1; }
           sign_in
           grep -q "Too many failed attempts" body.txt || { echo "expected the eleventh attempt to be refused by the limit"; explain; exit 1; }
           count=$(echo "SELECT COUNT(*) FROM pgv_sign_in_attempt WHERE user_name = 'ci-admin' AND success = 0" | sql)
