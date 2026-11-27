@@ -246,17 +246,25 @@ class UserMigrateControllerRoot extends BaseController {
 
 		// Make the zip
 		if (count($this->flist) > 0) {
-			require_once PGV_ROOT.'includes/pclzip.lib.php';
 			$this->buname = date("YmdHis").".zip";
 			$this->fname = $INDEX_DIRECTORY.$this->buname;
 			$comment = "Created by ".PGV_PHPGEDVIEW." ".PGV_VERSION_TEXT." on ".date("r").".";
-			$archive = new PclZip($this->fname);
+			$archive = new ZipArchive();
 			//-- remove ../ from file paths when creating zip
 			$ct = preg_match("~((\.\./)+)~", $INDEX_DIRECTORY, $match);
 			$rmpath = "";
 			if ($ct>0) $rmpath = $match[1];
-				$this->v_list = $archive->create($this->flist, PCLZIP_OPT_COMMENT, $comment, PCLZIP_OPT_REMOVE_PATH, $rmpath);
-			if ($this->v_list==0) $this->errorMsg = "Error : ".$archive->errorInfo(true);
+			$this->v_list = 0;
+			if ($archive->open($this->fname, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+				$archive->setArchiveComment($comment);
+				foreach ($this->flist as $zipentry) {
+					if (!is_file($zipentry)) continue;
+					$zipname = ($rmpath !== "" && strpos($zipentry, $rmpath) === 0) ? substr($zipentry, strlen($rmpath)) : $zipentry;
+					$archive->addFile($zipentry, ltrim($zipname, './'));
+				}
+				if ($archive->close()) $this->v_list = 1;
+			}
+			if ($this->v_list==0) $this->errorMsg = "Error : cannot create the ZIP file";
 			if (isset($_POST["um_usinfo"])) {
 				// Remove temporary files again
 				if (file_exists($INDEX_DIRECTORY."authenticate.php")) unlink($INDEX_DIRECTORY."authenticate.php");

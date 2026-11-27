@@ -56,11 +56,14 @@ if (!PGV_USER_GEDCOM_ADMIN) {
 function GetGEDFromZIP($zipfile, $extract=true) {
 	GLOBAL $INDEX_DIRECTORY;
 
-	require_once PGV_ROOT.'includes/pclzip.lib.php';
-	$zip = new PclZip($zipfile);
+	$zip = new ZipArchive();
 	// if it's not a valid zip, just return the filename
-	if (($list = $zip->listContent()) == 0) {
+	if ($zip->open($zipfile) !== true) {
 		return $zipfile;
+	}
+	$list = array();
+	for ($zipindex = 0; $zipindex < $zip->numFiles; $zipindex++) {
+		$list[] = array("index" => $zipindex, "filename" => $zip->getNameIndex($zipindex), "status" => "ok");
 	}
 
 	// Determine the extract directory
@@ -80,7 +83,8 @@ function GetGEDFromZIP($zipfile, $extract=true) {
 				copy($path.$filename, $path.$filename.".old");
 				unlink($path.$filename);
 			}
-			if ($zip->extract(PCLZIP_OPT_REMOVE_ALL_PATH, PCLZIP_OPT_PATH, $path, PCLZIP_OPT_BY_NAME, $listitem["filename"]) == 0) {
+			$zipdata = $zip->getFromIndex($listitem["index"]);
+			if ($zipdata === false || file_put_contents($path.$filename, $zipdata) === false) {
 				print "ERROR cannot extract ZIP";
 			}
 			return $filename;

@@ -44,12 +44,28 @@ expect() {
   if [ "$found" = "$3" ]; then pass=$((pass + 1)); echo "PASS  $1  $2 $3 '$4'"
   else fail=$((fail + 1)); echo "FAIL  $1  $2 should $3 '$4'"; fi
 }
-expect admin "individual.php?pid=I8" has "1975"
+expect admin "individual.php?pid=I8" has "February 1975"
 expect admin "index.php" has "logout"
-expect visitor "individual.php?pid=I1" has "1890"
-expect visitor "individual.php?pid=I8" lacks "1975"
-expect visitor "family.php?famid=F3" lacks "1970"
+expect visitor "individual.php?pid=I1" has "March 1890"
+expect visitor "individual.php?pid=I8" lacks "February 1975"
+expect visitor "family.php?famid=F3" lacks "June 1970"
 expect visitor "admin.php" lacks "useradmin.php"
+
+# Exports: a full GEDCOM for the administrator, and living people's details left out of a "visitor" export.
+export="downloadgedcom.php?action=download&ged=sample.ged&filetype=gedcom"
+expect admin "$export&privatize_export=none" has "1 FEB 1975"
+expect admin "$export&privatize_export=visitor" lacks "FEB 1975"
+expect admin "$export&privatize_export=visitor" has "12 MAR 1890"
+expect admin "downloadgedcom.php?action=download&ged=sample.ged&filetype=gramps&privatize_export=none" has "<database"
+expect visitor "$export&privatize_export=none" lacks "0 @I1@ INDI"
+
+# A zipped export is a real zip file holding the tree.
+curl -s -g -L -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/export.zip" "$base/$export&privatize_export=none&zip=yes"
+if php -r '$z = new ZipArchive(); exit($z->open($argv[1]) === true && $z->locateName("sample.ged") !== false ? 0 : 1);' "$work/export.zip"; then
+  pass=$((pass + 1)); echo "PASS  admin  zipped export"
+else
+  fail=$((fail + 1)); echo "FAIL  admin  zipped export"
+fi
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

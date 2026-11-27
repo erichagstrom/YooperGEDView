@@ -35,7 +35,6 @@ require_once PGV_ROOT.'includes/classes/class_grampsexport.php';
 require_once PGV_ROOT.'includes/classes/class_person.php';
 require_once PGV_ROOT.'includes/functions/functions.php';
 require_once PGV_ROOT.'includes/controllers/basecontrol.php';
-require_once PGV_ROOT.'includes/pclzip.lib.php';
 
 function same_group($a, $b) {
 	if ($a['type'] == $b['type'])
@@ -295,7 +294,7 @@ class ClippingsControllerRoot extends BaseController {
 							for ($k = 0; $k < $ft; $k++) {
 								$filename = $MEDIA_DIRECTORY.extract_filename(trim($match[$k][1]));
 								if (file_exists($filename)) {
-									$media[$mediacount] = array (PCLZIP_ATT_FILE_NAME => $filename);
+									$media[$mediacount] = array ('filename' => $filename);
 									$mediacount++;
 								}
 //								$record = preg_replace("|(\d FILE )" . addslashes($match[$k][1]) . "|", "$1" . $filename, $record);
@@ -337,7 +336,7 @@ class ClippingsControllerRoot extends BaseController {
 							for ($k = 0; $k < $ft; $k++) {
 								$filename = $MEDIA_DIRECTORY.extract_filename(trim($match[$k][1]));
 								if (file_exists($filename)) {
-									$media[$mediacount] = array (PCLZIP_ATT_FILE_NAME => $filename);
+									$media[$mediacount] = array ('filename' => $filename);
 									$mediacount++;
 								}
 //								$record = preg_replace("|(\d FILE )" . addslashes($match[$k][1]) . "|", "$1" . $filename, $record);
@@ -356,7 +355,7 @@ class ClippingsControllerRoot extends BaseController {
 							for ($k = 0; $k < $ft; $k++) {
 								$filename = $MEDIA_DIRECTORY.extract_filename(trim($match[$k][1]));
 								if (file_exists($filename)) {
-									$media[$mediacount] = array (PCLZIP_ATT_FILE_NAME => $filename);
+									$media[$mediacount] = array ('filename' => $filename);
 									$mediacount++;
 								}
 //								$record = preg_replace("|(\d FILE )" . addslashes($match[$k][1]) . "|", "$1" . $filename, $record);
@@ -371,7 +370,7 @@ class ClippingsControllerRoot extends BaseController {
 							for ($k = 0; $k < $ft; $k++) {
 								$filename = $MEDIA_DIRECTORY.extract_filename(trim($match[$k][1]));
 								if (file_exists($filename)) {
-									$media[$mediacount] = array (PCLZIP_ATT_FILE_NAME => $filename);
+									$media[$mediacount] = array ('filename' => $filename);
 									$mediacount++;
 								}
 //								$record = preg_replace("|(\d FILE )" . addslashes($match[$k][1]) . "|", "$1" . $filename, $record);
@@ -473,11 +472,18 @@ class ClippingsControllerRoot extends BaseController {
 			$zipName = "clippings".rand(0, 1500).".zip";
 			$fname = $INDEX_DIRECTORY.$zipName;
 			$comment = "Created by ".PGV_PHPGEDVIEW." ".PGV_VERSION_TEXT." on ".date("d M Y").".";
-			$archive = new PclZip($fname);
+			$archive = new ZipArchive();
 			// add the ged/gramps file to the root of the zip file (strip off the index_directory)
-			$this->media_list[]= array (PCLZIP_ATT_FILE_NAME => $INDEX_DIRECTORY.$tempFileName, PCLZIP_ATT_FILE_NEW_FULL_NAME => $tempFileName);
-			$v_list = $archive->create($this->media_list, PCLZIP_OPT_COMMENT, $comment);
-			if ($v_list == 0) print "Error : ".$archive->errorInfo(true)."</td></tr>";
+			$this->media_list[]= array ('filename' => $INDEX_DIRECTORY.$tempFileName, 'newname' => $tempFileName);
+			$v_list = 0;
+			if ($archive->open($fname, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+				$archive->setArchiveComment($comment);
+				foreach ($this->media_list as $zipentry) {
+					$archive->addFile($zipentry['filename'], isset($zipentry['newname']) ? $zipentry['newname'] : ltrim($zipentry['filename'], './'));
+				}
+				if ($archive->close()) $v_list = 1;
+			}
+			if ($v_list == 0) print "Error : cannot create the ZIP file</td></tr>";
 			else {
 				$openedFile = fopen($fname,"rb");
 				$this->download_data = fread($openedFile,filesize($fname));

@@ -65,8 +65,6 @@ if ($action == 'download') {
 }
 
 if ($action == "download" && $zip == "yes") {
-	require PGV_ROOT.'includes/pclzip.lib.php';
-
 	$temppath = $INDEX_DIRECTORY . "tmp/";
 	$fileName = $ged;
 	if ($filetype =="gramps") $fileName = $ged.".gramps";
@@ -94,9 +92,14 @@ if ($action == "download" && $zip == "yes") {
 	}
 	fclose($gedout);
 	$comment = "Created by ".PGV_PHPGEDVIEW." ".PGV_VERSION_TEXT." on " . date("r") . ".";
-	$archive = new PclZip(filename_decode($zipfile));
-	$v_list = $archive->create(filename_decode($gedname), PCLZIP_OPT_COMMENT, $comment, PCLZIP_OPT_REMOVE_PATH, filename_decode($temppath));
-	if ($v_list == 0) print "Error : " . $archive->errorInfo(true);
+	$archive = new ZipArchive();
+	$v_list = 0;
+	if ($archive->open(filename_decode($zipfile), ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+		$archive->setArchiveComment($comment);
+		$archive->addFile(filename_decode($gedname), basename(filename_decode($gedname)));
+		if ($archive->close()) $v_list = 1;
+	}
+	if ($v_list == 0) print "Error : cannot create the ZIP file";
 	else {
 		unlink(filename_decode($gedname));
 		if ($removeTempDir) rmdir(filename_decode($temppath));

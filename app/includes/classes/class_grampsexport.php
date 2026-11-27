@@ -110,7 +110,7 @@ class GrampsExport {
 		$etResname = $eResname->appendChild($etResname);
 		$eResname = $eResearcher->appendChild($eResname);
 		$eResemail = $this->dom->createElement("resemail");
-		$etResemail = $this->dom->createTextNode(get_user_setting($user, 'email'));
+		$etResemail = $this->dom->createTextNode((string)get_user_setting($user, 'email'));
 		$etResemail = $eResemail->appendChild($etResemail);
 		$eResemail = $eResearcher->appendChild($eResemail);
 		$eResearcher = $eHeader->appendChild($eResearcher);
@@ -562,7 +562,7 @@ function create_source($sourceID, $sourceRec, $level = 1, $done=1) {
 	* allows for a creation of a huge XML file with little chance of overlap
 	*/
 	function generateHandle() {
-		return strtoupper("_" . dechex(rand() * (time() * 877)) . dechex(time() * rand(1, 4)));
+		return strtoupper("_" . dechex((int)fmod((float)rand() * (time() * 877), (float)PHP_INT_MAX)) . dechex(time() * rand(1, 4)));
 	}
 
 
