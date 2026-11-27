@@ -8,13 +8,20 @@
     },
     "require-dev": {
         "php-parallel-lint/php-parallel-lint": "^1.4",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "spaze/phpstan-disallowed-calls": "^4.0"
     },
     "scripts": {
         "lint": "parallel-lint --exclude vendor --exclude app/SOAP --exclude app/tcpdf --exclude app/includes/PHPMailer --exclude app/client.php app",
+        "cs": "php-cs-fixer check --diff",
+        "cs-fix": "php-cs-fixer fix",
         "stan": "phpstan analyse --memory-limit=2G --no-progress",
+        "stan-src": "phpstan analyse --configuration=phpstan-src.neon --memory-limit=2G --no-progress",
         "check": [
             "@lint",
+            "@cs",
             "@stan"
         ]
     },
