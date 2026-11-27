@@ -48,7 +48,7 @@ define('PGV_DEBUG_PRIV', false);
 define('PGV_ERROR_LEVEL', 2); // 0=none, 1=minimal, 2=full
 
 // Required version of database tables/columns/indexes/etc.
-define('PGV_SCHEMA_VERSION', 15);
+define('PGV_SCHEMA_VERSION', 16);
 
 // Environmental requirements
 define('PGV_REQUIRED_PHP_VERSION',     '8.3.0');
@@ -357,6 +357,14 @@ if (!empty($_SESSION['pgv_user']) && $PGV_SESSION_POLICY->isIdle(isset($_SESSION
 	$_SESSION['initiated'] = true;
 }
 $_SESSION['last_activity'] = time();
+
+// A session from before the user's password was last changed is ended: it carries an older mark than the
+// user now has (see endOtherSessions)
+if (!empty($_SESSION['pgv_user']) && PGV_DB::isConnected() && (string)get_user_setting($_SESSION['pgv_user'], 'session_mark')!==(isset($_SESSION['session_mark']) ? (string)$_SESSION['session_mark'] : '')) {
+	$_SESSION = array();
+	session_regenerate_id(true);
+	$_SESSION['initiated'] = true;
+}
 
 // check whether it is necessary to regenerate a new session, destroying the current one
 // added SOAP_CONNECTED for SOAP session persistence (otherwise only one request per authentication is allowed)

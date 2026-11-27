@@ -223,15 +223,38 @@ why, and what the alternative was.
 58. **This is Apache configuration in the image, not program code.** A site on another web server must set up
     the same thing there. The program reads only what the web server tells it.
 
+59. **A lost password is replaced through a one-time link, not by mailing a new password**
+    (`YooperGEDView\Security\PasswordReset`, table `pgv_password_reset`, schema version 16). Before, anyone
+    could type a user name and the program at once replaced that user's password with a new 8-character one
+    and mailed it in plain text: a way to lock any user out, as often as wanted, and a password sitting in a
+    mailbox. Now asking changes nothing. The message holds a link with a random token that works once, for an
+    hour, and leads to a form for choosing a password. Only a hash of the token is stored.
+60. **Asking for a link gives the same answer for every user name**, real or not, with or without a mail
+    address, so the page cannot be used to find out which names exist. Before, it said "could not verify" for
+    unknown names. If the message cannot be sent, the reason goes to the log, not to the page: the mail
+    function prints addresses in its errors.
+61. **One link per user every five minutes.** Asking again sooner sends nothing, so the page cannot be used
+    to flood someone's mailbox. A new link replaces the user's earlier one.
+62. **Changing a password ends that user's other sessions** (`endOtherSessions()`): by the link, on the user's
+    own account page, or by an administrator. Each user has a random mark that is replaced when the password
+    changes; a session carries the mark it signed in under, and one carrying an older mark is signed out at
+    its next request. A first version compared times instead, and let a session survive when it had signed in
+    during the same second as the change; the test caught that in CI. The session that made the change carries
+    on. Why: someone who has got into an account should not stay in after its owner changes the password.
+63. **The mail address check no longer asks DNS whether the domain takes mail.** That lookup made sending
+    depend on the network at the moment of the request, refused addresses whenever DNS was slow or missing,
+    and made mail impossible to test. An address that cannot take mail now fails when the message is sent.
+64. **The test site writes its mail to a file** instead of sending it, so the smoke test can follow the link
+    in the message. This is the first test of anything the program mails.
+
 ### Left for later in Phase 2
+- The rule for a new password is still the inherited one: six characters or more. `bin/yooper install` asks
+  for twelve. One rule for all places is still to be set.
+- The old language strings for the mailed password (`mail04_line03` to `05`, `pwreqinfo`) are unused.
 - Help texts and language strings for the deleted pages are still in the language files.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
-- "Lost password" still mails a new password. It should mail a one-time link instead.
-- Changing a password does not end that user's other sessions.
 - Basic HTTP authentication (`?auth=basic`) is still there. It now shares the limit on failed attempts.
-- "Lost password" has no limit: anyone can have a new password mailed to any user, as often as they like. This
-  goes away with the one-time link.
 - `usermigrate*.php` can still import accounts with old hashes (which no longer work); the pages are due for
   deletion.
 

@@ -84,6 +84,7 @@ function authenticateUser($user_name, $password, $basic=false) {
 				session_regenerate_id(true);
 				$_SESSION['initiated'] = true;
 				$_SESSION['last_activity'] = time();
+				$_SESSION['session_mark'] = (string)get_user_setting($user_id, 'session_mark');
 				$_SESSION['pgv_user'] = $user_id;
 				$throttle->recordSuccess((string)$user_name, $remote_addr, time());
 				AddToLog(($basic ? 'Basic HTTP Authentication' :'Login'). ' Successful');
@@ -94,6 +95,30 @@ function authenticateUser($user_name, $password, $basic=false) {
 	$throttle->recordFailure((string)$user_name, $remote_addr, time());
 	AddToLog(($basic ? 'Basic HTTP Authentication' : 'Login').' Failed ->'.$user_name.'<-');
 	return false;
+}
+
+/**
+ * Requests for a new password by one-time link
+ * @return \YooperGEDView\Security\PasswordReset
+ */
+function passwordReset() {
+	global $TBLPREFIX;
+
+	return new \YooperGEDView\Security\PasswordReset(new \YooperGEDView\Security\PasswordResetRepository(PGV_DB::getPDO(), $TBLPREFIX));
+}
+
+/**
+ * Ends every other session of a user: called when their password changes.  The user gets a new random
+ * mark; a session that carries any other mark is signed out at its next request.  The session making the
+ * change, if it is theirs, takes the new mark and carries on.
+ * @param int $user_id
+ */
+function endOtherSessions($user_id) {
+	$session_mark=bin2hex(random_bytes(8));
+	set_user_setting($user_id, 'session_mark', $session_mark);
+	if (getUserId()==$user_id) {
+		$_SESSION['session_mark'] = $session_mark;
+	}
 }
 
 /**

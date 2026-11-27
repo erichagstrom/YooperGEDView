@@ -364,11 +364,7 @@ function validEmail($email) {
 			$isValid = false;
 			break;
 		}
-		if (!checkdnsrr($domain,"MX")) {
-			// domain not found in DNS or domain does not support email
-			$isValid = false;
-			break;
-		}
+		// Whether the domain takes mail is not looked up here: sending the message finds that out
 		break;
    }
    return $isValid;

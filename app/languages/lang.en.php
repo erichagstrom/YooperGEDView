@@ -1269,6 +1269,12 @@ $pgv_lang["mail04_line03"]			= "Recommendation:";
 $pgv_lang["mail04_line04"]			= "Please click on the link below or paste it into your browser, login with the new password, and change it immediately to keep the integrity of your data secure.";
 $pgv_lang["mail04_line05"]			= "After you have logged in, select the «#pgv_lang[editowndata]#» link under the «#pgv_lang[mygedview]#» menu and fill in the password fields to change your password.";
 $pgv_lang["mail04_subject"] 		= "Data request at #SERVER_NAME#";
+$pgv_lang["pw_reset_mail_link"]		= "To choose a new password, open this address within one hour:";
+$pgv_lang["pw_reset_mail_ignore"]	= "If you did not ask for this, do nothing.  Your password has not been changed.";
+$pgv_lang["pw_reset_sent"]			= "If there is an account with that user name and it has an email address, a message has been sent to it with a link for choosing a new password.  The link works once, for one hour.";
+$pgv_lang["pw_reset_title"]			= "Choose a new password";
+$pgv_lang["pw_reset_invalid"]		= "This link does not work any more.  It may have been used already, or be more than an hour old.";
+$pgv_lang["pw_reset_done"]			= "Your password has been changed.";
 
 $pgv_lang["pwreqinfo"]				= "Hello...<br /><br />An email with your new password was sent to the address we have on file for <b>#user[email]#</b>.<br /><br />Please check your email account; you should receive our message soon.<br /><br />Recommendation:<br />You should login to this site with your new password as soon as possible, and you should change your password to maintain your data's security.";
 
