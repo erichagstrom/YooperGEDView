@@ -87,11 +87,33 @@ why, and what the alternative was.
 29. **A signed-in session unused for the session time (`$PGV_SESSION_TIME`, 2 hours by default) is signed out.**
     Upstream only marked such users as "not logged in" in a list; the session itself carried on.
 
+30. **Failed sign-ins are limited per user name and per address** (`YooperGEDView\Security\SignInThrottle`): 10
+    failures for one user name, or 50 from one address, within 15 minutes, and further attempts are refused
+    without looking at the password. A successful sign-in clears that user name's count. Why per user name as
+    well as per address: an attacker with many addresses is otherwise unlimited. The cost: anyone can lock a
+    known user name out by guessing. So the lock is short, and refused attempts are not counted, which means
+    it ends 15 minutes after the tenth failure however long the guessing goes on. Alternative: lock until an
+    administrator steps in, which turns guessing into a way to shut people out for good.
+31. **Every sign-in attempt is recorded in a new table, `pgv_sign_in_attempt`** (schema version 15): the user
+    name as typed, the address, the time and the result. It is the audit log of sign-ins and what the limit
+    counts. Records older than 90 days are deleted. The user name is stored even when no such user exists, so
+    the table can hold whatever people type into that field, including a password typed there by mistake.
+32. **The address is the one the web server reports.** Behind a reverse proxy that is the proxy's address for
+    everyone, and the per-address limit would then lock all users out together. A deployment behind a proxy
+    must have the web server restore the real client address (Apache `mod_remoteip`). Not yet set up in the
+    container image.
+33. **`PGV_DB::getPDO()` added** so that new code can be handed the database connection. New classes take what
+    they need as arguments and do not reach for globals.
+
 ### Left for later in Phase 2
+- Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
+  sign-in record.
+- The container image does not restore the client address behind a proxy (see 32).
 - "Lost password" still mails a new password. It should mail a one-time link instead.
 - Changing a password does not end that user's other sessions.
-- Basic HTTP authentication (`?auth=basic`) is still there and has no limit on attempts; it goes with the rate
-  limiting work.
+- Basic HTTP authentication (`?auth=basic`) is still there. It now shares the limit on failed attempts.
+- "Lost password" has no limit: anyone can have a new password mailed to any user, as often as they like. This
+  goes away with the one-time link.
 - `usermigrate*.php` can still import accounts with old hashes (which no longer work); the pages are due for
   deletion.
 
