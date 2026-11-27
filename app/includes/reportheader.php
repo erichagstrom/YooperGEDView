@@ -119,7 +119,8 @@ function PGVRvarSHandler($attrs) {
 			$tfact = $type;
 		}
 		$var = str_replace(array("[", "]", "@fact", "@desc"), array("['", "']", $tfact, $desc), $var);
-		eval("if (!empty(\$$var)) \$var = \$$var;");
+		$named_value = report_named_value($var);
+		if (!empty($named_value)) $var = $named_value;
 		if (preg_match("/factarray\['(.*)'\]/", $var, $match)>0) {
 			$var = $match[1];
 		}
