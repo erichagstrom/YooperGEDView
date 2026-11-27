@@ -162,6 +162,22 @@ sign_in "$work/csrf-a" admin "test-admin-password"
 if signed_in "$work/csrf-a" && [ "$(post_status "$work/csrf-a" "$before")" = 403 ]; then result ok "the token from before sign-in is refused afterwards"
 else result other "the token from before sign-in is refused afterwards"; fi
 
+# Links from other sites: a signed-in visitor sent to an address with parameters must confirm first.
+# from_elsewhere <cookie file> <header> <page>: fetch a page as a browser coming from another site would.
+from_elsewhere() { curl -s -g -A "$agent" -b "$1" -c "$1" -H "$2" -o "$work/body" "$base/$3"; }
+from_elsewhere "$work/csrf-a" "Sec-Fetch-Site: cross-site" "index.php?logout=1"
+if grep -a -q "another site has sent you" "$work/body" && signed_in "$work/csrf-a"; then result ok "a sign-out link on another site does nothing until confirmed"
+else result other "a sign-out link on another site does nothing until confirmed"; fi
+from_elsewhere "$work/csrf-a" "Referer: https://elsewhere.example/page" "individual.php?pid=I1"
+if grep -a -q 'href="/individual.php?pid=I1">continue' "$work/body"; then result ok "an older browser's Referer header is used the same way"
+else result other "an older browser's Referer header is used the same way"; fi
+from_elsewhere "$work/csrf-a" "Sec-Fetch-Site: same-origin" "individual.php?pid=I8"
+if grep -a -q "February 1975" "$work/body"; then result ok "a link followed on this site is not held up"
+else result other "a link followed on this site is not held up"; fi
+from_elsewhere "$work/visitor" "Sec-Fetch-Site: cross-site" "individual.php?pid=I1"
+if grep -a -q "March 1890" "$work/body"; then result ok "a visitor who is not signed in is not held up"
+else result other "a visitor who is not signed in is not held up"; fi
+
 # Limit on failed attempts: after ten wrong passwords the right one is refused too, and the page says why.
 for _ in $(seq 10); do sign_in "$work/locked" admin "not-the-password"; done
 sign_in "$work/locked" admin "test-admin-password"
