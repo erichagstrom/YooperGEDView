@@ -98,6 +98,38 @@ function authenticateUser($user_name, $password, $basic=false) {
 }
 
 /**
+ * Checks every file sent with this request against the upload policy
+ * @return string|null why one of them may not be kept; null when all may, or none was sent
+ */
+function uploaded_files_refusal() {
+	$policy=new \YooperGEDView\Upload\UploadPolicy();
+	foreach ($_FILES as $field) {
+		if (!is_array($field) || !isset($field['name'], $field['tmp_name'], $field['error'])) {
+			return 'The upload could not be read.';
+		}
+		// One file, or several under one field name
+		$names=(array)$field['name'];
+		$paths=(array)$field['tmp_name'];
+		$errors=(array)$field['error'];
+		array_walk_recursive($names, function ($name, $key) use (&$flat_names) { $flat_names[]=$name; });
+		array_walk_recursive($paths, function ($path, $key) use (&$flat_paths) { $flat_paths[]=$path; });
+		array_walk_recursive($errors, function ($error, $key) use (&$flat_errors) { $flat_errors[]=$error; });
+		foreach ((array)$flat_names as $i=>$name) {
+			// Nothing chosen in this field, or PHP could not take the file: the page reports that itself
+			if (!isset($flat_errors[$i], $flat_paths[$i]) || $flat_errors[$i]!==UPLOAD_ERR_OK) {
+				continue;
+			}
+			$refusal=$policy->refusal((string)$name, (string)$flat_paths[$i]);
+			if ($refusal!==null) {
+				return $refusal;
+			}
+		}
+		unset($flat_names, $flat_paths, $flat_errors);
+	}
+	return null;
+}
+
+/**
  * Requests for a new password by one-time link
  * @return \YooperGEDView\Security\PasswordReset
  */

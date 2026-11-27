@@ -1400,6 +1400,8 @@ case 'update':
 		//-- check for photo update
 		if (count($_FILES)>0) {
 			if (isset($_REQUEST['folder'])) $folder = $_REQUEST['folder'];
+			// The folder stays inside the media folder: no "..", no other drive, nothing but a plain path
+			if (!isset($folder) || !is_string($folder) || strpos($folder, '..')!==false || !preg_match('~^[A-Za-z0-9_ /.-]*$~', $folder)) $folder = "";
 			$uploaded_files = array();
 			if (substr($folder, 0, 1) == "/") $folder = substr($folder, 1);
 			if (substr($folder, -1, 1) != "/") $folder .= "/";
