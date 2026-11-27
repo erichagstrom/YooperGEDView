@@ -211,6 +211,27 @@ else result other "PHP inside a file called a picture is refused"; fi
 if [ "$(upload_status addmedia.php mediafile "$work/photo.png" action=newentry folder= level=1)" = 200 ] && [ -s "$work/site/app/media/photo.png" ]; then result ok "a real picture is accepted and saved"
 else result other "a real picture is accepted and saved"; fi
 
+# Pending edits are kept as data. The old code wrote them into a PHP file, with the editor's user name between
+# quotes, and ran that file on every page. A user can choose their own name: this one closes the quotes and
+# prints the result of a sum, 982007569, if it is ever run.
+hostile_name="x'.print(31337*31337).'"
+php "$here/rename-user.php" "$work/site/app/index/test.sqlite" admin "$hostile_name"
+csrf=$(token "$work/csrf-a")
+curl -s -o "$work/body" -A "$agent" -b "$work/csrf-a" -c "$work/csrf-a" --data-urlencode "csrf=$csrf" --data "action=updateraw&pid=I2" \
+  --data-urlencode "newgedrec=0 @I2@ INDI
+1 NAME Aino /Kivela/
+1 SEX F
+1 NOTE It's a note with a quote" "$base/edit_interface.php"
+if grep -a -q "Update successful" "$work/body" && [ -s "$work/site/app/index/pgv_changes.json" ] && [ ! -e "$work/site/app/index/pgv_changes.php" ]; then result ok "an edit is kept as a pending change, in a data file"
+else result other "an edit is kept as a pending change, in a data file"; fi
+curl -s -o "$work/body" -A "$agent" -b "$work/csrf-a" -c "$work/csrf-a" "$base/edit_changes.php"
+if grep -a -q "I2" "$work/body" && ! grep -a -q "982007569" "$work/body" && ! grep -a -qE 'Parse error|Fatal error' "$work/body"; then result ok "a user name written to run as code in the pending changes is only a name"
+else result other "a user name written to run as code in the pending changes is only a name"; fi
+curl -s -o "$work/body" -A "$agent" -b "$work/csrf-a" -c "$work/csrf-a" "$base/index.php"
+if grep -a -q "logout=1" "$work/body" && ! grep -a -q "982007569" "$work/body"; then result ok "pages still load for editors after that edit"
+else result other "pages still load for editors after that edit"; fi
+php "$here/rename-user.php" "$work/site/app/index/test.sqlite" "$hostile_name" admin
+
 # Links from other sites: a signed-in visitor sent to an address with parameters must confirm first.
 # from_elsewhere <cookie file> <header> <page>: fetch a page as a browser coming from another site would.
 from_elsewhere() { curl -s -g -A "$agent" -b "$1" -c "$1" -H "$2" -o "$work/body" "$base/$3"; }

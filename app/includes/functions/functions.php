@@ -2594,9 +2594,25 @@ function get_relationship2($pid1, $pid2, $followspouse=true, $maxlength=0, $igno
 }
 
 /**
+ * The pending changes, as write_changes() stored them.  The file is read as data and never run.
+ * A pgv_changes.php left by PhpGedView is not read: it is PHP code.
+ * @return array
+ */
+function read_changes() {
+	global $INDEX_DIRECTORY;
+
+	$file = $INDEX_DIRECTORY."pgv_changes.json";
+	if (!file_exists($file)) {
+		return array();
+	}
+	$changes = json_decode((string)file_get_contents($file), true);
+	return is_array($changes) ? $changes : array();
+}
+
+/**
  * write changes
  *
- * this function writes the $pgv_changes back to the <var>$INDEX_DIRECTORY</var>/pgv_changes.php
+ * this function writes the $pgv_changes back to the <var>$INDEX_DIRECTORY</var>/pgv_changes.json
  * file so that it can be read in and checked to see if records have been updated.  It also stores
  * old records so that they can be undone.
  * @return bool true if successful false if there was an error
@@ -2607,29 +2623,21 @@ function write_changes() {
 	//-- only allow 1 thread to write changes at a time
 	$mutex = new Mutex("pgv_changes");
 	$mutex->Wait();
-	//-- write the changes file
-	$changestext = "<?php\n\$pgv_changes = array();\n";
+	//-- write the changes file.  It holds data (JSON), never code: these records and user names are written by
+	//-- editors, and the old pgv_changes.php, which was run to load it, let them write PHP into it.
+	$changes_to_keep = array();
 	foreach ($pgv_changes as $gid=>$changes) {
 		if (count($changes)>0) {
-			$changestext .= "\$pgv_changes[\"$gid\"] = array();\n";
-			foreach ($changes as $indexval => $change) {
-				$changestext .= "// Start of change record.\n";
-				$changestext .= "\$change = array();\n";
-				$changestext .= "\$change[\"gid\"] = '".$change["gid"]."';\n";
-				$changestext .= "\$change[\"gedcom\"] = '".$change["gedcom"]."';\n";
-				$changestext .= "\$change[\"type\"] = '".$change["type"]."';\n";
-				$changestext .= "\$change[\"status\"] = '".$change["status"]."';\n";
-				$changestext .= "\$change[\"user\"] = '".$change["user"]."';\n";
-				$changestext .= "\$change[\"time\"] = '".$change["time"]."';\n";
-				if (isset($change["linkpid"]))
-					$changestext .= "\$change[\"linkpid\"] = '".$change["linkpid"]."';\n";
-				$changestext .= "\$change[\"undo\"] = '".str_replace("\\\\'", "\\'", preg_replace("/'/", "\\'", $change["undo"]))."';\n";
-				$changestext .= "// End of change record.\n";
-				$changestext .= "\$pgv_changes[\"$gid\"][] = \$change;\n";
-			}
+			$changes_to_keep[$gid] = array_values($changes);
 		}
 	}
-	$fp = fopen($INDEX_DIRECTORY."pgv_changes.php", "wb");
+	$changestext = json_encode($changes_to_keep, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	if ($changestext===false) {
+		print "ERROR 7: Unable to write to changes file.\n";
+		$mutex->Release();
+		return false;
+	}
+	$fp = fopen($INDEX_DIRECTORY."pgv_changes.json", "wb");
 	if ($fp===false) {
 		print "ERROR 6: Unable to open changes file resource.  Unable to complete request.\n";
 		return false;
@@ -2645,8 +2653,8 @@ function write_changes() {
 	//-- release the mutex acquired above
 	$mutex->Release();
 
-	$logline = AddToLog("pgv_changes.php updated");
-	check_in($logline, "pgv_changes.php", $INDEX_DIRECTORY);
+	$logline = AddToLog("pgv_changes.json updated");
+	check_in($logline, "pgv_changes.json", $INDEX_DIRECTORY);
 	return true;
 }
 

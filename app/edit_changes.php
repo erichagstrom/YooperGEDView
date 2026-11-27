@@ -33,7 +33,7 @@ if (!PGV_USER_CAN_ACCEPT) {
 	exit;
 }
 
-require $INDEX_DIRECTORY.'pgv_changes.php';
+$pgv_changes = read_changes();
 
 $action=safe_GET('action');
 $cid   =safe_GET('cid');

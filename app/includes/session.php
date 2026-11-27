@@ -699,11 +699,7 @@ if (PGV_SCRIPT_NAME!='editconfig_help.php') {
 	}
 
 	//-- load any editing changes
-	if (PGV_USER_CAN_EDIT && file_exists("{$INDEX_DIRECTORY}pgv_changes.php")) {
-		require $INDEX_DIRECTORY.'pgv_changes.php';
-	} else {
-		$pgv_changes = array();
-	}
+	$pgv_changes = PGV_USER_CAN_EDIT ? read_changes() : array();
 
 	if (empty($LOGIN_URL)) {
 		$LOGIN_URL = 'login.php';
