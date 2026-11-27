@@ -214,6 +214,53 @@ else result other "failed sign-ins are recorded, refused ones are not counted (f
 sed -i -E 's/last_activity\|i:[0-9]+;/last_activity|i:1;/' "$work/site/sessions/sess_$(session_id "$work/admin")"
 if signed_in "$work/admin"; then result other "an idle session is signed out"; else result ok "an idle session is signed out"; fi
 
+# A lost password. This comes after everything else: it changes the administrator's password.
+# ask_for_link <user>: fill in the "lost password" form; the answer is in $work/body.
+ask_for_link() {
+  local csrf
+  csrf=$(token "$work/lost")
+  curl -s -o "$work/body" -A "$agent" -b "$work/lost" -c "$work/lost" --data-urlencode "user_name=$1" --data "action=requestpw&csrf=$csrf" "$base/login_register.php"
+}
+# choose_password <link token> <password> <password again>: send the form behind the link; the answer is in $work/body.
+choose_password() {
+  local csrf
+  csrf=$(token "$work/lost")
+  curl -s -o "$work/body" -A "$agent" -b "$work/lost" -c "$work/lost" --data-urlencode "user_password01=$2" --data-urlencode "user_password02=$3" \
+    --data "action=setpw&token=$1&csrf=$csrf" "$base/login_register.php"
+}
+# The limit on failed attempts for this name was reached earlier in this run; clear the record to sign in again.
+php "$here/failed-sign-ins.php" "$work/site/app/index/test.sqlite" admin --forget > /dev/null
+sign_in "$work/elsewhere" admin "test-admin-password"
+: > "$work/site/mail"
+ask_for_link nobody-by-that-name
+answer_unknown=$(grep -a -c "a message has been sent" "$work/body")
+ask_for_link admin
+answer_known=$(grep -a -c "a message has been sent" "$work/body")
+link=$(grep -a -o 'login_register.php?action=resetpw&token=[0-9a-f]\{64\}' "$work/site/mail" | head -n 1)
+if [ "$answer_unknown" = 1 ] && [ "$answer_known" = 1 ] && [ "$(grep -a -c 'action=resetpw' "$work/site/mail")" = 1 ]; then result ok "asking for a password link answers the same for any name and mails only a real user"
+else result other "asking for a password link answers the same for any name and mails only a real user"; fi
+if grep -a -q "test-admin-password" "$work/site/mail" || ! signed_in "$work/elsewhere"; then result other "asking for a link changes nothing and mails no password"
+else result ok "asking for a link changes nothing and mails no password"; fi
+ask_for_link admin
+if [ "$(grep -a -c 'action=resetpw' "$work/site/mail")" = 1 ]; then result ok "asking again straight away sends no second message"
+else result other "asking again straight away sends no second message"; fi
+curl -s -o "$work/body" -A "$agent" -b "$work/lost" -c "$work/lost" "$base/$link"
+if [ -n "$link" ] && grep -a -q 'name="user_password01"' "$work/body"; then result ok "the link in the message offers a new password"
+else result other "the link in the message offers a new password"; fi
+choose_password "${link##*=}" "a-new-password-1" "a-different-one-2"
+if grep -a -q "Passwords do not match" "$work/body"; then result ok "two different new passwords are refused"; else result other "two different new passwords are refused"; fi
+choose_password "$(printf 'a%.0s' $(seq 64))" "a-new-password-1" "a-new-password-1"
+if grep -a -q "This link does not work any more" "$work/body"; then result ok "a made-up link is refused"; else result other "a made-up link is refused"; fi
+choose_password "${link##*=}" "a-new-password-1" "a-new-password-1"
+if grep -a -q "Your password has been changed" "$work/body"; then result ok "the link sets the new password"; else result other "the link sets the new password"; fi
+if signed_in "$work/elsewhere"; then result other "sessions from before the change are ended"; else result ok "sessions from before the change are ended"; fi
+curl -s -o "$work/body" -A "$agent" -b "$work/lost" -c "$work/lost" "$base/$link"
+if grep -a -q "This link does not work any more" "$work/body"; then result ok "the link works only once"; else result other "the link works only once"; fi
+sign_in "$work/old" admin "test-admin-password"
+if signed_in "$work/old"; then result other "the old password no longer works"; else result ok "the old password no longer works"; fi
+sign_in "$work/new" admin "a-new-password-1"
+if signed_in "$work/new"; then result ok "the new password works"; else result other "the new password works"; fi
+
 # Repeat the failures at the end, where they are easy to find.
 grep "^FAIL" "$log" || true
 echo "$pass passed, $fail failed"
