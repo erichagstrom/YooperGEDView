@@ -1,9 +1,9 @@
 name: Checks
+# Runs on every push and pull request, documentation included: a required check that is skipped would leave
+# the pull request waiting for ever.
 on:
   push:
-    paths-ignore: ['docs/**', '*.md']
   pull_request:
-    paths-ignore: ['docs/**', '*.md']
 permissions:
   contents: read
 jobs:
