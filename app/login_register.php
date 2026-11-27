@@ -108,11 +108,11 @@ switch ($action) {
 				$user_new_pw = "";
 				$max = strlen($passchars)-1;
 				for($i=0; $i<8; $i++) {
-					$index = rand(0,$max);
+					$index = random_int(0,$max);
 					$user_new_pw .= $passchars[$index];
 				}
 
-				set_user_password($user_id, crypt($user_new_pw, PGV_SALT));
+				set_user_password($user_id, (new \YooperGEDView\Security\PasswordHasher())->hash($user_new_pw));
 				set_user_setting($user_id, 'pwrequested', 1);
 
 				// switch language to user settings
@@ -374,7 +374,7 @@ switch ($action) {
 					print "<a href=\"javascript:history.back()\">".$pgv_lang["back"]."</a><br />";
 				}
 				else if ($user_password01 == $user_password02) {
-					if ($user_id=create_user($user_name, crypt($user_password01, PGV_SALT))) {
+					if ($user_id=create_user($user_name, (new \YooperGEDView\Security\PasswordHasher())->hash($user_password01))) {
 						set_user_setting($user_id, 'firstname',           $user_firstname);
 						set_user_setting($user_id, 'lastname',            $user_lastname);
 						set_user_setting($user_id, 'email',               $user_email);
@@ -382,7 +382,7 @@ switch ($action) {
 						set_user_setting($user_id, 'verified',            'no');
 						set_user_setting($user_id, 'verified_by_admin',    $REQUIRE_ADMIN_AUTH_REGISTRATION ? 'no' : 'yes');
 						set_user_setting($user_id, 'reg_timestamp',        date('U'));
-						set_user_setting($user_id, 'reg_hashcode',         md5(crypt($user_name, PGV_SALT)));
+						set_user_setting($user_id, 'reg_hashcode',         bin2hex(random_bytes(16)));
 						set_user_setting($user_id, 'contactmethod',        "messaging2");
 						set_user_setting($user_id, 'defaulttab',           $GEDCOM_DEFAULT_TAB);
 						set_user_setting($user_id, 'visibleonline',        'Y');
@@ -545,7 +545,7 @@ switch ($action) {
 		print "<tr><td class=\"optionbox\">";
 		print str_replace("#user_name#", $user_name, $pgv_lang["pls_note08"]);
 		if ($user_id) {
-			$pw_ok = (get_user_password($user_id) == crypt($user_password, get_user_password($user_id)));
+			$pw_ok = (new \YooperGEDView\Security\PasswordHasher())->verify((string)$user_password, (string)get_user_password($user_id));
 			$hc_ok = (get_user_setting($user_id, 'reg_hashcode') == $user_hashcode);
 			if (($pw_ok) && ($hc_ok)) {
 				set_user_setting($user_id, 'verified', 'yes');

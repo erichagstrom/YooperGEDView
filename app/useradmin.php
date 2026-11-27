@@ -137,7 +137,7 @@ if ($action=='createuser' || $action=='edituser2') {
 			} else {
 				// New user
 				if ($action=='createuser') {
-					if ($user_id=create_user($username, crypt($pass1, PGV_SALT))) {
+					if ($user_id=create_user($username, (new \YooperGEDView\Security\PasswordHasher())->hash($pass1))) {
 						set_user_setting($user_id, 'reg_timestamp', date('U'));
 						set_user_setting($user_id, 'sessiontime', '0');
 						AddToLog("User ->{$username}<- created");
@@ -150,7 +150,7 @@ if ($action=='createuser' || $action=='edituser2') {
 				}
 				// Change password
 				if ($action=='edituser2' && !empty($pass1)) {
-					set_user_password($user_id, crypt($pass1, PGV_SALT));
+					set_user_password($user_id, (new \YooperGEDView\Security\PasswordHasher())->hash($pass1));
 					AddToLog("User ->{$oldusername}<- had password changed");
 				}
 				// Change username
