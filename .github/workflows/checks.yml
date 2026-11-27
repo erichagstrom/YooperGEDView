@@ -112,5 +112,27 @@ jobs:
           grep -q "Too many failed attempts" body.txt || { echo "expected the eleventh attempt to be refused by the limit"; explain; exit 1; }
           count=$(echo "SELECT COUNT(*) FROM pgv_sign_in_attempt WHERE user_name = 'ci-admin' AND success = 0" | sql)
           test "$count" = 10 || { echo "expected 10 recorded failures, found $count"; exit 1; }
+      # Run last: it adds a failed sign-in from another address.
+      - name: A reverse proxy is believed about the visitor, and nobody else is
+        run: |
+          set -eu
+          sql() { docker compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -N -u"$MARIADB_USER" "$MARIADB_DATABASE"'; }
+          agent="Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0"
+          # From inside the container, which is the trusted address by default.
+          docker compose exec -T web bash -s < tests/proxy-check.sh > proxied-headers.txt
+          recorded=$(echo "SELECT ip_address FROM pgv_sign_in_attempt WHERE user_name = 'via-proxy'" | sql)
+          test "$recorded" = 203.0.113.9 || { echo "expected the visitor's address from the proxy, recorded '$recorded'"; exit 1; }
+          grep -i '^set-cookie: PHPSESSID=' proxied-headers.txt | grep -qi '; *secure' || { echo "expected a Secure cookie when the proxy says HTTPS"; cat proxied-headers.txt; exit 1; }
+          grep -qi '^strict-transport-security:' proxied-headers.txt || { echo "expected HSTS when the proxy says HTTPS"; cat proxied-headers.txt; exit 1; }
+          # From outside, the same headers are a visitor's own claim and count for nothing.
+          curl -s -A "$agent" -H "X-Forwarded-For: 203.0.113.9" -H "X-Forwarded-Proto: https" -D outside-headers.txt -o /dev/null "http://127.0.0.1:8080/login.php?url=index.php"
+          if grep -i '^set-cookie: PHPSESSID=' outside-headers.txt | grep -qi '; *secure'; then echo "a visitor's own X-Forwarded-Proto was believed"; exit 1; fi
+          if grep -qi '^strict-transport-security:' outside-headers.txt; then echo "a visitor's own X-Forwarded-Proto was believed"; exit 1; fi
+          curl -s -A "$agent" -H "X-Forwarded-For: 203.0.113.9" -b cookies.txt -c cookies.txt -o page.txt "http://127.0.0.1:8080/login.php?url=index.php"
+          csrf=$(grep -o 'name="csrf" value="[0-9a-f]*"' page.txt | head -n 1 | cut -d'"' -f4)
+          curl -s -A "$agent" -H "X-Forwarded-For: 203.0.113.9" -b cookies.txt -c cookies.txt -o /dev/null \
+            --data "action=login&url=index.php&username=not-via-proxy&password=wrong-password&csrf=$csrf" http://127.0.0.1:8080/login.php
+          recorded=$(echo "SELECT ip_address FROM pgv_sign_in_attempt WHERE user_name = 'not-via-proxy'" | sql)
+          test -n "$recorded" && test "$recorded" != 203.0.113.9 || { echo "a visitor's own X-Forwarded-For was believed, recorded '$recorded'"; exit 1; }
       - if: failure()
         run: docker compose logs --tail 12 web
