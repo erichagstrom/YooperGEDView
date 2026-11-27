@@ -1,0 +1,7 @@
+# Static analysis of the inherited code in app/, at level 0. Next step: record today's findings with
+# `composer stan -- --generate-baseline` so that only new ones fail the check, then raise the level. New code is checked separately and strictly (phpstan-src.neon).
+parameters:
+    level: 0
+    phpVersion: 80300
+    paths:
+        - app

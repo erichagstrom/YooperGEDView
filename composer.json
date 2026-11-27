@@ -1,0 +1,38 @@
+{
+    "name": "yoopergedview/yoopergedview",
+    "description": "YooperGEDView: a modernized fork of PhpGedView 4.3.0",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.3",
+        "ext-dom": "*",
+        "ext-gd": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-zip": "*",
+        "phpmailer/phpmailer": "^6.9",
+        "tecnickcom/tcpdf": "^6.7"
+    },
+    "require-dev": {
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "spaze/phpstan-disallowed-calls": "^4.0"
+    },
+    "scripts": {
+        "lint": "parallel-lint --exclude vendor app",
+        "cs": "php-cs-fixer check --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "stan": "phpstan analyse --memory-limit=2G --no-progress",
+        "stan-src": "phpstan analyse --configuration=phpstan-src.neon --memory-limit=2G --no-progress",
+        "check": [
+            "@lint",
+            "@cs",
+            "@stan"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

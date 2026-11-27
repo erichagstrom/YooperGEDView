@@ -1,0 +1,6 @@
+.git
+vendor
+tests
+docs
+.github
+.env

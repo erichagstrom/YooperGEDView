@@ -1,0 +1,117 @@
+0 HEAD
+1 SOUR YooperGEDView-tests
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUB1@
+0 @SUB1@ SUBM
+1 NAME Test Fixture
+0 @I1@ INDI
+1 NAME Aino /Kivela/
+1 SEX F
+1 BIRT
+2 DATE 12 MAR 1890
+2 PLAC Calumet, Houghton, Michigan, USA
+1 DEAT
+2 DATE 3 NOV 1961
+2 PLAC Hancock, Houghton, Michigan, USA
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Eino /Maki/
+1 SEX M
+1 BIRT
+2 DATE 30 JUN 1886
+2 PLAC Oulu, Finland
+1 DEAT
+2 DATE 19 JAN 1950
+2 PLAC Calumet, Houghton, Michigan, USA
+1 OCCU Copper miner
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Helmi /Maki/
+1 SEX F
+1 BIRT
+2 DATE 8 AUG 1915
+2 PLAC Calumet, Houghton, Michigan, USA
+1 DEAT
+2 DATE 22 FEB 1999
+2 PLAC Marquette, Marquette, Michigan, USA
+1 FAMC @F1@
+1 FAMS @F2@
+0 @I4@ INDI
+1 NAME Toivo /Maki/
+1 SEX M
+1 BIRT
+2 DATE 2 DEC 1918
+2 PLAC Calumet, Houghton, Michigan, USA
+1 DEAT
+2 DATE 14 JUN 1944
+2 PLAC France
+1 FAMC @F1@
+0 @I5@ INDI
+1 NAME Walter /Lindqvist/
+1 SEX M
+1 BIRT
+2 DATE 17 APR 1912
+2 PLAC Ishpeming, Marquette, Michigan, USA
+1 DEAT
+2 DATE 5 OCT 1988
+2 PLAC Marquette, Marquette, Michigan, USA
+1 FAMS @F2@
+0 @I6@ INDI
+1 NAME Karen /Lindqvist/
+1 SEX F
+1 BIRT
+2 DATE 9 SEP 1948
+2 PLAC Marquette, Marquette, Michigan, USA
+1 FAMC @F2@
+1 FAMS @F3@
+0 @I7@ INDI
+1 NAME Dale /Peterson/
+1 SEX M
+1 BIRT
+2 DATE 21 MAY 1946
+2 PLAC Escanaba, Delta, Michigan, USA
+1 FAMS @F3@
+0 @I8@ INDI
+1 NAME Erik /Peterson/
+1 SEX M
+1 BIRT
+2 DATE 1 FEB 1975
+2 PLAC Marquette, Marquette, Michigan, USA
+1 FAMC @F3@
+0 @I9@ INDI
+1 NAME Sara /Peterson/
+1 SEX F
+1 BIRT
+2 DATE 15 JUL 1979
+2 PLAC Marquette, Marquette, Michigan, USA
+1 FAMC @F3@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I1@
+1 CHIL @I3@
+1 CHIL @I4@
+1 MARR
+2 DATE 6 JUN 1913
+2 PLAC Calumet, Houghton, Michigan, USA
+1 SOUR @S1@
+0 @F2@ FAM
+1 HUSB @I5@
+1 WIFE @I3@
+1 CHIL @I6@
+1 MARR
+2 DATE 14 SEP 1940
+2 PLAC Marquette, Marquette, Michigan, USA
+0 @F3@ FAM
+1 HUSB @I7@
+1 WIFE @I6@
+1 CHIL @I8@
+1 CHIL @I9@
+1 MARR
+2 DATE 20 JUN 1970
+2 PLAC Marquette, Marquette, Michigan, USA
+0 @S1@ SOUR
+1 TITL Parish register (invented for tests)
+0 TRLR

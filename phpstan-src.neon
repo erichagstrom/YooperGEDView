@@ -1,0 +1,35 @@
+# Static analysis of new code (everything outside app/): highest level, strict rules, banned constructs.
+# See docs/CODING-STANDARDS.md. No baseline: findings here are fixed, not recorded.
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-loose-calls.neon
+parameters:
+    level: max
+    phpVersion: 80300
+    paths:
+        - src
+    disallowedFunctionCalls:
+        -
+            function: 'unserialize()'
+            message: 'use JSON'
+        -
+            function: 'extract()'
+            message: 'name the variables'
+        -
+            function: 'crypt()'
+            message: 'use password_hash() and password_verify()'
+    disallowedSuperglobals:
+        -
+            superglobal:
+                - '$GLOBALS'
+                - '$_GET'
+                - '$_POST'
+                - '$_REQUEST'
+                - '$_COOKIE'
+                - '$_FILES'
+                - '$_SESSION'
+            message: 'read input through the request object'

@@ -1,0 +1,9 @@
+# Pages requested by both a signed-out visitor and the administrator. One per line.
+index.php
+login.php?url=index.php
+indilist.php
+famlist.php
+search.php
+calendar.php
+individual.php?pid=I1
+family.php?famid=F1
