@@ -157,13 +157,11 @@ if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE))
     fail('cannot copy the sample tree');
 }
 
-request($baseUrl . 'login.php', $cookieJar);
-request($baseUrl . 'login.php', $cookieJar, [
-    'action' => 'login',
-    'username' => ADMIN_USER,
-    'password' => ADMIN_PASSWORD,
-    'url' => 'editgedcoms.php',
-]);
+// Sign in through the form, as a browser would: the form carries the token that the program asks for.
+$form = formDefaults(request($baseUrl . 'login.php?url=editgedcoms.php', $cookieJar), 'loginform');
+$form['fields']['username'] = ADMIN_USER;
+$form['fields']['password'] = ADMIN_PASSWORD;
+request($baseUrl . 'login.php', $cookieJar, $form['fields']);
 
 // "Add GEDCOM": the tree's settings form, then the import pages until the program reports the tree as imported.
 $form = formDefaults(request($baseUrl . 'editconfig_gedcom.php?source=add_form', $cookieJar), 'configform');
