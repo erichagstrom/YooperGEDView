@@ -577,58 +577,8 @@ function myplot($mytitle, $n, $xdata, $xtitle, $ydata, $ytitle, $legend) {
 	$titleLength = strpos($mytitle."\n", "\n");
 	$title = substr($mytitle, 0, $titleLength);
 
-	$imgurl = "https://chart.apis.google.com/chart?cht=bvg&chs=950x300&chf=bg,s,ffffff00|c,s,ffffff00&chtt=".$title."&".$datastring."&".$colorstring."&chbh=";
-	if (count($ydata) > 3) {
-		$imgurl .= "5,1";
-	} elseif (count($ydata) < 2) {
-		$imgurl .= "45,1";
-	} else {
-		$imgurl .= "20,3";
-	}
-	$imgurl .= "&chxt=x,x,y,y&chxl=0:|";
-	for($i=0; $i<count($xdata); $i++) {
-		$imgurl .= $xdata[$i]."|";
-	}
-
-	$imgurl .= "1:||||".$xtitle."|2:|";
-	$imgurl .= "0|";
-	if ($percentage){
-		for($i=1; $i<11; $i++) {
-			if ($ymax < 11)
-				$imgurl .= round($ymax*$i/10, 1)."|";
-			else
-				$imgurl .= round($ymax*$i/10, 0)."|";
-		}
-		$imgurl .= "3:||%|";
-	}
-	else {
-		if ($ymax < 11) {
-			for($i=1; $i<$ymax+1; $i++) {
-				$imgurl .= round($ymax*$i/($ymax), 0)."|";
-			}
-		}
-		else {
-			for($i=1; $i<11; $i++) {
-				$imgurl .= round($ymax*$i/10, 0)."|";
-			}
-		}
-		$imgurl .= "3:||".$ytitle."|";
-	}
-	//only show legend if y-data is non-2-dimensional
-	if (count($ydata) > 1) {
-		$imgurl .= "&chdl=";
-		for($i=0; $i<count($legend); $i++){
-			$imgurl .= $legend[$i];
-			if (!($i == (count($legend)-1))){
-				$imgurl .= "|";
-			}
-		}
-	}
-	// in PHP 5.3.0 we can use
-	//$title = strstr($mytitle, '|', true);
-	$title = substr($mytitle, 0, strpos($mytitle, '|'));
+	// No chart: these were pictures fetched from Google's chart service, which closed in 2019, and asking for them sent data from the tree to Google.
 	echo "<center><div class=\"statistics_chart\">";
-	echo "<img src=\"", encode_url($imgurl), "\" width=\"950\" height=\"300\" border=\"0\" alt=\"", $title, "\" title=\"", $title, "\"/>";
 	echo "</div></center><br /><br />";
 }
 

@@ -93,9 +93,7 @@ foreach ($pgv_language as $key=>$value) {
 }
 asort($Sorted_Langs);
 
-// Add in the required code to perform a google translation
-echo "<script type='text/javascript' src='http://www.google.com/jsapi'></script>";
-echo "<script type='text/javascript' src='js/translate.js'></script>";
+// The Google translation helper is not loaded: it fetched a script from Google (js/translate.js needs it)
 
 /* Language File Edit Mask */
 
