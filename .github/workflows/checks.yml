@@ -1,8 +1,9 @@
 name: Checks
-# Runs on every push and pull request, documentation included: a required check that is skipped would leave
+# Runs on every pull request and on main, documentation included: a required check that is skipped would leave
 # the pull request waiting for ever.
 on:
   push:
+    branches: [main]
   pull_request:
 permissions:
   contents: read
