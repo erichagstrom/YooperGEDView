@@ -51,6 +51,15 @@ expect visitor "individual.php?pid=I8" lacks "February 1975"
 expect visitor "family.php?famid=F3" lacks "June 1970"
 expect visitor "admin.php" lacks "useradmin.php"
 
+# Every report, as a web page.
+report_options="output=HTML&vars[pid]=I1&vars[famid]=F1&vars[sources]=on&vars[notes]=on&vars[pageSize]=A4&vars[maxgen]=3"
+report_options="$report_options&vars[name]=&vars[sortby]=NAME&vars[relatives]=child-family&type[pid]=INDI&type[famid]=FAM"
+for name in pid famid sources notes pageSize maxgen name sortby relatives; do report_options="$report_options&varnames[]=$name"; done
+for report in "$here"/../app/reports/*.xml; do
+  check admin "reportengine.php?action=run&report=reports/$(basename "$report")&$report_options"
+done
+expect admin "reportengine.php?action=run&report=reports/individual.xml&$report_options" has "Kivela"
+
 # Exports: a full GEDCOM for the administrator, and living people's details left out of a "visitor" export.
 export="downloadgedcom.php?action=download&ged=sample.ged&filetype=gedcom"
 expect admin "$export&privatize_export=none" has "1 FEB 1975"

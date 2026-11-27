@@ -490,11 +490,11 @@ class PGVRElement {
 		global $embed_fonts, $SpecialOrds, $pgvreport, $reportTitle, $reportDescription;
 
 		foreach($SpecialOrds as $ord) {
-			if (strpos($t, chr($ord))!==false) {
+			if (strpos((string)$t, chr($ord))!==false) {
 				$embed_fonts = true;
 			}
 		}
-		$t = trim($t, "\r\n\t");
+		$t = trim((string)$t, "\r\n\t");
 		$t = str_replace(array("<br />", "&nbsp;"), array("\n", " "), $t);
 		if (!PGV_RNEW) {
 			$t = strip_tags($t);
@@ -557,7 +557,7 @@ class PGVRHtml extends PGVRElement {
 	public $attrs;
 	public $elements = array();
 
-	function PGVRHtml($tag, $attrs) {
+	function __construct($tag, $attrs) {
 		$this->tag = $tag;
 		$this->attrs = $attrs;
 		return 0;
@@ -691,7 +691,7 @@ class PGVRCell extends PGVRElement {
 	* @param string $bocolor Border color
 	* @param string $tcolor Text color
 	*/
-	function PGVRCell($width, $height, $border, $align, $bgcolor, $style, $ln, $top, $left, $fill, $stretch, $bocolor, $tcolor, $reseth) {
+	function __construct($width, $height, $border, $align, $bgcolor, $style, $ln, $top, $left, $fill, $stretch, $bocolor, $tcolor, $reseth) {
 		$this->align = $align;
 		$this->border = $border;
 		$this->bgcolor = $bgcolor;
@@ -854,7 +854,7 @@ class PGVRTextBox extends PGVRElement {
 	* @param boolean $padding
 	* @param boolean $reseth
 	*/
-	function PGVRTextBox($width, $height, $border, $bgcolor, $newline, $left, $top, $pagecheck, $style, $fill, $padding, $reseth) {
+	function __construct($width, $height, $border, $bgcolor, $newline, $left, $top, $pagecheck, $style, $fill, $padding, $reseth) {
 		$this->border = $border;
 		$this->bgcolor = $bgcolor;
 		$this->fill= $fill;
@@ -923,7 +923,7 @@ class PGVRText extends PGVRElement {
 	* @param string $style The name of the text style
 	* @param string $color HTML color code
 	*/
-	function PGVRText($style, $color) {
+	function __construct($style, $color) {
 		$this->text = "";
 		$this->color = $color;
 		$this->wrapWidthRemaining = 0;
@@ -989,7 +989,7 @@ class PGVRFootnote extends PGVRElement {
 	public $wrapWidthCell;
 	public $addlink;
 
-	function PGVRFootnote($style="") {
+	function __construct($style="") {
 		$this->text = "";
 		if (!empty($style)) {
 			$this->styleName = $style;
@@ -1067,7 +1067,7 @@ class PGVRPageHeader extends PGVRElement {
 		return 0;
 	}
 
-	function PGVRPageHeader() {
+	function __construct() {
 		$this->elements = array();
 		return 0;
 	}
@@ -1145,7 +1145,7 @@ class PGVRImage extends PGVRElement {
 	* @param string $align Placement of the image. L: left, C:center, R:right
 	* @param string $ln T:same line, N:next line
 	*/
-	function PGVRImage($file, $x, $y, $w, $h, $align, $ln) {
+	function __construct($file, $x, $y, $w, $h, $align, $ln) {
 		$this->file = $file;
 		$this->width = $w;
 		$this->height = $h;
@@ -1209,7 +1209,7 @@ class PGVRLine extends PGVRElement {
 	* @param mixed $x2
 	* @param mixed $y2
 	*/
-	function PGVRLine($x1, $y1, $x2, $y2) {
+	function __construct($x1, $y1, $x2, $y2) {
 		$this->x1 = $x1;
 		$this->y1 = $y1;
 		$this->x2 = $x2;
@@ -1879,7 +1879,7 @@ function PGVRGedcomSHandler($attrs) {
 		$id = $match[1];
 	}
 	$tag = $attrs["id"];
-	$tag = str_replace("@fact", $fact, $tag);
+	$tag = str_replace("@fact", (string)$fact, $tag);
 	$tags = explode(":", $tag);
 	$newgedrec = "";
 	if (count($tags)<2) {
@@ -2192,7 +2192,7 @@ function PGVRGetPersonNameSHandler($attrs) {
 				}
 			} else {
 				$addname = $record->getAddName();
-				$addname = preg_replace("/<span class=\"starredname\">(.*)<\/span> ?/", "\\1* ", $addname); //@@ restores the * for underlining a given name
+				$addname = preg_replace("/<span class=\"starredname\">(.*)<\/span> ?/", "\\1* ", (string)$addname); //@@ restores the * for underlining a given name
 				if (!PGV_RNEW) {
 					$addname = strip_tags($addname);//@@
 				}
@@ -2241,7 +2241,7 @@ function PGVRGedcomValueSHandler($attrs) {
 		if ($tag=="@id") {
 			$currentElement->addText($id);
 		} else {
-			$tag = str_replace("@fact", $fact, $tag);
+			$tag = str_replace("@fact", (string)$fact, $tag);
 			if (empty($attrs["level"])) {
 				$temp = explode(" ", trim($gedrec));
 				$level = $temp[0];
@@ -2320,7 +2320,7 @@ function PGVRRepeatTagSHandler($attrs) {
 			$value = trim($value);
 			$currentElement->addText($value);
 		} else {
-			$tag = str_replace("@fact", $fact, $tag);
+			$tag = str_replace("@fact", (string)$fact, $tag);
 			$tags = explode(":", $tag);
 			$temp = explode(" ", trim($gedrec));
 			$level = $temp[0];
@@ -2797,7 +2797,7 @@ function PGVRifSHandler($attrs) {
 	$condition = preg_replace("/\\$(\w+)/", "\$vars[\"$1\"][\"id\"]", $condition);
 	$condition = str_replace(array(" LT ", " GT "), array("<", ">"), $condition);
 	// Replace the first accurance only once of @fact:DATE or in any other combinations to the current fact, such as BIRT
-	$condition = str_replace("@fact", $fact, $condition);
+	$condition = str_replace("@fact", (string)$fact, $condition);
 	$match = array();
 	$count = preg_match_all("/@([\w:\.]+)/", $condition, $match, PREG_SET_ORDER);
 	$i = 0;
@@ -2826,7 +2826,7 @@ function PGVRifSHandler($attrs) {
 				$level++;
 				$value = get_gedcom_value($id, $level, $gedrec, "", false);
 			}
-			$value = "\"".str_replace(array("'", '"'), array("\'", '\"'), $value)."\"";
+			$value = "\"".str_replace(array("'", '"'), array("\'", '\"'), (string)$value)."\"";
 		}
 		$condition = str_replace("@$id", $value, $condition);
 		$i++;
@@ -3227,7 +3227,7 @@ function PGVRListSHandler($attrs) {
 				if ((strpos($attr, "filter")===0) && $value) {
 					// Substitute global vars
 					$value=preg_replace_callback('/\$(\w+)/',
-					                             function ($match) {global $vars; return $vars["$match[1]"]["id"]; },
+					                             function ($match) {global $vars; return isset($vars["$match[1]"]["id"]) ? $vars["$match[1]"]["id"] : ""; },
 					                             $value);
 					// Convert the various filters into SQL
 					if (preg_match('/^(\w+):DATE (LTE|GTE) (.+)$/', $value, $match)) {
@@ -3351,7 +3351,7 @@ function PGVRListSHandler($attrs) {
 					$expr = trim($match[2]);
 					$val = trim($match[3]);
 					if (preg_match("/\\$(\w+)/", $val, $match)) {
-						$val = $vars[$match[1]]["id"];
+						$val = isset($vars[$match[1]]["id"]) ? $vars[$match[1]]["id"] : "";
 						$val = trim($val);
 					}
 					$searchstr = "";
