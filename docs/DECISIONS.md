@@ -40,6 +40,35 @@ why, and what the alternative was.
     callers now, which touches the core record-loading code before there are tests around it.
 13. **"Manage sites" page keeps only IP banning and search-engine lists.**
 
+14. **PclZip replaced by PHP's `ZipArchive`** in the four places that made or read zip files. PclZip fails on
+    PHP 8. Zipped exports are checked by the smoke test; the admin backup and zipped GEDCOM upload are converted
+    but not yet covered by a test.
+15. **TCPDF 6 and PHPMailer 6 come from Composer.** The bundled TCPDF 4.8 does not parse on PHP 8. The program
+    loads `vendor/autoload.php` (one folder above `app/`, outside the web root) only where mail or PDF is needed,
+    and says so plainly if it is missing. PDF output is tested for the individual report only; sending mail is
+    not tested at all.
+16. **PHP 4 style constructors renamed to `__construct`** (33 classes, mostly the report engine and feeds). PHP 8
+    no longer runs them when an object is created.
+17. **The program's error handler honours `@` again.** In PHP 8 a suppressed error no longer shows up as
+    `error_reporting() == 0`, so suppressed warnings were being printed into pages and PDFs.
+18. **Error reporting is `E_ALL`, and the program no longer forces errors onto the page.** Upstream tried to
+    switch reporting off entirely and display on; on PHP 8 the first half silently did nothing. Now the server's
+    `display_errors` / `log_errors` settings decide. The container image logs and does not display.
+19. **A report condition that is not valid PHP counts as false.** These conditions are run with `eval`; PHP 7+
+    throws where PHP 5 returned false. The `eval` itself is removed in Phase 2.
+20. **Container image:** official `php:8.3-apache`, libraries installed by a Composer build stage, code owned by
+    root, `index/` and `includes/` not served, uploads not executable, web installer and bulk account import
+    blocked, database settings from the environment. Not yet pinned by digest.
+21. **Test data and tools are public-safe:** an invented family, a throw-away administrator, nothing from any
+    real site.
+
+### Found on the way, not changed (for Phase 2)
+- Calling `module.php` with a bad module name bans the caller's IP address for an hour, administrators included.
+- By default, names of living people are shown to visitors (`$SHOW_LIVING_NAMES = $PRIV_PUBLIC`); only their
+  details are hidden. A safer default would hide the names too.
+- A password hash is accepted in any `crypt()` format the database holds, which is how the test administrator
+  gets a bcrypt hash today.
+
 ### Known risk: comparisons that changed meaning in PHP 8
 Item 8 is one case of a wider change: in PHP 8, `0 == ''` and `0 == 'abc'` are false where PHP 5 said true. Such
 code raises no error or warning; it just takes the other branch. There is no reliable automatic finder. The

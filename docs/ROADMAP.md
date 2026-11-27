@@ -1,6 +1,6 @@
 # Roadmap: from PhpGedView 4.3.0 to YooperGEDView
 
-Status: Phase 0 started. Scope: `app/` (PhpGedView 4.3.0). Backend first; pages keep their
+Status: Phase 1 (runs on PHP 8.3) done as far as the tests reach; Phase 2 next. Scope: `app/` (PhpGedView 4.3.0). Backend first; pages keep their
 current look until Phase 5.
 
 ## What the code looks like today
@@ -54,12 +54,22 @@ Each phase ends with the test suite passing, and with a site that still works.
 - [ ] Unit tests for the privacy rules (`functions_privacy.php`) before anything touches them
 
 ### Phase 1. Run on a supported PHP (8.3)
-- [x] Fix syntax that PHP 8 rejects in the program's own code (17 files of `$s{0}` offsets; the BMP functions PHP now has built in)
-- [ ] Fix the 33 removed-function calls, magic-quotes and `register_globals` code
-- [ ] Remove the SOAP web service, PEAR, `drupal.php`, `mosgedview.php`, `postgedview.php` (about 14,000 lines, unused here)
-- [ ] Replace bundled TCPDF, PHPMailer and PclZip with current Composer packages (`ZipArchive` for zip)
-- [ ] Turn on full error reporting to the log; fix warnings until the log is quiet
-- [ ] New container image on the official PHP 8.3 image, MariaDB LTS; drop the borrowed `gd` extension
+Done as far as the tests reach. Details and reasons are in `DECISIONS.md`.
+- [x] Fix syntax that PHP 8 rejects in the program's own code
+- [x] Fix removed and deprecated function calls, PHP 4 style constructors, and the dead PHP 5 start-up code
+- [x] Fix what PHP 8 treats differently at run time on every page and report the smoke test visits
+- [x] Remove the SOAP web service, PEAR, the CMS bridges and remote-site linking
+- [x] TCPDF and PHPMailer from Composer; PclZip replaced by `ZipArchive`
+- [x] Full error reporting; the server decides whether errors are shown or logged
+- [x] Container image on the official PHP 8.3 image with MariaDB 11.4 (`Dockerfile`, `compose.yaml`)
+- [x] English only: the other language files are removed
+
+Left over from Phase 1:
+- [ ] Pages and actions the tests do not reach yet: saving edits, accepting changes, uploading media, creating users, sending mail, PDF for reports other than the individual report
+- [ ] Comparisons that changed meaning in PHP 8 (see "Known risk" in `DECISIONS.md`); needs the reference site
+- [ ] PHPStan baseline for `app/`, then make that check blocking
+- [ ] The container image cannot set up a new site until `bin/yooper install` exists (the web installer is blocked)
+- [ ] Pin the base images by digest
 
 ### Phase 2. Security core
 - [ ] Passwords: `password_hash` (Argon2id). No old hashes need migrating; every account gets a reset
@@ -123,7 +133,8 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 |---|---|---|
 | Syntax check, static analysis | Catch breakage without running anything | In CI |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
-| Smoke test (`tests/smoke.sh`) | Main pages answer with no PHP error | In CI, failing until Phase 1 is done |
+| Container image | Builds, starts with MariaDB, creates its tables, refuses the installer and the settings folder | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 154 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning; what each may see; exports | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
