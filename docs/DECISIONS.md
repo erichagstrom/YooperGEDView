@@ -284,7 +284,32 @@ why, and what the alternative was.
     expect `1`, so those sections had never been printed in a test. That turned up one more PHP 8 deprecation
     in the report engine, fixed here.
 
+74. **Every uploaded file is checked before any page code runs** (`YooperGEDView\Upload\UploadPolicy`, applied
+    in `includes/session.php`). The five places that take uploads saved the file under the name its sender
+    gave it, in the media folder, which the web server serves. None looked at that name. An editor could
+    upload `x.php` and have it run as a page of the site; the quick upload on the edit page also took a
+    folder from the request, so `..` put the file in the program's own folder. Confirmed on the old code:
+    all four of the new upload tests fail there. A refused upload gets status 400 and one sentence saying
+    why; nothing is saved.
+75. **The rules.** The name must end in a type from a list: the media types the inherited code names, plus
+    GEDCOM, zip and a few current media types. No part of the name between dots may be a type that servers
+    run or browsers show as a page (`php`, `phtml`, `html`, `svg`, `htaccess` and others), since some servers
+    run `x.php.jpg`. The content, as PHP's `fileinfo` reads it, must not be a program or a web page; and for
+    pictures, PDF and zip it must be what the name says.
+76. **`htm`, `html`, `swf` and `scr` are no longer media types for upload.** The inherited list had them. A
+    web page in the media folder is a page of the site written by whoever uploaded it. Files of those types
+    already in a media folder are untouched.
+77. **A picture that also holds PHP is kept, under a picture name.** Such files are harmless unless something
+    runs them, and the name rules are what prevent that. Looking for PHP inside pictures would refuse real
+    photographs whose data happens to hold `<?`.
+78. **The quick upload's folder must be a plain path inside the media folder.** Anything with `..` or other
+    characters is replaced by the media folder itself.
+
 ### Left for later in Phase 2
+- Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
+  the media firewall is switched on for the tree. The container image does not run PHP in that folder; another
+  web server needs the same setting.
+- The GEDCOM upload on the tree settings page takes its folder from the request. Only administrators reach it.
 - An add-on's language file that refers to other `GLOBALS` names in its texts will find them not replaced.
 - The rule for a new password is still the inherited one: six characters or more. `bin/yooper install` asks
   for twelve. One rule for all places is still to be set.
