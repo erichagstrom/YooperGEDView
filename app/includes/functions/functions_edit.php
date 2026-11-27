@@ -320,9 +320,9 @@ function remove_subrecord($oldrecord, $tag, $gid='', $num=0) {
 	for($i=0; $i<count($gedlines); $i++) {
 		if (preg_match("/".$matchstr."/", $gedlines[$i])>0) {
 			if ($num==-1 || $n==$num) {
-				$glevel = $gedlines[$i]{0};
+				$glevel = $gedlines[$i][0];
 				$i++;
-				while((isset($gedlines[$i]))&&(strlen($gedlines[$i])<4 || $gedlines[$i]{0}>$glevel)) $i++;
+				while((isset($gedlines[$i]))&&(strlen($gedlines[$i])<4 || $gedlines[$i][0]>$glevel)) $i++;
 				$i--;
 			}
 			else $n++;
@@ -353,7 +353,7 @@ function remove_subline($oldrecord, $linenum) {
 		$i++;
 		if ($i<count($gedlines)) {
 			//-- don't put empty lines in the record
-			while((isset($gedlines[$i]))&&(strlen($gedlines[$i])<4 || $gedlines[$i]{0}>$glevel)) $i++;
+			while((isset($gedlines[$i]))&&(strlen($gedlines[$i])<4 || $gedlines[$i][0]>$glevel)) $i++;
 			while($i<count($gedlines)) {
 				if (trim($gedlines[$i])!='') $newrec .= $gedlines[$i]."\n";
 				$i++;

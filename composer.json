@@ -11,7 +11,7 @@
         "phpstan/phpstan": "^2.1"
     },
     "scripts": {
-        "lint": "parallel-lint --exclude vendor --exclude app/client.php app",
+        "lint": "parallel-lint --exclude vendor --exclude app/SOAP --exclude app/tcpdf --exclude app/includes/PHPMailer --exclude app/client.php app",
         "stan": "phpstan analyse --memory-limit=2G --no-progress",
         "check": [
             "@lint",

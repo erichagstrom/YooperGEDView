@@ -186,14 +186,14 @@ class UserMigrateControllerRoot extends BaseController {
 					// backup media files
 					$dir = dir($MEDIA_DIRECTORY);
 					while(false !== ($entry = $dir->read())) {
-						if ($entry{0} != ".") {
+						if ($entry[0] != ".") {
 							if ($entry != "thumbs") $this->flist[] = $MEDIA_DIRECTORY.$entry;
 						}
 					}
 					if ($USE_MEDIA_FIREWALL) {
 						$dir = dir($MEDIA_FIREWALL_ROOTDIR.$MEDIA_DIRECTORY);
 						while(false !== ($entry = $dir->read())) {
-							if ($entry{0} != ".") {
+							if ($entry[0] != ".") {
 								if ($entry != "thumbs" && $entry != "watermark") $this->flist[] = $MEDIA_FIREWALL_ROOTDIR.$MEDIA_DIRECTORY.$entry;
 							}
 						}

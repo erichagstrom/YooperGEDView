@@ -833,7 +833,7 @@ class GedcomRecord {
 			if (empty($line)) {
 				$line=' ';
 			}
-			if ($i==$lct||$line{0}==1) {
+			if ($i==$lct||$line[0]==1) {
 				if ($i>1){
 					$event = new Event($factrec, $linenum);
 					$fact = $event->getTag();

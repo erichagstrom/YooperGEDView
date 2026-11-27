@@ -125,7 +125,7 @@ if ($action=='createuser' || $action=='edituser2') {
 			$i=1;
 			$pass=true;
 			while (strlen($username) > $i) {
-				if (stristr($alphabet, $username{$i})===false) {
+				if (stristr($alphabet, $username[$i])===false) {
 					$pass=false;
 					break;
 				}

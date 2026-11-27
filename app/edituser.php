@@ -76,7 +76,7 @@ if ($form_action=='update') {
 		$i=1;
 		$pass=true;
 		while (strlen($form_username) > $i) {
-			if (stristr($alphabet, $form_username{$i})===false) {
+			if (stristr($alphabet, $form_username[$i])===false) {
 				$pass=false;
 				break;
 			}

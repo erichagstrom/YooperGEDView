@@ -944,7 +944,7 @@ if (check_media_structure()) {
 			}
 
 			foreach ($dirs as $indexval => $dir) {
-				if ($dir{0}!=".") {
+				if ($dir[0]!=".") {
 				print "<tr>";
 					print "<td class=\"optionbox center width10\">";
 						// directory options

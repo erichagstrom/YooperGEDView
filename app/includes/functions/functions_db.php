@@ -1964,7 +1964,7 @@ function delete_fact($linenum, $pid, $gedrec) {
 				$i++;
 				if ($i<$ctlines) {
 					// Remove the fact
-					while ((isset($gedlines[$i]))&&($gedlines[$i]{0}>$glevel)) {
+					while ((isset($gedlines[$i]))&&($gedlines[$i][0]>$glevel)) {
 						$i++;
 					}
 					// Add the remaining lines

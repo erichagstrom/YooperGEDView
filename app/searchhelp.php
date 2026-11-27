@@ -147,7 +147,7 @@ if ((!empty($searchtext)) && strlen($searchtext)>1)  {
 	foreach ($pgv_lang as $text => $value) {
 		if ($searchintext == "all") {
 			$helpvarnames[] = $text;
-		} elseif ((substr($text, -5) == "_help" && $value{0}!="_") || (substr($text, -4) == ".php")) {
+		} elseif ((substr($text, -5) == "_help" && $value[0]!="_") || (substr($text, -4) == ".php")) {
 			$helpvarnames[] = $text;
 		}
 	}

@@ -142,7 +142,7 @@ function warnuser(cbox) {
 		sort($entryList);
 		foreach ($entryList as $entry) {
 			//echo $entry, "\n";
-			if ($entry{0} != '.') {
+			if ($entry[0] != '.') {
 				if ($ged_id=get_id_from_gedcom($entry)) {
 					print "<li class=\"facts_value\" name=\"$entry\" style=\"margin-bottom:2px;\" id=\"lock_$entry\" >";
 					print "<img src=\"./images/RESN_confidential.gif\" alt=\"\" />&nbsp;&nbsp;";

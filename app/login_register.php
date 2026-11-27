@@ -109,7 +109,7 @@ switch ($action) {
 				$max = strlen($passchars)-1;
 				for($i=0; $i<8; $i++) {
 					$index = rand(0,$max);
-					$user_new_pw .= $passchars{$index};
+					$user_new_pw .= $passchars[$index];
 				}
 
 				set_user_password($user_id, crypt($user_new_pw, PGV_SALT));
@@ -358,7 +358,7 @@ switch ($action) {
 			$i = 1;
 			$pass = TRUE;
 			while (strlen($user_name) > $i) {
-				if (stristr($alphabet, $user_name{$i}) != TRUE) {
+				if (stristr($alphabet, $user_name[$i]) != TRUE) {
 					$pass = FALSE;
 					break;
 				}

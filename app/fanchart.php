@@ -78,7 +78,7 @@ function split_align_text($data, $maxlen) {
 	// last line
 	if (!empty($line)) {
 		$len = strlen($line);
-		if (in_array(ord($line{0}),$RTLOrd)) $len/=2;
+		if (in_array(ord($line[0]),$RTLOrd)) $len/=2;
 		$p = max(0,floor(($maxlen-$len)/2));
 		$line = str_repeat(" ", $p) . "$line"; // center alignment using spaces
 		$text .= "$line";
@@ -135,7 +135,7 @@ function print_fan_chart($treeid, $fanw=640, $fandeg=270) {
 		if (!empty($fanChart['font'])) echo '<span class="error">', $pgv_lang["fontfile_error"], ' : ', $fanChart['font']. '</span>';
 		$fanChart['font']=PGV_ROOT.'includes/fonts/DejaVuSans.ttf';
 	}
-	if ($fanChart['font']{0}!='/') $fanChart['font'] = dirname(__FILE__) . "/" . $fanChart['font'];
+	if ($fanChart['font'][0]!='/') $fanChart['font'] = dirname(__FILE__) . "/" . $fanChart['font'];
 	if (!file_exists($fanChart['font'])) {
 		echo '<span class="error">', $pgv_lang["fontfile_error"], ' : ', $fanChart['font']. '</span>';
 		return false;
@@ -144,10 +144,10 @@ function print_fan_chart($treeid, $fanw=640, $fandeg=270) {
 	$fanChart['size'] = intval($fanChart['size']);
 	if ($fanChart['size']<2) $fanChart['size'] = 7;
 
-	if (empty($fanChart['color']) || $fanChart['color']{0}!='#') $fanChart['color'] = '#000000';
-	if (empty($fanChart['bgColor']) || $fanChart['bgColor']{0}!='#') $fanChart['bgColor'] = '#EEEEEE';
-	if (empty($fanChart['bgMColor']) || $fanChart['bgMColor']{0}!='#') $fanChart['bgMColor'] = '#D0D0AC';
-	if (empty($fanChart['bgFColor']) || $fanChart['bgFColor']{0}!='#') $fanChart['bgFColor'] = '#D0ACD0';
+	if (empty($fanChart['color']) || $fanChart['color'][0]!='#') $fanChart['color'] = '#000000';
+	if (empty($fanChart['bgColor']) || $fanChart['bgColor'][0]!='#') $fanChart['bgColor'] = '#EEEEEE';
+	if (empty($fanChart['bgMColor']) || $fanChart['bgMColor'][0]!='#') $fanChart['bgMColor'] = '#D0D0AC';
+	if (empty($fanChart['bgFColor']) || $fanChart['bgFColor'][0]!='#') $fanChart['bgFColor'] = '#D0ACD0';
 
 	$treesize=count($treeid);
 	if ($treesize<1) return;

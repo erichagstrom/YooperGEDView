@@ -23,7 +23,7 @@ Measured on the untouched 4.3.0 release in `app/` (397 PHP files, about 240,000 
 | Risky admin pages | `dir_editor.php`, `editlang*.php` (writes PHP), `pgvinfo.php` (phpinfo), `config_download.php`, `install.php`, `usermigrate*.php`, `client.php` / `genservice.php` (SOAP) |
 | Bundled libraries | TCPDF 4.8 (54,800 lines), PHPMailer 5.2.23, PEAR + SOAP (11,700 lines), PclZip, Prototype, script.aculo.us, old jQuery. All unmaintained at these versions |
 | Translations | 32,700 lines of PHP arrays in `languages/` |
-| PHP 8 | Only `client.php` fails a syntax check on PHP 8.3, but 33 calls to removed functions (`each`, `split`, `create_function`, `ereg`) and the magic-quotes code will fail at run time |
+| PHP 8 | 35 files failed a PHP 8.3 syntax check: 18 of the program's own (now fixed) and 17 in the bundled SOAP, TCPDF and PHPMailer code (removed or replaced in Phase 1). A further 33 calls to removed functions (`each`, `split`, `create_function`, `ereg`) and the magic-quotes code will fail at run time |
 | Tests | None |
 
 ## The decision
@@ -53,7 +53,8 @@ Each phase ends with the test suite passing, and with a site that still works.
 - [ ] Unit tests for the privacy rules (`functions_privacy.php`) before anything touches them
 
 ### Phase 1. Run on a supported PHP (8.3)
-- [ ] Fix `client.php`, the 33 removed-function calls, magic-quotes and `register_globals` code
+- [x] Fix syntax that PHP 8 rejects in the program's own code (17 files of `$s{0}` offsets; the BMP functions PHP now has built in)
+- [ ] Fix the 33 removed-function calls, magic-quotes and `register_globals` code
 - [ ] Remove the SOAP web service, PEAR, `drupal.php`, `mosgedview.php`, `postgedview.php` (about 14,000 lines, unused here)
 - [ ] Replace bundled TCPDF, PHPMailer and PclZip with current Composer packages (`ZipArchive` for zip)
 - [ ] Turn on full error reporting to the log; fix warnings until the log is quiet

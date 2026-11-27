@@ -1430,7 +1430,7 @@ function print_main_media($pid, $level=1, $related=false, $noedit=false) {
 					if ($et>0) $ext = substr(trim($ematch[1]), 1);
 					$row['m_ext'] = $ext;
 					$row['mm_gid'] = $pid;
-						$row['mm_gedrec'] = get_sub_record($objSubrec{0}, $objSubrec, $gedrec);
+						$row['mm_gedrec'] = get_sub_record($objSubrec[0], $objSubrec, $gedrec);
 					$res = print_main_media_row('normal', $row, $pid);
 					$media_found = $media_found || $res;
 				}
@@ -1448,7 +1448,7 @@ function print_main_media($pid, $level=1, $related=false, $noedit=false) {
 				if ($et>0) $ext = substr(trim($ematch[1]), 1);
 				$row['m_ext'] = $ext;
 				$row['mm_gid'] = $pid;
-				$row['mm_gedrec'] = get_sub_record($objSubrec{0}, $objSubrec, $gedrec);
+				$row['mm_gedrec'] = get_sub_record($objSubrec[0], $objSubrec, $gedrec);
 				$res = print_main_media_row('new', $row, $pid);
 				$media_found = $media_found || $res;
 			}
