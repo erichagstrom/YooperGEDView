@@ -10,5 +10,3 @@ parameters:
         - app/tcpdf/*
         - app/includes/PHPMailer/*
         - app/includes/pclzip.lib.php
-        # Language files other than English are removed in Phase 1.
-        - app/languages/*
