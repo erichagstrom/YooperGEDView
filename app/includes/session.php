@@ -417,6 +417,18 @@ if (!in_array(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '
 	}
 	unset($csrf_sent);
 }
+// Uploaded files: each must pass the upload policy before any page code sees it (UploadPolicy)
+if (!empty($_FILES)) {
+	$upload_refusal = uploaded_files_refusal();
+	if ($upload_refusal!==null) {
+		header('HTTP/1.0 400 Bad Request');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo $upload_refusal, ' Nothing was saved. Go back and choose another file.';
+		exit;
+	}
+	unset($upload_refusal);
+}
+
 // The token is added to every form sent by POST as the page goes out, so that no page can leave it out.
 // File downloads are not pages and are not held in memory for this.
 if (!in_array(PGV_SCRIPT_NAME, array('downloadbackup.php', 'mediafirewall.php', 'imageflush.php')) && !(PGV_SCRIPT_NAME=='downloadgedcom.php' && isset($_REQUEST['action']) && $_REQUEST['action']=='download')) {
