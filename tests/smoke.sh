@@ -321,6 +321,28 @@ sign_in "$work/after-command" admin "set-on-the-command-line"
 if signed_in "$work/after-command" && ! signed_in "$work/before-command"; then result ok "the password set on the command line works, and sessions from before it are ended"
 else result other "the password set on the command line works, and sessions from before it are ended"; fi
 
+# Moving a PhpGedView site over. The test site is made to look as 4.3.0 would have left it, then upgraded.
+php "$here/make-site-old.php" "$work/site/app/index/test.sqlite" "$work/site/app/index"
+yooper() { DB_TYPE=sqlite DB_NAME="$work/site/app/index/test.sqlite" "$here/../bin/yooper" "$@"; }
+yooper upgrade-from-pgv --index="$work/site/app/index" > "$work/upgrade-look" 2>&1
+if grep -q "Nothing has been changed" "$work/upgrade-look" && grep -q "would be carried over" "$work/upgrade-look" && [ -e "$work/site/app/index/pgv_changes.php" ]; then result ok "upgrade-from-pgv first reports, and changes nothing"
+else result other "upgrade-from-pgv first reports, and changes nothing"; fi
+yooper upgrade-from-pgv --index="$work/site/app/index" --apply > "$work/upgrade-done" 2>&1
+if grep -q "The changes above have been made" "$work/upgrade-done" && grep -q "admin (administrator)" "$work/upgrade-done" && grep -q "sample.ged_conf.php: settings only" "$work/upgrade-done" && [ -s "$work/site/app/index/pgv_changes.json" ]; then result ok "upgrade-from-pgv --apply makes the changes"
+else result other "upgrade-from-pgv --apply makes the changes"; fi
+sign_in "$work/moved-old" admin "the-old-password"
+if signed_in "$work/moved-old"; then result other "after the move, the old password does not sign in"; else result ok "after the move, the old password does not sign in"; fi
+echo "set-after-the-move-1" | yooper set-password admin > /dev/null
+php "$here/failed-sign-ins.php" "$work/site/app/index/test.sqlite" admin --forget > /dev/null
+sign_in "$work/moved" admin "set-after-the-move-1"
+if signed_in "$work/moved"; then result ok "after the move, the administrator signs in with a password set on the server"
+else result other "after the move, the administrator signs in with a password set on the server"; fi
+curl -s -o "$work/body" -A "$agent" -b "$work/moved" -c "$work/moved" "$base/edit_changes.php"
+if grep -a -q "I3" "$work/body" && ! grep -a -qE '(Warning|Deprecated|Notice|Fatal error)(</b>)?: ' "$work/body"; then result ok "after the move, the pending edit from the old site is there to accept"
+else result other "after the move, the pending edit from the old site is there to accept"; fi
+check moved "individual.php?pid=I1"
+check moved "index.php"
+
 # Repeat the failures at the end, where they are easy to find.
 grep "^FAIL" "$log" || true
 echo "$pass passed, $fail failed"
