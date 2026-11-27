@@ -133,9 +133,9 @@ if (!isset($DBPORT)) {
 }
 
 @ini_set('arg_separator.output', '&amp;');
-@ini_set('error_reporting', 0);
-@ini_set('display_errors', '1');
-@error_reporting(0);
+// Errors are reported in full. Whether they are shown or only logged is the server's choice (display_errors,
+// log_errors); the program no longer overrides it.
+error_reporting(E_ALL);
 
 // PHP too old?
 if (version_compare(PHP_VERSION, PGV_REQUIRED_PHP_VERSION)<0) {

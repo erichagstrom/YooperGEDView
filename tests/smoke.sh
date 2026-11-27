@@ -15,12 +15,20 @@ server=$!
 trap 'kill $server 2>/dev/null; rm -rf "$work"' EXIT
 for _ in $(seq 50); do curl -s -o /dev/null "$base/GPL.txt" && break; sleep 0.2; done
 
+pass=0; fail=0
+# A site with no administrator and no tree yet sends the visitor to the installer, without PHP errors.
+first=$(curl -s -m 120 -A "$agent" -D "$work/first-headers" "$base/index.php")
+if grep -qi '^location: install.php' "$work/first-headers" && ! grep -qE 'Fatal error|Warning|Deprecated|ERROR [0-9]+:' <<<"$first"; then
+  pass=$((pass + 1)); report "PASS  visitor  empty site redirects to the installer"
+else
+  fail=$((fail + 1)); report "FAIL  visitor  empty site redirects to the installer"
+fi
+
 if ! php "$here/provision.php" "$base" "$work/site/app"; then
   report "FAIL  provisioning"
   exit 1
 fi
 
-pass=0; fail=0
 # check <who> <page>: who is "visitor" or "admin" (its cookie file).
 check() {
   local code error
