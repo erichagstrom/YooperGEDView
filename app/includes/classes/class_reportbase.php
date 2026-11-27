@@ -1006,6 +1006,7 @@ class PGVRFootnote extends PGVRElement {
 	function addText($t) {
 		global $embed_fonts, $SpecialOrds;
 
+		$t = (string)$t;
 		foreach($SpecialOrds as $ord) {
 			if (strpos($t, chr($ord))!==false) {
 				$embed_fonts = true;
@@ -2494,7 +2495,8 @@ function PGVRvarSHandler($attrs) {
 			$tfact = $type;
 		}
 		$var = str_replace(array("[", "]", "@fact", "@desc"), array("['", "']", $tfact, $desc), $var);
-		eval("if (!empty(\$$var)) \$var = \$$var;");
+		$named_value = report_named_value($var);
+		if (!empty($named_value)) $var = $named_value;
 		$match = array();
 		if (preg_match("/factarray\['(.*)'\]/", $var, $match)) {
 			$var = $match[1];
@@ -2530,7 +2532,8 @@ function PGVRvarLetterSHandler($attrs) {
 		} else {
 			$tfact = $fact;
 			$var = str_replace(array("[", "]", "@fact", "@desc"), array("['", "']", $tfact, $desc), $var);
-			eval("if (!empty(\$$var)) \$var = \$$var;");
+			$named_value = report_named_value($var);
+			if (!empty($named_value)) $var = $named_value;
 			$letter = UTF8_substr($var, 0, 1);
 		}
 		$currentElement->addText($letter);
@@ -2742,8 +2745,8 @@ function PGVRSetVarSHandler($attrs) {
 		$name = $vars["'".$match[1]."'"]["id"];
 	}
 	if ((substr($value, 0, 10) == "\$pgv_lang[") or (substr($value, 0, 11) == "\$factarray[")) {
-		$var = str_replace(array("[", "]"), array("['", "']"), $value);
-		eval("\$value = $var;");
+		// $pgv_lang[name] or $factarray[name] in the file stands for that text
+		$value = (string)report_named_value(str_replace(array("[", "]"), array("['", "']"), substr($value, 1)));
 	}
 	$count = preg_match_all("/\\$(\w+)/", $value, $match, PREG_SET_ORDER);
 	$i=0;
@@ -2793,49 +2796,41 @@ function PGVRifSHandler($attrs) {
 	}
 
 	$vars["POSTAL_CODE"]["id"] = $POSTAL_CODE;
-	$condition = $attrs["condition"];
-	$condition = preg_replace("/\\$(\w+)/", "\$vars[\"$1\"][\"id\"]", $condition);
-	$condition = str_replace(array(" LT ", " GT "), array("<", ">"), $condition);
-	// Replace the first accurance only once of @fact:DATE or in any other combinations to the current fact, such as BIRT
-	$condition = str_replace("@fact", (string)$fact, $condition);
-	$match = array();
-	$count = preg_match_all("/@([\w:\.]+)/", $condition, $match, PREG_SET_ORDER);
-	$i = 0;
-	while( $i < $count ) {
-		$id = $match[$i][1];
-		$value="\"\"";
+	// The condition is worked out by YooperGEDView\Report\ConditionEvaluator, which asks for the value of each
+	// $variable and @TAG it meets.  Values are never made part of the condition's text.
+	$variable = function ($name) use ($vars) {
+		return isset($vars[$name]["id"]) && is_scalar($vars[$name]["id"]) ? $vars[$name]["id"] : null;
+	};
+	$tag = function ($id) use ($gedrec, $fact, $desc, $generation) {
 		if ($id=="ID") {
-			if (preg_match("/0 @(.+)@/", $gedrec, $match)) {
-				$value = "'".$match[1]."'";
-			}
+			return preg_match("/0 @(.+)@/", (string)$gedrec, $match) ? $match[1] : "";
 		} elseif ($id=="fact") {
-			$value = "\"$fact\"";
+			return (string)$fact;
 		} elseif ($id=="desc") {
-			$value = "\"$desc\"";
+			return (string)$desc;
 		} elseif ($id=="generation") {
-			$value = "\"$generation\"";
-		} else {
-
-			$temp = explode(" ", trim($gedrec));
-			$level = $temp[0];
-			if ($level==0) {
-				$level++;
-			}
-			$value = get_gedcom_value($id, $level, $gedrec, "", false);
-			if (empty($value)) {
-				$level++;
-				$value = get_gedcom_value($id, $level, $gedrec, "", false);
-			}
-			$value = "\"".str_replace(array("'", '"'), array("\'", '\"'), (string)$value)."\"";
+			return (string)$generation;
 		}
-		$condition = str_replace("@$id", $value, $condition);
-		$i++;
-	}
-	$condition = "if ($condition) return true; else return false;";
-	// A condition that is not valid PHP counts as false, as it did before PHP 7 made that an exception.
+		// @fact:DATE means the DATE of the current fact, such as BIRT:DATE
+		if (strpos($id, "fact:")===0) {
+			$id = $fact.substr($id, 4);
+		}
+		$temp = explode(" ", trim((string)$gedrec));
+		$level = $temp[0];
+		if ($level==0) {
+			$level++;
+		}
+		$value = get_gedcom_value($id, $level, $gedrec, "", false);
+		if (empty($value)) {
+			$level++;
+			$value = get_gedcom_value($id, $level, $gedrec, "", false);
+		}
+		return (string)$value;
+	};
+	// A condition that cannot be read counts as false.
 	try {
-		$ret = @eval($condition);
-	} catch (Throwable $ex) {
+		$ret = (new \YooperGEDView\Report\ConditionEvaluator())->holds((string)$attrs["condition"], $variable, $tag);
+	} catch (\YooperGEDView\Report\InvalidCondition $ex) {
 		$ret = false;
 	}
 	if (!$ret) {

@@ -160,21 +160,17 @@ function trim_recursive($var) {
 	}
 }
 
-// Update the variable definitions in a PHP config file, such as config.php
-function update_config(&$text, $var, $value) {
-	// NULL values probably wouldn't hurt, but empty strings are probably better
-	if (is_null($value)) {
-		$value='';
-	}
-	$regex='/^[ \t]*[$]'.$var.'[ \t]*=.*;[ \t]*/m';
-	$assign='$'.$var.'='.var_export($value, true).'; ';
-	if (preg_match($regex, $text)) {
-		// Variable found in file - update it
-		$text=preg_replace($regex, $assign, $text);
-	} else {
-		// Variable not found in file - insert it
-		$text=preg_replace('/^(.*[\r\n]+)([ \t]*[$].*)$/s', '$1'.$assign." // new config variable\n".'$2', $text);
-	}
+/**
+ * The text that a reference in a report file stands for, such as pgv_lang['edit'] or factarray['BIRT'].
+ * Only those two lists can be reached.
+ * @param string $reference
+ * @return string|null null when there is no such text
+ */
+function report_named_value($reference) {
+	global $pgv_lang, $factarray;
+
+	$value=(new \YooperGEDView\Text\NamedValues(array('pgv_lang'=>$pgv_lang, 'factarray'=>$factarray)))->find($reference);
+	return $value===null ? null : (string)$value;
 }
 
 // Convert a file upload PHP error code into user-friendly text
@@ -312,74 +308,6 @@ function load_privacy_file($ged_id=PGV_GED_ID) {
 	) {
 		require $privacy_file;
 	}
-}
-
-/**
- * Update the site configuration settings
- * New settings are passed in as an array of key value pairs
- * The key in the array should be the name of the setting to change
- * the value should be the new value
- * $newconfig['CONFIGURED'] = true;
- *
- * @param array	$newconfig
- * @param boolean $return	return the text or try to write the file
- * @return mixed	returns true on success, or returns an array of error messages on failure
- */
-function update_site_config($newconfig, $return = false) {
-	global $pgv_lang, $COMMIT_COMMAND;
-
-	$errors = array();
-
-	//-- load the configuration file text
-	if (file_exists("config.php")) {
-		$configtext = file_get_contents("config.php");
-	} else {
-		$configtext = file_get_contents("config.dist");
-	}
-
-	foreach($newconfig as $setting=>$value) {
-		update_config($configtext, $setting, $value);
-	}
-
-	//-- check if the configtext, excluding the PHP open and PHP close tags, is valid PHP
-	$tempConfigText = $configtext;
-	if (strtoupper(substr($tempConfigText, 0, 5)) == '<?PHP') {
-		$tempConfigText = substr($tempConfigText, 5);	// Get rid of PHP open tag
-	}
-	$tempConfigText = trim($tempConfigText);	// Get rid of leading and trailing white spaces
-	if (substr($tempConfigText, -2) == '?>') {
-		$tempConfigText = substr($tempConfigText, 0, -2);	// Get rid of PHP close tag
-	}
-	$tempConfigText = str_ireplace('include', '// include', $tempConfigText);
-	$tempConfigText = str_ireplace('require', '// require', $tempConfigText);	// Make sure we don't escape from the config file
-
-	$res = @eval($tempConfigText);
-	if ($res===false) {
-		$error['msg'] = "There was an error in the generated config.php.<br />".htmlentities($configtext);
-		$errors[] = $error;
-	} else {
-		if ($return) {
-			return $configtext;
-		}
-
-		$fp = @fopen("config.php", "wb");
-		if (!$fp) {
-			$error['msg'] = $pgv_lang["pgv_config_write_error"];
-			$errors[] = $error;
-		} else {
-			fwrite($fp, $configtext);
-			fclose($fp);
-			$logline = AddToLog("config.php updated by >".getUserName()."<");
-			if (!empty($COMMIT_COMMAND)) {
-				check_in($logline, "config.php", "");
-			}
-		}
-	}
-
-	if (count($errors)>0) {
-		return $errors;
-	}
-	return true;
 }
 
 // Save the languages the user has chosen to have active on the website

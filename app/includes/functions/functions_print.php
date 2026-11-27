@@ -1482,7 +1482,24 @@ function print_text($help, $level=0, $noprint=0){
 		if (substr($help, 0, 4)=='PGV_' && defined($help)) {
 			$value=constant($help);
 		} else {
-			eval("if (isset(\$$help)) \$value = \$$help;");
+			// Only these can be named in a text: the language lists, the few values this function was given, and
+			// the variables that the language files themselves refer to as GLOBALS[name].
+			$named_value=(new \YooperGEDView\Text\NamedValues(array(
+				'pgv_lang'=>$pgv_lang, 'factarray'=>$factarray, 'faqlist'=>$faqlist,
+				'COMMON_NAMES_THRESHOLD'=>$COMMON_NAMES_THRESHOLD, 'INDEX_DIRECTORY'=>$INDEX_DIRECTORY, 'LANGUAGE'=>$LANGUAGE,
+				'GUESS_URL'=>$GUESS_URL, 'UpArrow'=>$UpArrow, 'DAYS_TO_SHOW_LIMIT'=>$DAYS_TO_SHOW_LIMIT, 'MEDIA_DIRECTORY'=>$MEDIA_DIRECTORY,
+				'repeat'=>$repeat, 'thumbnail'=>$thumbnail, 'xref'=>$xref, 'pid'=>$pid,
+				'GLOBALS'=>array_intersect_key($GLOBALS, array_flip(array(
+					'MEDIA_DIRECTORY', 'MEDIA_DIRECTORY_LEVELS', 'MEDIA_FIREWALL_ROOTDIR', 'INDEX_DIRECTORY', 'PGV_IMAGE_DIR', 'UpArrow',
+					'GEDCOM', 'GEDCOM_TITLE', 'CONTACT_EMAIL', 'Webmaster_EMAIL', 'MAX_VIEWS', 'MAX_VIEW_TIME', 'TBLPREFIX',
+					'SUBLIST_TRIGGER_I', 'SUBLIST_TRIGGER_F', 'pid', 'ged', 'ged_link', 'currentPage', 'lastPage', 'addLinkId', 'remLinkId',
+					'whichFile', 'whichFile1', 'whichFile2', 'tempStringHead',
+					'oldMediaName', 'newMediaName', 'oldMediaFolder', 'newMediaFolder', 'oldThumbFolder', 'newThumbFolder'
+				))),
+			)))->find($help);
+			if ($named_value!==null) {
+				$value=$named_value;
+			}
 		}
 		if ($value===false) return false;
 		$sentence = $value;

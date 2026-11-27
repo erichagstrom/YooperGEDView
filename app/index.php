@@ -267,14 +267,10 @@ if ($action=="ajax") {
 		if (isset($ublocks[$side][$_REQUEST['bindex']])) {
 			$blockval = $ublocks[$side][$_REQUEST['bindex']];
 			if ($blockval[0]==$block && array_key_exists($blockval[0], $PGV_BLOCKS)) {
-				if ($side=="main") {
-					$param1 = "false";
-				} else {
-					$param1 = "true";
-				}
+				$param1 = ($side!="main");
 				if (array_key_exists($blockval[0], $PGV_BLOCKS) && !loadCachedBlock($blockval, $side.$_REQUEST['bindex'])) {
 					ob_start();
-					eval($blockval[0]."($param1, \$blockval[1], \"$side\", ".$_REQUEST['bindex'].");");
+					$blockval[0]($param1, $blockval[1], $side, (int)$_REQUEST['bindex']);
 					$content = ob_get_contents();
 					saveCachedBlock($blockval, $side.$_REQUEST['bindex'], $content);
 					ob_end_flush();
@@ -293,12 +289,12 @@ if ($action=="ajax") {
 	//-- not sure which block to call so call the first one we find
 	foreach($ublocks["main"] as $bindex=>$blockval) {
 		if ($blockval[0]==$block && array_key_exists($blockval[0], $PGV_BLOCKS)) {
-			eval($blockval[0]."(false, \$blockval[1], \"main\", $bindex);");
+			$blockval[0](false, $blockval[1], "main", $bindex);
 		}
 	}
 	foreach($ublocks["right"] as $bindex=>$blockval) {
 		if ($blockval[0]==$block && array_key_exists($blockval[0], $PGV_BLOCKS)) {
-			eval($blockval[0]."(true, \$blockval[1], \"right\", $bindex);");
+			$blockval[0](true, $blockval[1], "right", $bindex);
 		}
 	}
 	exit;
@@ -389,7 +385,7 @@ if (count($ublocks["main"])!=0) {
 			if ($SEARCH_SPIDER || PGV_DEBUG) {
 				// Search spiders get the blocks directly
 				ob_start();
-				eval($block[0]."(false, \$block[1], \"main\", $bindex);");
+				$block[0](false, $block[1], "main", $bindex);
 				$content = ob_get_contents();
 				$temp = $SEARCH_SPIDER;
 				$SEARCH_SPIDER = false;
@@ -423,7 +419,7 @@ if (count($ublocks["right"])!=0) {
 			if ($SEARCH_SPIDER || PGV_DEBUG) {
 				// Search spiders get the blocks directly
 				ob_start();
-				eval($block[0]."(true, \$block[1], \"right\", $bindex);");
+				$block[0](true, $block[1], "right", $bindex);
 				$content = ob_get_contents();
 				saveCachedBlock($block, "right".$bindex, $content);
 				ob_end_flush();

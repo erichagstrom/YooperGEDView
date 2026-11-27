@@ -353,8 +353,9 @@ if ($action=="configure" && isset($ublocks[$side][$index])) {
 	print "<input type=\"hidden\" name=\"side\" value=\"$side\" />\n";
 	print "<input type=\"hidden\" name=\"index\" value=\"$index\" />\n";
 	print "<table border=\"0\" class=\"facts_table ".$TEXT_DIRECTION."\" width=\"99%\">";
-	if ($PGV_BLOCKS[$block[0]]["canconfig"]) {
-		eval($block[0]."_config(\$block[1]);");
+	if ($PGV_BLOCKS[$block[0]]["canconfig"] && function_exists($block[0]."_config")) {
+		$block_config = $block[0]."_config";
+		$block_config($block[1]);
 		print "<tr><td colspan=\"2\" class=\"topbottombar\">";
 		print_help_link("click_here_help", "qm");
 		print "<input type=\"button\" value=\"".$pgv_lang["click_here"]."\" onclick=\"document.block.submit();\" />";

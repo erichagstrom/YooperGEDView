@@ -17,7 +17,7 @@ Measured on the untouched 4.3.0 release in `app/` (397 PHP files, about 240,000 
 | Passwords | MD5-crypt (`$1$`), with the salt taken from the session id (`includes/session.php:380`) |
 | Forms | No CSRF protection anywhere (POST requests fixed in Phase 2) |
 | Sessions | Cookie flags not set by the app; a session id can be supplied by the caller in one code path (`session.php:363`) |
-| `eval` | 12 uses in PhpGedView's own code: home-page blocks (`index.php`, one with a request value inside the string), the report engine, settings loading (`functions.php:356`) |
+| `eval` | (All removed in Phase 2.) 12 uses in PhpGedView's own code: home-page blocks (`index.php`, one with a request value inside the string), the report engine, settings loading (`functions.php:356`) |
 | Settings as code | The app writes PHP files and then `require`s them: `config.php`, per-tree `_conf.php` and `_priv.php`, `pgv_changes.php` (pending edits), `lang_settings.php`, `banned.php` |
 | `unserialize` | 26 uses in 11 files, on database and session values |
 | Risky admin pages | `dir_editor.php`, `editlang*.php` (writes PHP), `pgvinfo.php` (phpinfo), `config_download.php`, `install.php`, `usermigrate*.php`, `client.php` / `genservice.php` (SOAP) |
@@ -82,7 +82,7 @@ Left over from Phase 1:
 - [x] Links that change something (`?action=delete`, `?logout=1` and the like): a signed-in visitor sent to one by another site must confirm first
 - [ ] Those links become POST requests (with the router in Phase 3); the confirmation step then goes
 - [ ] One request object for all input; remove the 779 direct superglobal reads file by file
-- [ ] Remove every `eval`: blocks and reports become classes looked up from a fixed list
+- [x] Remove every `eval`: blocks are called by a name checked against a fixed list, report conditions are worked out by a small interpreter, texts can name only listed values
 - [ ] Settings out of PHP files: secrets from the environment, the rest in the database. Pending edits (`pgv_changes.php`) into a table. `unserialize` replaced by JSON
 - [x] `bin/yooper install` replaces the web installer for creating the first administrator
 - [x] Delete `dir_editor.php`, `editlang*.php`, `pgvinfo.php`, `config_download.php`, `install.php`, `usermigrate*.php` (and `changelanguage.php`, which depended on them)
@@ -144,7 +144,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 195 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 197 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
