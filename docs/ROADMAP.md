@@ -15,7 +15,7 @@ Measured on the untouched 4.3.0 release in `app/` (397 PHP files, about 240,000 
 | Database | Already PDO with prepared statements (336 `prepare` calls). The best part of the codebase |
 | Input | 779 direct `$_GET/$_POST/$_REQUEST/$_COOKIE` reads in 66 files, next to 522 uses of the `safe_GET` regex helpers |
 | Passwords | MD5-crypt (`$1$`), with the salt taken from the session id (`includes/session.php:380`) |
-| Forms | No CSRF protection anywhere |
+| Forms | No CSRF protection anywhere (POST requests fixed in Phase 2) |
 | Sessions | Cookie flags not set by the app; a session id can be supplied by the caller in one code path (`session.php:363`) |
 | `eval` | 12 uses in PhpGedView's own code: home-page blocks (`index.php`, one with a request value inside the string), the report engine, settings loading (`functions.php:356`) |
 | Settings as code | The app writes PHP files and then `require`s them: `config.php`, per-tree `_conf.php` and `_priv.php`, `pgv_changes.php` (pending edits), `lang_settings.php`, `banned.php` |
@@ -77,7 +77,8 @@ Left over from Phase 1:
 - [ ] Password reset by one-time link (today a new password is still sent by mail); changing a password ends the user's other sessions
 - [x] Sign-in: limit on failed attempts with a temporary lock, and a record of every sign-in attempt
 - [ ] Audit log of administrator actions in the database (today they go to the log files in `index/`), and a page to read both
-- [ ] CSRF token on every state-changing request, enforced centrally
+- [x] CSRF token on every POST request, enforced centrally and added to every form as the page goes out
+- [ ] Actions that change something by GET (links such as `?action=delete`, `?logout=1`) become POST requests
 - [ ] One request object for all input; remove the 779 direct superglobal reads file by file
 - [ ] Remove every `eval`: blocks and reports become classes looked up from a fixed list
 - [ ] Settings out of PHP files: secrets from the environment, the rest in the database. Pending edits (`pgv_changes.php`) into a table. `unserialize` replaced by JSON
@@ -137,7 +138,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Unit tests (`composer test`) | PHPUnit tests of the new code in `src/` | In CI, blocking |
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the installer and the settings folder | In CI, blocking |
-| Smoke test (`tests/smoke.sh`) | 167 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning; what each may see; exports; sign-in and session rules | In CI, blocking |
+| Smoke test (`tests/smoke.sh`) | 171 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |

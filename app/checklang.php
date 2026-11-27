@@ -104,6 +104,7 @@ print "</table>";
 print "</center>";
 print "<br /><br />";
 print_footer();
+if (ob_get_level()) ob_flush();
 flush();
 
 // process each lang
@@ -206,6 +207,7 @@ function checkfile($filename) {
 	echo 'progress = document.getElementById(ELT);';
 	echo 'progress.innerHTML = perc+"%";';
 	echo PGV_JS_END;
+	if (ob_get_level()) ob_flush();
 	flush();
 }
 

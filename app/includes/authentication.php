@@ -97,6 +97,45 @@ function authenticateUser($user_name, $password, $basic=false) {
 }
 
 /**
+ * Protection against forged requests
+ * @return \YooperGEDView\Security\CsrfProtection
+ */
+function csrfProtection() {
+	static $csrf=null;
+
+	if ($csrf===null) {
+		$csrf=new \YooperGEDView\Security\CsrfProtection();
+	}
+	return $csrf;
+}
+
+/**
+ * Output handler: adds the token field to the forms of an HTML page as it goes out.  A new token is made
+ * when the session has none, which is the case after signing in.
+ * @param string $page
+ * @return string
+ */
+function csrf_protect_page($page) {
+	foreach (headers_list() as $header) {
+		if (stripos($header, 'Content-Type:')===0 && stripos($header, 'text/html')===false) {
+			return $page;
+		}
+	}
+	if (stripos($page, '<form')===false) {
+		return $page;
+	}
+	try {
+		if (empty($_SESSION['csrf'])) {
+			$_SESSION['csrf']=csrfProtection()->newToken();
+		}
+		return csrfProtection()->protectForms($page, (string)$_SESSION['csrf']);
+	} catch (Exception $ex) {
+		// The forms go out without the token and will be refused when sent
+		return $page;
+	}
+}
+
+/**
  * The limit on failed sign-in attempts, which also keeps the record of every attempt
  * @return \YooperGEDView\Security\SignInThrottle
  */

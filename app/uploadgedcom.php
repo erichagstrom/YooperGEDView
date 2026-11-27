@@ -883,6 +883,7 @@ if ($startimport == "true") {
 		print "</td><td style=\"text-align: center;\"><div id=\"link1\">&nbsp;</div>";
 		print "<div id=\"link2\">&nbsp;</div><div id=\"link3\">&nbsp;</div>";
 		print "</td></tr></table>";
+		if (ob_get_level()) ob_flush();
 		flush();
 	}
 //-- end of setup_progress_bar function
@@ -925,6 +926,7 @@ if ($stage == 0) {
 	write_changes();
 	$stage = 1;
 }
+if (ob_get_level()) ob_flush();
 flush();
 
 if ($stage == 1) {
@@ -943,6 +945,7 @@ if ($stage == 1) {
 	//print "<tr><td class=\"optionbox\">";
 	setup_progress_bar($FILE_SIZE);
 	//print "</td></tr>";
+	if (ob_get_level()) ob_flush();
 	flush();
 
 	// ------------------------------------------------------ Begin importing data
@@ -1039,6 +1042,7 @@ if ($stage == 1) {
 				$newtime = time();
 				$exectime = $newtime - $oldtime;
 				echo PGV_JS_START, "update_progress($TOTAL_BYTES, $exectime);", PGV_JS_END;
+				if (ob_get_level()) ob_flush();
 				flush();
 			} else {
 				print ' ';
@@ -1143,6 +1147,7 @@ if ($stage == 1) {
 	} else {
 		echo PGV_JS_START, "complete_progress($importtime, '$exec_text', '$go_pedi', '$go_welc');", PGV_JS_END;
 	}
+	if (ob_get_level()) ob_flush();
 	flush();
 
 	// Import Statistics

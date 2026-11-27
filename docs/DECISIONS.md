@@ -105,7 +105,27 @@ why, and what the alternative was.
 33. **`PGV_DB::getPDO()` added** so that new code can be handed the database connection. New classes take what
     they need as arguments and do not reach for globals.
 
+34. **Every request other than GET, HEAD and OPTIONS must send back the session's token**
+    (`YooperGEDView\Security\CsrfProtection`), checked in `includes/session.php` before any page code runs.
+    A request without it gets "403" and a short explanation. The token is 32 random bytes, kept in the
+    session, sent as the form field `csrf` or the header `X-CSRF-Token`, and replaced at sign-in.
+35. **The token is added to forms by an output filter, not by editing each form.** The whole page passes
+    through a handler that puts the hidden field after every `<form method="post">` tag. Why: 77 forms in
+    inherited code, printed in a dozen different ways; a form added later, or one in a module, is covered
+    without anyone remembering. The smoke test fails if any page has a POST form without the field.
+    Alternative: a call in each form, as webtrees does. That becomes the way when templates arrive in Phase 4,
+    and the filter goes.
+36. **This is the one place new code builds HTML by joining strings**, against the coding standards, because
+    there is no template layer yet. The field is made only from a token checked to be hexadecimal.
+37. **Pages are held in memory until they finish, so that the filter sees them whole.** The four pages that show
+    progress while they work (GEDCOM import, check, export, language check) now push their output through the
+    filter at each step. File downloads (media, backups, GEDCOM download) bypass the filter. One loss: the
+    relationship calculator no longer sends a space now and then to notice that the visitor has gone away.
+
 ### Left for later in Phase 2
+- Actions done by GET are not protected by the token: links that delete, accept or reject, and `?logout=1`.
+  SameSite=Lax cookies do not stop these either, since a link clicked on another site is a plain navigation.
+  Each needs to become a POST; they are scattered through the page scripts.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).

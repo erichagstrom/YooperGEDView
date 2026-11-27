@@ -939,6 +939,7 @@ foreach ($gedfile as $num=>$value) {
 				printf("%07d  %s\n", $i+1, $gedfile[$i]);
 		}
 		printf("<b><font color='red'>&lrm;%07d[[</font><b>%s</b><font color='red'>]]&lrm;  %s; {$pgv_lang['see']} %s</font></b>\n", $num+1, htmlspecialchars($gedfile[$num]), $err, pgv_href($curr_l0tag, $curr_xref));
+		if (ob_get_level()) ob_flush();
 		flush();
 		$last_err_num=$num;
 	} else

@@ -84,9 +84,13 @@ jobs:
           echo "INSERT INTO pgv_user (user_name, password) VALUES ('ci-admin', 'not-a-hash');
                 INSERT INTO pgv_user_setting (user_id, setting_name, setting_value)
                   SELECT user_id, 'canadmin', 'Y' FROM pgv_user WHERE user_name = 'ci-admin'" | sql
+          # Load the sign-in page for its token, then send the form.
           sign_in() {
-            curl -s -o body.txt -A "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" \
-              --data "action=login&url=index.php&username=ci-admin&password=wrong-password" http://127.0.0.1:8080/login.php
+            local agent="Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0" csrf
+            curl -s -o page.txt -A "$agent" -b cookies.txt -c cookies.txt "http://127.0.0.1:8080/login.php?url=index.php"
+            csrf=$(grep -o 'name="csrf" value="[0-9a-f]*"' page.txt | head -n 1 | cut -d'"' -f4)
+            curl -s -o body.txt -A "$agent" -b cookies.txt -c cookies.txt \
+              --data "action=login&url=index.php&username=ci-admin&password=wrong-password&csrf=$csrf" http://127.0.0.1:8080/login.php
           }
           # What the page said and what was recorded, for when a check below fails.
           explain() {
