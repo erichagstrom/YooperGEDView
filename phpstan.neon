@@ -1,5 +1,5 @@
-# Static analysis of YooperGEDView's own code, at level 0 to start. Next step: record the existing findings with
-# `composer stan -- --generate-baseline` and include that file here, so that only new problems fail the check.
+# Static analysis of the inherited code in app/, at level 0. It passes with no baseline; raise the level as the
+# code is cleaned up. New code is checked separately and strictly (phpstan-src.neon).
 parameters:
     level: 0
     phpVersion: 80300
