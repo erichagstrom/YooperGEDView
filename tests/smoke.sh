@@ -187,6 +187,30 @@ else result other "pages carry the type, frame and referrer headers"; fi
 if grep -q -i '^Strict-Transport-Security:' "$work/page-headers"; then result other "a site reached without HTTPS does not ask browsers to insist on it"
 else result ok "a site reached without HTTPS does not ask browsers to insist on it"; fi
 
+# Uploads: a file is checked before any page sees it, whichever page it is sent to.
+printf '<?php echo "this would run"; ?>\n' > "$work/shell.php"
+cp "$work/shell.php" "$work/holiday.php.jpg"
+cp "$work/shell.php" "$work/disguised.png"
+printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89' > "$work/photo.png"
+# upload_status <page> <field> <file> [<name>=<value>...]: the HTTP status of sending a file to a page, as the administrator.
+upload_status() {
+  local page=$1 field=$2 file=$3 csrf extra=()
+  shift 3
+  for pair in "$@"; do extra+=(--form-string "$pair"); done
+  csrf=$(token "$work/csrf-a")
+  curl -s -o "$work/body" -w '%{http_code}' -A "$agent" -b "$work/csrf-a" -c "$work/csrf-a" --form-string "csrf=$csrf" "${extra[@]}" -F "$field=@$file" "$base/$page"
+}
+if [ "$(upload_status addmedia.php mediafile "$work/shell.php" action=newentry folder=)" = 400 ] && [ ! -e "$work/site/app/media/shell.php" ]; then result ok "a PHP file is not accepted as media"
+else result other "a PHP file is not accepted as media"; fi
+if [ "$(upload_status edit_interface.php anything "$work/shell.php" action=update folder=../)" = 400 ] && [ ! -e "$work/site/app/shell.php" ]; then result ok "a PHP file is not accepted by the quick upload, in any folder"
+else result other "a PHP file is not accepted by the quick upload, in any folder"; fi
+if [ "$(upload_status addmedia.php mediafile "$work/holiday.php.jpg" action=newentry folder=)" = 400 ]; then result ok "a PHP ending hidden before a picture ending is refused"
+else result other "a PHP ending hidden before a picture ending is refused"; fi
+if [ "$(upload_status addmedia.php mediafile "$work/disguised.png" action=newentry folder=)" = 400 ]; then result ok "PHP inside a file called a picture is refused"
+else result other "PHP inside a file called a picture is refused"; fi
+if [ "$(upload_status addmedia.php mediafile "$work/photo.png" action=newentry folder= level=1)" = 200 ] && [ -s "$work/site/app/media/photo.png" ]; then result ok "a real picture is accepted and saved"
+else result other "a real picture is accepted and saved"; fi
+
 # Links from other sites: a signed-in visitor sent to an address with parameters must confirm first.
 # from_elsewhere <cookie file> <header> <page>: fetch a page as a browser coming from another site would.
 from_elsewhere() { curl -s -g -A "$agent" -b "$1" -c "$1" -H "$2" -o "$work/body" "$base/$3"; }
