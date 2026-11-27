@@ -305,6 +305,23 @@ why, and what the alternative was.
 78. **The quick upload's folder must be a plain path inside the media folder.** Anything with `..` or other
     characters is replaced by the media folder itself.
 
+79. **Pending edits are kept as data, in `index/pgv_changes.json`, and no longer as a PHP file that is run.**
+    The old code wrote each pending change into `pgv_changes.php` as lines of PHP and loaded that file on
+    every page an editor opened. The editor's user name went between quotes with nothing escaped, and user
+    names may hold quotes; users can change their own. Confirmed on the old code: an editor named
+    `x'.print(...).'` had that code run on every page load after making one edit. The file is now written
+    with `json_encode` and read with `json_decode`; nothing in it is run.
+80. **A `pgv_changes.php` left by PhpGedView is not read.** It is PHP code and may hold exactly what 79
+    describes. Pending edits in it are not carried over; the upgrade tool will read that file as text. A
+    site should accept or reject its pending changes before moving to this version.
+81. **JSON in a file for now, a table later.** The roadmap puts pending edits in a database table. That
+    touches every place that reads `$pgv_changes`, and belongs with the rest of the settings work. This
+    change closes the hole with the smallest step: the same list, the same file name but for its ending,
+    written and read as data.
+82. **The record's own text was not a way in.** The old code's escaping of the record held, because
+    backslashes are stripped from what is sent before it gets there. Only the user name, and the other
+    fields written without escaping, were.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another
