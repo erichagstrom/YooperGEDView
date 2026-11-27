@@ -25,3 +25,18 @@ jobs:
       # Not blocking until the baseline of existing findings is committed (see phpstan.neon).
       - run: composer stan
         continue-on-error: true
+
+  smoke:
+    runs-on: ubuntu-24.04
+    # Expected to fail until the program runs on PHP 8.3 (Phase 1). Remove this line when it passes.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, gd, mbstring
+          coverage: none
+      - run: tests/smoke.sh

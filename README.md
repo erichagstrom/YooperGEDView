@@ -12,6 +12,7 @@ findings and the plan.
 - `app/`: the program. The first commit that adds it is the untouched upstream release, so
   `git diff <that commit> -- app` shows every change made since.
 - `docs/ROADMAP.md`: code review of the starting point, the phases, and the upgrade path from PhpGedView.
+- `tests/`: sample data, local server and smoke test. See `tests/README.md`.
 - `composer.json`, `phpstan.neon`, `.github/workflows/checks.yml`: development checks.
 
 ## Development checks

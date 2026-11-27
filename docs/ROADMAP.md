@@ -49,7 +49,8 @@ Each phase ends with the test suite passing, and with a site that still works.
 - [x] Composer project, syntax check and PHPStan at its lowest level (`composer.json`, `phpstan.neon`)
 - [ ] PHPStan baseline file, then make that check blocking
 - [x] CI on every push: syntax check, static analysis, dependency audit (`.github/workflows/checks.yml`); tests join when they exist
-- [ ] Characterization tests: record the HTML of about 30 key pages and the GEDCOM export for a made-up sample tree, compare on every change
+- [x] Sample tree, local server and smoke test (`tests/`)
+- [ ] Reference site and page comparison (see "Test infrastructure")
 - [ ] Unit tests for the privacy rules (`functions_privacy.php`) before anything touches them
 
 ### Phase 1. Run on a supported PHP (8.3)
@@ -114,6 +115,24 @@ Goal: anyone with a PhpGedView 4.3.0 site gets to YooperGEDView with one command
 - Every later schema change is a numbered migration that runs on start-up, so upgrades between YooperGEDView versions use the same mechanism.
 - The upgrade is tested in CI against a made-up PhpGedView 4.3.0 database (no real family data).
 - GEDCOM export and import stays as the fallback route in and out.
+
+## Test infrastructure
+All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in this public repository.
+
+| Layer | Purpose | Status |
+|---|---|---|
+| Syntax check, static analysis | Catch breakage without running anything | In CI |
+| Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
+| Smoke test (`tests/smoke.sh`) | Main pages answer with no PHP error | In CI, failing until Phase 1 is done |
+| Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
+| Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
+| Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
+| Upgrade test | `upgrade-from-pgv` on the reference dump, then the smoke and privacy tests on the result | To build with the tool |
+
+## Who uses what
+- **This repository** is the product: what gets released and deployed.
+- **A site running PhpGedView 4.3.0** is the client: it changes nothing until a release exists, then runs
+  `upgrade-from-pgv`. Client sites never carry patches of their own; anything they need goes into a release here.
 
 ## Still open
 - Which features can go? Candidates: SOAP service, remote-site links, Gramps export, RSS, iCal, hit counter, multi-tree support. Current default: SOAP, remote-site links and the hit counter go; the rest stay.
