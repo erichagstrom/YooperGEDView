@@ -28,9 +28,9 @@ jobs:
       # Reports only: app/ has findings at level 0 and no baseline of them has been recorded yet.
       - run: composer stan
         continue-on-error: true
-      # New code: highest level, strict rules, no baseline. Runs once src/ holds code.
+      # New code: highest level, strict rules, no baseline.
       - run: composer stan-src
-        if: hashFiles('src/**/*.php') != ''
+      - run: composer test
 
   smoke:
     runs-on: ubuntu-24.04

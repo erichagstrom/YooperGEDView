@@ -70,15 +70,11 @@ for report in "$here"/../app/reports/*.xml; do
 done
 expect admin "reportengine.php?action=run&report=reports/individual.xml&$report_options" has "Kivela"
 
-# A report as a PDF file. Needs Composer's libraries (composer install).
-if [ -f "$here/../vendor/autoload.php" ]; then
-  pdf_options=${report_options/output=HTML/output=PDF}
-  curl -s -g -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/report.pdf" "$base/reportengine.php?action=run&report=reports/individual.xml&$pdf_options"
-  if [ "$(head -c 5 "$work/report.pdf")" = "%PDF-" ]; then pass=$((pass + 1)); report "PASS  admin  individual report as PDF"
-  else fail=$((fail + 1)); report "FAIL  admin  individual report as PDF: $(head -c 300 "$work/report.pdf" | tr -d '\n')"; fi
-else
-  report "SKIP  admin  individual report as PDF (no vendor/ folder: run composer install)"
-fi
+# A report as a PDF file.
+pdf_options=${report_options/output=HTML/output=PDF}
+curl -s -g -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/report.pdf" "$base/reportengine.php?action=run&report=reports/individual.xml&$pdf_options"
+if [ "$(head -c 5 "$work/report.pdf")" = "%PDF-" ]; then pass=$((pass + 1)); report "PASS  admin  individual report as PDF"
+else fail=$((fail + 1)); report "FAIL  admin  individual report as PDF: $(head -c 300 "$work/report.pdf" | tr -d '\n')"; fi
 
 # Exports: a full GEDCOM for the administrator, and living people's details left out of a "visitor" export.
 export="downloadgedcom.php?action=download&ged=sample.ged&filetype=gedcom"
@@ -95,6 +91,56 @@ if unzip -Z1 "$work/export.zip" 2>/dev/null | grep -qx "sample.ged"; then
 else
   fail=$((fail + 1)); report "FAIL  admin  zipped export"
 fi
+
+# Sign-in and sessions. These come last: the final check signs the administrator out.
+# result <ok|other> <what>: record a check made by hand.
+result() {
+  if [ "$1" = ok ]; then pass=$((pass + 1)); report "PASS  $2"; else fail=$((fail + 1)); report "FAIL  $2"; fi
+}
+# session_id <cookie file>: the session id held in a curl cookie file.
+session_id() { awk '$6 == "PHPSESSID" { print $7 }' "$1"; }
+# sign_in <cookie file> <user> <password>: visit the sign-in page, then send the form.
+sign_in() {
+  curl -s -o /dev/null -A "$agent" -b "$1" -c "$1" "$base/login.php?url=index.php"
+  curl -s -o /dev/null -A "$agent" -b "$1" -c "$1" \
+    --data-urlencode "username=$2" --data-urlencode "password=$3" --data "action=login&url=index.php" "$base/login.php"
+}
+signed_in() {
+  curl -s -A "$agent" -b "$1" -c "$1" -o "$work/body" "$base/index.php"
+  grep -a -q "logout=1" "$work/body"
+}
+
+curl -s -o /dev/null -A "$agent" -D "$work/cookie-headers" "$base/index.php"
+cookie=$(grep -i '^set-cookie: PHPSESSID=' "$work/cookie-headers" | tail -n 1)
+if grep -qi 'httponly' <<<"$cookie" && grep -qi 'samesite=lax' <<<"$cookie"; then result ok "session cookie is HttpOnly and SameSite=Lax"
+else result other "session cookie is HttpOnly and SameSite=Lax: $cookie"; fi
+
+curl -s -o /dev/null -A "$agent" -b "PHPSESSID=chosenbythecaller0000000000" -D "$work/cookie-headers" "$base/index.php"
+if grep -i '^set-cookie: PHPSESSID=' "$work/cookie-headers" | grep -qv 'chosenbythecaller'; then result ok "a session id chosen by the caller is replaced"
+else result other "a session id chosen by the caller is replaced"; fi
+curl -s -o /dev/null -A "$agent" -D "$work/cookie-headers" "$base/index.php?PHPSESSID=chosenbythecaller0000000000"
+if grep -i '^set-cookie: PHPSESSID=' "$work/cookie-headers" | grep -qv 'chosenbythecaller'; then result ok "a session id in the address is ignored"
+else result other "a session id in the address is ignored"; fi
+
+sign_in "$work/wrong" admin "not-the-password"
+if signed_in "$work/wrong"; then result other "a wrong password is refused"; else result ok "a wrong password is refused"; fi
+sign_in "$work/legacy" legacy "test-admin-password"
+if signed_in "$work/legacy"; then result other "a password stored in the old MD5 format is refused"; else result ok "a password stored in the old MD5 format is refused"; fi
+
+curl -s -o /dev/null -A "$agent" -b "$work/fresh" -c "$work/fresh" "$base/login.php?url=index.php"
+before=$(session_id "$work/fresh")
+sign_in "$work/fresh" admin "test-admin-password"
+after=$(session_id "$work/fresh")
+if signed_in "$work/fresh" && [ -n "$before" ] && [ "$before" != "$after" ]; then result ok "signing in gives a new session id"
+else result other "signing in gives a new session id (before '$before', after '$after')"; fi
+if [ -e "$work/site/sessions/sess_$before" ]; then result other "the session from before sign-in is gone"; else result ok "the session from before sign-in is gone"; fi
+
+curl -s -o /dev/null -A "$agent" -b "$work/fresh" -c "$work/fresh" "$base/index.php?logout=1"
+if signed_in "$work/fresh"; then result other "signing out ends the session"; else result ok "signing out ends the session"; fi
+
+# Idle time-out: wind the administrator's last activity back to long ago; the next request is a visitor's.
+sed -i -E 's/last_activity\|i:[0-9]+;/last_activity|i:1;/' "$work/site/sessions/sess_$(session_id "$work/admin")"
+if signed_in "$work/admin"; then result other "an idle session is signed out"; else result ok "an idle session is signed out"; fi
 
 # Repeat the failures at the end, where they are easy to find.
 grep "^FAIL" "$log" || true

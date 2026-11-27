@@ -5,10 +5,16 @@ declare(strict_types=1);
 // Usage: php provision.php <base-url> <site-dir>
 // Turns a freshly started test site (tests/serve.sh) into a usable one: creates the administrator and imports
 // tests/fixtures/sample.ged through the program's own pages, the way a person would.
-// Test credentials only: user "admin", password "test-admin-password".
+// Test credentials only: user "admin", password "test-admin-password". A second user, "legacy", has the same
+// password stored the way PhpGedView 4.3.0 stored it (MD5-crypt), which must no longer be accepted.
+
+use YooperGEDView\Security\PasswordHasher;
+
+require __DIR__ . '/../vendor/autoload.php';
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASSWORD = 'test-admin-password';
+const LEGACY_USER = 'legacy';
 const TREE_FILE = 'sample.ged';
 const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0';
 
@@ -97,17 +103,15 @@ function formDefaults(string $html, string $formName): array
     return ['action' => $form->getAttribute('action'), 'fields' => $fields];
 }
 
-function createAdministrator(PDO $database): void
+function createAdministrator(PDO $database, string $name, string $passwordHash): void
 {
-    $salt = '$2y$10$' . substr(strtr(base64_encode(random_bytes(18)), '+', '.'), 0, 22);
-    $database->prepare('INSERT INTO pgv_user (user_name, password) VALUES (?, ?)')
-        ->execute([ADMIN_USER, crypt(ADMIN_PASSWORD, $salt)]);
+    $database->prepare('INSERT INTO pgv_user (user_name, password) VALUES (?, ?)')->execute([$name, $passwordHash]);
     $userId = $database->lastInsertId();
     $settings = [
         'firstname' => 'Test',
-        'lastname' => 'Admin',
+        'lastname' => ucfirst($name),
         'canadmin' => 'Y',
-        'email' => 'admin@example.com',
+        'email' => $name . '@example.com',
         'verified' => 'yes',
         'verified_by_admin' => 'yes',
         'language' => 'english',
@@ -146,7 +150,8 @@ if ($cookieJar === false) {
 // The first request makes the program create its tables.
 request($baseUrl . 'index.php', $cookieJar);
 $database = new PDO('sqlite:' . $siteDir . '/index/test.sqlite', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-createAdministrator($database);
+createAdministrator($database, ADMIN_USER, (new PasswordHasher())->hash(ADMIN_PASSWORD));
+createAdministrator($database, LEGACY_USER, crypt(ADMIN_PASSWORD, '$1$padpadpa$'));
 
 if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE)) {
     fail('cannot copy the sample tree');
