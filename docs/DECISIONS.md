@@ -100,8 +100,8 @@ why, and what the alternative was.
     the table can hold whatever people type into that field, including a password typed there by mistake.
 32. **The address is the one the web server reports.** Behind a reverse proxy that is the proxy's address for
     everyone, and the per-address limit would then lock all users out together. A deployment behind a proxy
-    must have the web server restore the real client address (Apache `mod_remoteip`). Not yet set up in the
-    container image.
+    must have the web server restore the real client address (Apache `mod_remoteip`). The container image does so since
+    decision 56.
 33. **`PGV_DB::getPDO()` added** so that new code can be handed the database connection. New classes take what
     they need as arguments and do not reach for globals.
 
