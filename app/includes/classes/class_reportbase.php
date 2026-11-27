@@ -2832,7 +2832,12 @@ function PGVRifSHandler($attrs) {
 		$i++;
 	}
 	$condition = "if ($condition) return true; else return false;";
-	$ret = @eval($condition);
+	// A condition that is not valid PHP counts as false, as it did before PHP 7 made that an exception.
+	try {
+		$ret = @eval($condition);
+	} catch (Throwable $ex) {
+		$ret = false;
+	}
 	if (!$ret) {
 		$processIfs++;
 	}
