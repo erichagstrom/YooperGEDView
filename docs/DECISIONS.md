@@ -174,7 +174,26 @@ why, and what the alternative was.
     editor loaded a script from Google for a translation helper. That is no longer loaded; the page itself is
     due for deletion.
 
+48. **`bin/yooper install` creates the first administrator** (`YooperGEDView\Console\Yooper`). It is the part of
+    the web installer that mattered for security: whoever reached `install.php` first on a new site became its
+    administrator. The command needs a shell on the server, which a passer-by does not have. It refuses when
+    the site already has an administrator.
+49. **The password comes from standard input, never from the command line**, where it would show in the list of
+    running programs and in the shell's history. At least 12 characters. Typed at a keyboard it is echoed;
+    hiding it needs a terminal library and is left for later.
+50. **The command does not create the tables or write settings.** The program still creates its tables on the
+    first page request, and the database settings come from the environment (as in the container image) or
+    are written into `config.php` by hand. So setting up is: start the site, ask for one page, run the
+    command. Moving table creation into the command comes with the migrations of Phase 3.
+51. **The database is found through environment variables** (`DB_TYPE`, `DB_HOST`, `DB_PORT`, `DB_NAME`,
+    `DB_USER`, `DB_PASSWORD`, `DB_PREFIX`), not by reading `config.php`, which is PHP code and would have to be
+    run. A site set up by editing `config.php` must give the same values to the command.
+52. **The tests set up their site with the command.** `tests/provision.php` and the image job in CI both create
+    their administrator with it, so every smoke run signs in with an account it made, on SQLite and MariaDB.
+
 ### Left for later in Phase 2
+- `install.php` is still in the program (blocked in the container image). It goes, with the redirect to it
+  from a site that has no administrator, in the deletion of the old admin pages.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the
   sign-in record.
 - The container image does not restore the client address behind a proxy (see 32).

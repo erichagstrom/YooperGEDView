@@ -68,7 +68,7 @@ Left over from Phase 1:
 - [ ] Pages and actions the tests do not reach yet: saving edits, accepting changes, uploading media, creating users, sending mail, PDF for reports other than the individual report
 - [ ] Comparisons that changed meaning in PHP 8 (see "Known risk" in `DECISIONS.md`); needs the reference site
 - [ ] PHPStan baseline for `app/`, then make that check blocking
-- [ ] The container image cannot set up a new site until `bin/yooper install` exists (the web installer is blocked)
+- [x] `bin/yooper install` creates the first administrator, so the container image can set up a new site without the web installer
 - [ ] Pin the base images by digest
 
 ### Phase 2. Security core
@@ -83,6 +83,7 @@ Left over from Phase 1:
 - [ ] One request object for all input; remove the 779 direct superglobal reads file by file
 - [ ] Remove every `eval`: blocks and reports become classes looked up from a fixed list
 - [ ] Settings out of PHP files: secrets from the environment, the rest in the database. Pending edits (`pgv_changes.php`) into a table. `unserialize` replaced by JSON
+- [x] `bin/yooper install` replaces the web installer for creating the first administrator
 - [ ] Delete `dir_editor.php`, `editlang*.php`, `pgvinfo.php`, `config_download.php`, `install.php`, `usermigrate*.php`
 - [ ] Uploads: type check by content, random stored names, media kept outside the web root and served only through the access check
 - [x] Response headers: Content-Security-Policy, HSTS, and the three already set in Apache, sent by the program
