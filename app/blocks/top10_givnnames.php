@@ -49,7 +49,7 @@ $PGV_BLOCKS["print_block_givn_top10"]["config"]		= array(
 /**
  * Print First Names Block
  */
-function print_block_givn_top10($block=true, $config="", $side, $index) {
+function print_block_givn_top10($block, $config, $side, $index) {
 	global $pgv_lang, $TEXT_DIRECTION, $PGV_BLOCKS, $ctype, $PGV_IMAGES, $PGV_IMAGE_DIR;
 
 	if (empty($config)) $config = $PGV_BLOCKS["print_block_givn_top10"]["config"];

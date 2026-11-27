@@ -33,8 +33,6 @@ jobs:
 
   smoke:
     runs-on: ubuntu-24.04
-    # Expected to fail until the program runs on PHP 8.3 (Phase 1). Remove this line when it passes.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v5
         with:

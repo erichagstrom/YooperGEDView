@@ -28,7 +28,7 @@ check() {
   else fail=$((fail + 1)); echo "FAIL  $1  $2 (HTTP $code) $error"; fi
 }
 
-visitor_pages="index.php login.php indilist.php famlist.php search.php calendar.php individual.php?pid=I1 family.php?famid=F1"
+visitor_pages="index.php login.php?url=index.php indilist.php famlist.php search.php calendar.php individual.php?pid=I1 family.php?famid=F1"
 admin_pages="$visitor_pages
   sourcelist.php source.php?sid=S1 placelist.php medialist.php pedigree.php?rootid=I8 descendancy.php?pid=I1
   ancestry.php?rootid=I8 familybook.php?pid=I1 hourglass.php?pid=I3 timeline.php?pids[]=I1 lifespan.php
@@ -41,6 +41,21 @@ curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" "$base/login.
 curl -s -o /dev/null -A "$agent" -b "$work/admin" -c "$work/admin" \
   --data-urlencode "username=admin" --data-urlencode "password=test-admin-password" --data "action=login&url=index.php" "$base/login.php"
 for page in $admin_pages; do check admin "$page"; done
+
+# expect <who> <page> has|lacks <text>: what each kind of user may see.
+expect() {
+  local found=lacks
+  curl -s -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" "$base/$2"
+  grep -a -q -- "$4" "$work/body" && found=has
+  if [ "$found" = "$3" ]; then pass=$((pass + 1)); echo "PASS  $1  $2 $3 '$4'"
+  else fail=$((fail + 1)); echo "FAIL  $1  $2 should $3 '$4'"; fi
+}
+expect admin "individual.php?pid=I8" has "1975"
+expect admin "index.php" has "logout"
+expect visitor "individual.php?pid=I1" has "1890"
+expect visitor "individual.php?pid=I8" lacks "1975"
+expect visitor "family.php?famid=F3" lacks "1970"
+expect visitor "admin.php" lacks "useradmin.php"
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

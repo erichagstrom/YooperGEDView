@@ -41,7 +41,7 @@ $PGV_BLOCKS["print_html_block"]["config"]		= array(
 	"html"=>$pgv_lang["html_block_sample_part1"]." <img src=\"".$PGV_IMAGE_DIR."/".$PGV_IMAGES["admin"]["small"]."\" alt=\"".$pgv_lang["config_block"]."\" /> ".$pgv_lang["html_block_sample_part2"]
 );
 
-function print_html_block($block=true, $config="", $side, $index) {
+function print_html_block($block, $config, $side, $index) {
 	global $pgv_lang, $PGV_IMAGE_DIR, $TEXT_DIRECTION, $PGV_IMAGES, $HTML_BLOCK_COUNT, $PGV_BLOCKS, $ctype;
 
 	if (empty($config)) $config = $PGV_BLOCKS["print_html_block"]["config"];

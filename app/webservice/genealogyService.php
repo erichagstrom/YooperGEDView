@@ -59,6 +59,7 @@ $skiptrace =& PEAR::getStaticProperty('PEAR_Error', 'skiptrace');
 $skiptrace = true;
 
 // Genealogy class
+#[AllowDynamicProperties]
 class GenealogyService
 {
 	var $__varValues = array();

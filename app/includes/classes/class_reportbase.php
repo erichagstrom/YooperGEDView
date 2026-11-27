@@ -61,6 +61,7 @@ if (!isset($embed_fonts)) {
  * @package PhpGedView
  * @subpackage Reports
  */
+#[AllowDynamicProperties]
 class PGVReportBase {
 	/**
 	* Left Margin (expressed in points) Default: 17.99 mm, 0.7083 inch
@@ -459,6 +460,7 @@ class PGVReportBase {
  * @package PhpGedView
  * @subpackage Reports
  */
+#[AllowDynamicProperties]
 class PGVRElement {
 	/**
 	* @var string

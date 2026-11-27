@@ -67,7 +67,7 @@ if (preg_match('/^(\d+)-(\d+)$/', $year, $match)) {
 		$ged_date=new GedcomDate("FROM {$cal} {$y1} TO {$cal} {$y2}");
 		$action='year';
 	} else {
-		if ($year<0)
+		if (is_numeric($year) && $year<0)
 			$year=(-$year)."B.C."; // need BC to parse date
 		$ged_date=new GedcomDate("{$cal} {$day} {$month} {$year}");
 		$year=$ged_date->date1->y; // need negative year for year entry field.

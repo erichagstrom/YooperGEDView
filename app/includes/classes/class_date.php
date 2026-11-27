@@ -51,6 +51,7 @@ define('PGV_CLASS_DATE_PHP', '');
 // + For imprecise dates such as "JAN 2000" we store the start/end julian day.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#[AllowDynamicProperties]
 class CalendarDate {
 	var $y, $m, $d;     // Numeric year/month/day
 	var $minJD, $maxJD; // Julian Day numbers
@@ -974,6 +975,7 @@ class RomanDate extends CalendarDate {
 // GedcomDate represents the date or date range from a gedcom DATE record.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#[AllowDynamicProperties]
 class GedcomDate {
 	var $qual1=null; // Optional qualifier, such as BEF, FROM, ABT
 	var $date1=null; // The first (or only) date
@@ -983,7 +985,7 @@ class GedcomDate {
 
 	function __construct($date) {
 		// Extract any explanatory text
-		if (preg_match('/^(.*)( ?\(.*)$/', $date, $match)) {
+		if (preg_match('/^(.*)( ?\(.*)$/', (string)$date, $match)) {
 			$date=$match[1];
 			$this->text=$match[2];
 		}
@@ -991,7 +993,7 @@ class GedcomDate {
 		$date=preg_replace(
 			array('/(\d+|@#[^@]+@)/', '/[\s;:.,-]+/', '/^ /', '/ $/'),
 			array(' $1 ', ' ', '', ''),
-			strtolower($date)
+			strtolower((string)$date)
 		);
 		if (preg_match('/^(from|bet) (.+) (and|to) (.+)/', $date, $match)) {
 			$this->qual1=$match[1];

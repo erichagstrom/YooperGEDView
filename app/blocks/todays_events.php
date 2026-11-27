@@ -51,7 +51,7 @@ $PGV_BLOCKS["print_todays_events"]["config"]	= array(
 
 //-- today's events block
 //-- this block prints a list of today's upcoming events of living people in your gedcom
-function print_todays_events($block=true, $config="", $side, $index) {
+function print_todays_events($block, $config, $side, $index) {
 	global $pgv_lang, $SHOW_ID_NUMBERS, $ctype, $TEXT_DIRECTION;
 	global $PGV_IMAGE_DIR, $PGV_IMAGES, $PGV_BLOCKS, $THEME_DIR;
 

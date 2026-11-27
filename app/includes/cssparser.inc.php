@@ -21,6 +21,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CSS_PARSER_PHP', '');
 
+#[AllowDynamicProperties]
 class cssparser {
   var $css;
   var $html;
@@ -136,14 +137,14 @@ class cssparser {
   function Get($key, $property) {
     $key = strtolower($key);
 //    $property = strtolower($property);
-    @list($tag, $subtag) = explode(":",$key);
-    @list($tag, $class) = explode(".",$tag);
-    @list($tag, $id) = explode("#",$tag);
+    @list($tag, $subtag) = explode(":",$key); $subtag = (string)$subtag;
+    @list($tag, $class) = explode(".",$tag); $class = (string)$class;
+    @list($tag, $id) = explode("#",$tag); $id = (string)$id;
     $result = "";
     foreach($this->css as $_tag => $value) {
-      @list($_tag, $_subtag) = explode(":",$_tag);
-      @list($_tag, $_class) = explode(".",$_tag);
-      @list($_tag, $_id) = explode("#",$_tag);
+      @list($_tag, $_subtag) = explode(":",$_tag); $_subtag = (string)$_subtag;
+      @list($_tag, $_class) = explode(".",$_tag); $_class = (string)$_class;
+      @list($_tag, $_id) = explode("#",$_tag); $_id = (string)$_id;
 
       $tagmatch = (strcmp($tag, $_tag) == 0) | (strlen($_tag) == 0);
       $subtagmatch = (strcmp($subtag, $_subtag) == 0) | (strlen($_subtag) == 0);

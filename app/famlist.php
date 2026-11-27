@@ -131,7 +131,7 @@ if ($show_all=='yes') {
 	} else {
 		$legend=$alpha;
 	}
-	$url='famlist.php?alpha='.urlencode($alpha);
+	$url='famlist.php?alpha='.urlencode((string)$alpha);
 }
 
 

@@ -31,6 +31,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CLASS_GEDCOMRECORD_PHP', '');
 
+#[AllowDynamicProperties]
 class GedcomRecord {
 	var $xref       =null;  // The record identifier
 	var $type       =null;  // INDI, FAM, etc.
@@ -59,7 +60,7 @@ class GedcomRecord {
 		} else {
 			// Construct from raw GEDCOM data
 			$this->gedrec=$data;
-			if (preg_match('/^0 (?:@('.PGV_REGEX_XREF.')@ )?('.PGV_REGEX_TAG.')/', $data, $match)) {
+			if (preg_match('/^0 (?:@('.PGV_REGEX_XREF.')@ )?('.PGV_REGEX_TAG.')/', (string)$data, $match)) {
 				$this->xref=$match[1];
 				$this->type=$match[2];
 			}
@@ -145,7 +146,7 @@ class GedcomRecord {
 			}
 
 			// If we didn't find the record in the database, it may be remote
-			if (!$data && strpos($pid, ':')) {
+			if (!$data && strpos((string)$pid, ':')) {
 				list($servid, $remoteid)=explode(':', $pid);
 				$service=ServiceClient::getInstance($servid);
 				if ($service) {
@@ -808,7 +809,7 @@ class GedcomRecord {
 			return;
 		}
 		//-- must trim the record here because the record is trimmed in edit and it could mess up line numbers
-		$this->gedrec = trim($this->gedrec);
+		$this->gedrec = trim((string)$this->gedrec);
 		//-- find all the fact information
 		$indilines = explode("\n", $this->gedrec);   // -- find the number of lines in the individuals record
 		$lct = count($indilines);

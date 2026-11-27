@@ -133,7 +133,7 @@ function print_fams($person, $famid=null) {
 	// current indi
 	echo "<li>";
 	$class = "";
-	$sosa = @array_search($person->getXref(), $_SESSION['user_ancestors']);
+	$sosa = array_search($person->getXref(), isset($_SESSION['user_ancestors']) ? $_SESSION['user_ancestors'] : array());
 	if ($sosa) {
 		$class = "search_hit";
 		$sosa = "<a dir=$TEXT_DIRECTION target=\"_blank\" class=\"details1 {$person->getBoxStyle()}\" title=\"Sosa\" href=\"relationship.php?pid2=".PGV_USER_ROOT_ID."&pid1=".$person->getXref()."\">&nbsp;{$sosa}&nbsp;</a>".sosa_gen($sosa);
@@ -153,7 +153,7 @@ function print_fams($person, $famid=null) {
 		$spouse = $family->getSpouse($person);
 		if ($spouse) {
 			$class = "";
-			$sosa2 = @array_search($spouse->getXref(), $_SESSION['user_ancestors']);
+			$sosa2 = array_search($spouse->getXref(), isset($_SESSION['user_ancestors']) ? $_SESSION['user_ancestors'] : array());
 			if ($sosa2) {
 				$class = "search_hit";
 				$sosa2 = "<a dir=$TEXT_DIRECTION target=\"_blank\" class=\"details1 {$spouse->getBoxStyle()}\" title=\"Sosa\" href=\"relationship.php?pid2=".PGV_USER_ROOT_ID."&pid1=".$spouse->getXref()."\">&nbsp;{$sosa2}&nbsp;</a>".sosa_gen($sosa2);

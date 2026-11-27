@@ -204,8 +204,8 @@ class AncestryControllerRoot extends BaseController {
 			print "</span>";
 			// display parents recursively
 			print "\r\n<ul style=\"list-style: none; display: block;\" id=\"sosa_$sosa\">";
-			$this->print_child_ascendancy($parents["HUSB"], $sosa*2, $depth-1);
-			$this->print_child_ascendancy($parents["WIFE"], $sosa*2+1, $depth-1);
+			$this->print_child_ascendancy($parents ? $parents["HUSB"] : null, $sosa*2, $depth-1);
+			$this->print_child_ascendancy($parents ? $parents["WIFE"] : null, $sosa*2+1, $depth-1);
 			print "</ul>\r\n";
 		}
 		print "</li>\r\n";

@@ -31,6 +31,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_BASECONTROL_PHP', '');
 
+#[AllowDynamicProperties]
 class BaseController {
 	var $view        =null;
 	var $action      =null;

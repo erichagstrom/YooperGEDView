@@ -44,7 +44,7 @@ $PGV_BLOCKS["print_recent_changes"]["config"]   = array(
 
 //-- Recent Changes block
 //-- this block prints a list of changes that have occurred recently in your gedcom
-function print_recent_changes($block=true, $config="", $side, $index) {
+function print_recent_changes($block, $config, $side, $index) {
 	global $pgv_lang, $ctype;
 	global $PGV_IMAGE_DIR, $PGV_IMAGES, $PGV_BLOCKS;
 

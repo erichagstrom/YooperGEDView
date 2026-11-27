@@ -63,7 +63,7 @@ function getRLM(){
  * @return	string	The input string, with &lrm; and &rlm; stripped
  */
 function stripLRMRLM($inputText) {
-	return str_replace(array(PGV_UTF8_LRM, PGV_UTF8_RLM, PGV_UTF8_LRO, PGV_UTF8_RLO, PGV_UTF8_LRE, PGV_UTF8_RLE, PGV_UTF8_PDF, "&lrm;", "&rlm;", "&LRM;", "&RLM;"), "", $inputText);
+	return str_replace(array(PGV_UTF8_LRM, PGV_UTF8_RLM, PGV_UTF8_LRO, PGV_UTF8_RLO, PGV_UTF8_LRE, PGV_UTF8_RLE, PGV_UTF8_PDF, "&lrm;", "&rlm;", "&LRM;", "&RLM;"), "", (string)$inputText);
 }
 
 /**

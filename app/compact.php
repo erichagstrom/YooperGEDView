@@ -54,7 +54,7 @@ if (PGV_USE_LIGHTBOX) {
 
 if (strlen($name)<30) $cellwidth="420";
 else $cellwidth=(strlen($name)*14);
-print "\n\t<table class=\"list_table $TEXT_DIRECTION\"><tr><td width=\"${cellwidth}px\" valign=\"top\">\n\t\t";
+print "\n\t<table class=\"list_table $TEXT_DIRECTION\"><tr><td width=\"{$cellwidth}px\" valign=\"top\">\n\t\t";
 print "<h2>" . $pgv_lang["compact_chart"] . ":";
 print "<br />".PrintReady($name) ;
 if ($addname != "") print "<br />" . PrintReady($addname);

@@ -283,7 +283,7 @@ $controller->checkPrivacy();
 			}
 		?>
  			<a href="individual.php?pid=<?php echo $pid; ?>">&nbsp;<?php echo PrintReady($indi->getFullName()); ?><br />
- 			<?php $addname = $indi->getAddName(); if (strlen($addname) > 0) echo PrintReady($addname); ?>
+ 			<?php $addname = $indi->getAddName(); if (strlen((string)$addname) > 0) echo PrintReady($addname); ?>
 			</a>
 			<input type="hidden" name="pids[<?php echo $p; ?>]" value="<?php echo htmlentities($pid, ENT_COMPAT, 'UTF-8'); ?>" />
 			<?php if (!$controller->isPrintPreview()) {
@@ -359,7 +359,7 @@ if (count($controller->people)>0) {
 	</div>
 	<?php
 	//-- at a scale of 25 or higher, show every year
-	$mod = 25/$controller->scale;
+	$mod = (int)(25/$controller->scale);
 	if ($mod<1) $mod = 1;
 	for($i=$controller->baseyear+1; $i<$controller->topyear; $i++) {
 		if ($i % $mod == 0)  {

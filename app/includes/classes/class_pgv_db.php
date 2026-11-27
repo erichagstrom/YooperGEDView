@@ -34,6 +34,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CLASS_PGV_DB_PHP', '');
 
+#[AllowDynamicProperties]
 class PGV_DB {
 	//////////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTION
@@ -802,6 +803,7 @@ class PGV_DB {
 	}
 }
 
+#[AllowDynamicProperties]
 class PGV_DBStatement {
 	//////////////////////////////////////////////////////////////////////////////
 	// CONSTRUCTION

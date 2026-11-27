@@ -39,7 +39,7 @@ $PGV_BLOCKS["print_gedcom_favorites"]["canconfig"]= false;
 $PGV_BLOCKS["print_gedcom_favorites"]["config"]   = array("cache"=>7);
 
 //-- print gedcom favorites
-function print_gedcom_favorites($block = true, $config="", $side, $index) {
+function print_gedcom_favorites($block, $config, $side, $index) {
 	global $pgv_lang, $factarray, $PGV_IMAGE_DIR, $PGV_IMAGES, $ctype, $TEXT_DIRECTION;
 	global $show_full, $PEDIGREE_FULL_DETAILS, $BROWSERTYPE, $ENABLE_AUTOCOMPLETE;
 

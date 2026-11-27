@@ -43,7 +43,7 @@ $PGV_BLOCKS["print_user_news"]["config"]	= array("cache"=>0);
  * Prints a user news/journal
  *
  */
-function print_user_news($block=true, $config="", $side, $index) {
+function print_user_news($block, $config, $side, $index) {
 	global $pgv_lang, $PGV_IMAGE_DIR, $PGV_IMAGES, $TEXT_DIRECTION, $ctype;
 
 	$usernews = getUserNews(PGV_USER_ID);

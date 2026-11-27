@@ -1127,7 +1127,7 @@ function find_sfamily_ids($pid) {
  * @return array array of family ids
  */
 function find_families_in_record($indirec, $tag) {
-	preg_match_all("/\n1 {$tag} @(".PGV_REGEX_XREF.')@/', $indirec, $match);
+	preg_match_all("/\n1 {$tag} @(".PGV_REGEX_XREF.')@/', (string)$indirec, $match);
 	return $match[1];
 }
 

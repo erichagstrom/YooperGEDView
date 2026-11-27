@@ -33,6 +33,7 @@ define('PGV_CLASS_TREENAV_PHP', '');
 require_once PGV_ROOT.'includes/classes/class_person.php';
 require_once PGV_ROOT.'includes/functions/functions_charts.php';
 
+#[AllowDynamicProperties]
 class TreeNav {
 	var $rootPerson = null;
 	var $bwidth = 170;

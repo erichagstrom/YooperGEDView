@@ -42,7 +42,7 @@ $PGV_BLOCKS["top10_pageviews"]["config"]	= array(
 	"count_placement"=>"left"
 	);
 
-function top10_pageviews($block=true, $config="", $side, $index) {
+function top10_pageviews($block, $config, $side, $index) {
 	global $TBLPREFIX, $pgv_lang, $INDEX_DIRECTORY, $PGV_BLOCKS, $ctype, $PGV_IMAGES, $PGV_IMAGE_DIR, $SHOW_COUNTER, $SHOW_SOURCES, $TEXT_DIRECTION;
 
 	if (empty($config)) {

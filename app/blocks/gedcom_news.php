@@ -48,7 +48,7 @@ $PGV_BLOCKS['print_gedcom_news']['config']		= array(
  *
  * @todo Add an allowed HTML translation
  */
-function print_gedcom_news($block = true, $config='', $side, $index)
+function print_gedcom_news($block, $config, $side, $index)
 {
 	global $pgv_lang, $PGV_IMAGE_DIR, $PGV_IMAGES, $TEXT_DIRECTION, $ctype, $PGV_BLOCKS;
 

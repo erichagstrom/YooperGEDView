@@ -53,7 +53,7 @@ function top_surname_sort($a, $b) {
 	return $countb - $counta;
 }
 
-function print_block_name_top10($block=true, $config="", $side, $index) {
+function print_block_name_top10($block, $config, $side, $index) {
 	global $pgv_lang, $COMMON_NAMES_ADD, $COMMON_NAMES_REMOVE, $COMMON_NAMES_THRESHOLD, $PGV_BLOCKS, $ctype, $PGV_IMAGES, $PGV_IMAGE_DIR, $SURNAME_LIST_STYLE;
 
 	if (empty($config)) {

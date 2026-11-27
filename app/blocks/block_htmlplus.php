@@ -49,7 +49,7 @@ $PGV_BLOCKS['print_htmlplus_block']['config']		= array(
 	'ui'=>0
 );
 
-function print_htmlplus_block($block=true, $config='', $side, $index) {
+function print_htmlplus_block($block, $config, $side, $index) {
 	global $ctype, $factarray, $GEDCOM, $HTML_BLOCK_COUNT, $PGV_BLOCKS, $PGV_IMAGE_DIR, $PGV_IMAGES, $pgv_lang, $TEXT_DIRECTION, $MULTI_MEDIA, $SHOW_ID_NUMBERS;
 	// config sanity check
 	if (empty($config)){$config = $PGV_BLOCKS['print_htmlplus_block']['config'];}else{foreach($PGV_BLOCKS['print_htmlplus_block']['config'] as $k=>$v){if (!isset($config[$k])){$config[$k] = $v;}}}

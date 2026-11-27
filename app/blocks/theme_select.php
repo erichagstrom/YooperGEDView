@@ -39,7 +39,7 @@ $PGV_BLOCKS["print_block_theme_select"]["type"]			= "gedcom";
 $PGV_BLOCKS["print_block_theme_select"]["canconfig"]	= false;
 $PGV_BLOCKS["print_block_theme_select"]["config"]		= array("cache"=>-1);
 
-function print_block_theme_select($style=0, $config="", $side, $index) {
+function print_block_theme_select($style, $config, $side, $index) {
 	global $pgv_lang;
 	global $ALLOW_THEME_DROPDOWN, $ALLOW_USER_THEMES, $THEME_DIR, $pgv_lang, $themeformcount;
 

@@ -43,7 +43,7 @@ $PGV_BLOCKS["print_RSS_block"]["config"]		= array("cache"=>0);
  *
  * Prints a block allowing the user to login to the site directly from the portal
  */
-function print_RSS_block($block = true, $config="", $side, $index) {
+function print_RSS_block($block, $config, $side, $index) {
 	global $LANGUAGE, $pgv_lang;
 
 	$id="rss_block";

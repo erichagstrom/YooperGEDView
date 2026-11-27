@@ -43,7 +43,7 @@ $PGV_BLOCKS["print_block_cookie_policy"]["config"]		= array(
 	"cookiepolicy_link"=>"",
 	);
 
-function print_block_cookie_policy($block=true, $config="", $side, $index) {
+function print_block_cookie_policy($block, $config, $side, $index) {
 	global $pgv_lang, $PGV_BLOCKS, $ctype, $PGV_IMAGES, $PGV_IMAGE_DIR;
 
 	if (empty($config)) {

@@ -45,7 +45,7 @@ $PGV_BLOCKS['print_yahrzeit']['config']   =array(
 );
 
 // this block prints a list of upcoming yahrzeit events of people in your gedcom
-function print_yahrzeit($block=true, $config='', $side, $index) {
+function print_yahrzeit($block, $config, $side, $index) {
 	global $pgv_lang, $factarray, $SHOW_ID_NUMBERS, $ctype, $TEXT_DIRECTION;
 	global $PGV_IMAGE_DIR, $PGV_IMAGES, $PGV_BLOCKS;
 	global $DAYS_TO_SHOW_LIMIT, $SHOW_MARRIED_NAMES, $SERVER_URL;

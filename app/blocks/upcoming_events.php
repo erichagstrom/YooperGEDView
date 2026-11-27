@@ -52,7 +52,7 @@ $PGV_BLOCKS["print_upcoming_events"]["config"]		= array(
 
 //-- upcoming events block
 //-- this block prints a list of upcoming events of people in your gedcom
-function print_upcoming_events($block=true, $config="", $side, $index) {
+function print_upcoming_events($block, $config, $side, $index) {
 	global $pgv_lang, $SHOW_ID_NUMBERS, $ctype, $TEXT_DIRECTION;
 	global $PGV_IMAGE_DIR, $PGV_IMAGES, $PGV_BLOCKS, $THEME_DIR;
 	global $DAYS_TO_SHOW_LIMIT;

@@ -47,7 +47,7 @@ $PGV_BLOCKS['print_todo']['config']   =array(
 );
 
 // this block prints a list of _TODO events in your gedcom
-function print_todo($block=true, $config='', $side, $index) {
+function print_todo($block, $config, $side, $index) {
 	global $pgv_lang, $factarray, $ctype, $PGV_IMAGE_DIR, $PGV_IMAGES, $PGV_BLOCKS;
 
 	$block=true; // Always restrict this block's height

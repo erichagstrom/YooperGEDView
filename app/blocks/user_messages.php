@@ -42,7 +42,7 @@ $PGV_BLOCKS["print_user_messages"]["canconfig"]	= false;
 $PGV_BLOCKS["print_user_messages"]["config"]	= array("cache"=>0);
 
 //-- print user messages
-function print_user_messages($block=true, $config="", $side, $index) {
+function print_user_messages($block, $config, $side, $index) {
 	global $pgv_lang, $PGV_IMAGE_DIR, $TEXT_DIRECTION, $PGV_STORE_MESSAGES, $PGV_IMAGES;
 
 	$usermessages = getUserMessages(PGV_USER_NAME);
@@ -93,7 +93,7 @@ function print_user_messages($block=true, $config="", $side, $index) {
 			$content .= "<td class=\"list_value_wrap\"><input type=\"checkbox\" id=\"cb_message$key\" name=\"message_id[]\" value=\"$key\" /></td>";
 			$showmsg=preg_replace("/(\w)\/(\w)/","\$1/<span style=\"font-size:1px;\"> </span>\$2",PrintReady($message["subject"]));
 			$showmsg=str_replace("@","@<span style=\"font-size:1px;\"> </span>",$showmsg);
-			$content .= "<td class=\"list_value_wrap\"><a href=\"javascript:;\" onclick=\"expand_layer('message$key'); return false;\"><img id=\"message${key}_img\" src=\"".$PGV_IMAGE_DIR."/".$PGV_IMAGES["plus"]["other"]."\" border=\"0\" alt=\"".$pgv_lang["show_details"]."\" title=\"".$pgv_lang["show_details"]."\" /> <b>".$showmsg."</b></a></td>";
+			$content .= "<td class=\"list_value_wrap\"><a href=\"javascript:;\" onclick=\"expand_layer('message$key'); return false;\"><img id=\"message{$key}_img\" src=\"".$PGV_IMAGE_DIR."/".$PGV_IMAGES["plus"]["other"]."\" border=\"0\" alt=\"".$pgv_lang["show_details"]."\" title=\"".$pgv_lang["show_details"]."\" /> <b>".$showmsg."</b></a></td>";
 			if (!empty($message["created"])) {
 				$time = strtotime($message["created"]);
 			} else {

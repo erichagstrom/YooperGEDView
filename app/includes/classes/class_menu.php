@@ -30,6 +30,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CLASS_MENU_PHP', '');
 
+#[AllowDynamicProperties]
 class Menu {
 	var $separator = false;
 	var $label = ' ';
@@ -87,7 +88,7 @@ class Menu {
 	{
 		if (file_exists($icon)) $this->icon = $icon;
 		else $this->icon = null;
-		if (file_exists($hovericon)) $this->hovericon = $hovericon;
+		if ($hovericon && file_exists($hovericon)) $this->hovericon = $hovericon;
 		else $this->hovericon = null;
 	}
 

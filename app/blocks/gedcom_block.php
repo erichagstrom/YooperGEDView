@@ -40,7 +40,7 @@ $PGV_BLOCKS["print_gedcom_block"]["canconfig"]	= false;
 $PGV_BLOCKS["print_gedcom_block"]["config"]		= array("cache"=>0);
 
 //-- function to print the gedcom block
-function print_gedcom_block($block = true, $config="", $side, $index) {
+function print_gedcom_block($block, $config, $side, $index) {
 	global $hitCount, $pgv_lang, $SHOW_COUNTER;
 
 	$id = "gedcom_welcome";

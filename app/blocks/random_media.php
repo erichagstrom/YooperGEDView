@@ -79,7 +79,7 @@ if ($MULTI_MEDIA) {
 	require_once PGV_ROOT.'includes/functions/functions_print_facts.php';
 
 	//-- function to display a random picture from the gedcom
-	function print_random_media($block = true, $config="", $side, $index) {
+	function print_random_media($block, $config, $side, $index) {
 		global $pgv_lang, $foundlist, $MULTI_MEDIA, $TEXT_DIRECTION, $PGV_IMAGE_DIR, $PGV_IMAGES;
 		global $MEDIA_EXTERNAL, $MEDIA_DIRECTORY, $SHOW_SOURCES;
 		global $MEDIATYPE, $THUMBNAIL_WIDTH, $USE_MEDIA_VIEWER;

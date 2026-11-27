@@ -39,6 +39,7 @@ define('PGV_CLASS_GRAMPSEXPORT_PHP', '');
   * of which are prefixed by GE.
   */
 
+#[AllowDynamicProperties]
 class GrampsExport {
 
 	var $mediaFiles = array(),$i;

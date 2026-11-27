@@ -556,7 +556,7 @@ function get_indilist_indis($surn='', $salpha='', $galpha='', $marnm=false, $fam
 // To search for unknown names, use $surn="@N.N.", $salpha="@" or $galpha="@"
 // To search for names with no surnames, use $salpha=","
 ////////////////////////////////////////////////////////////////////////////////
-function get_famlist_fams($surn='', $salpha='', $galpha='', $marnm, $ged_id=null) {
+function get_famlist_fams($surn, $salpha, $galpha, $marnm, $ged_id=null) {
 	global $TBLPREFIX;
 
 	$list=array();

@@ -373,12 +373,12 @@ class SearchControllerRoot extends BaseController {
 		$query_terms=array();
 		$query=$this->query;
 		// Words in double quotes stay together
-		while (preg_match('/"([^"]+)"/', $query, $match)) {
+		while (preg_match('/"([^"]+)"/', (string)$query, $match)) {
 			$query_terms[]=trim($match[1]);
 			$query=str_replace($match[0], '', $query);
 		}
 		// Other words get treated separately
-		while (preg_match('/[\S]+/', $query, $match)) {
+		while (preg_match('/[\S]+/', (string)$query, $match)) {
 			$query_terms[]=trim($match[0]);
 			$query=str_replace($match[0], '', $query);
 		}

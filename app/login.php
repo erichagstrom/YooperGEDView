@@ -203,7 +203,7 @@ $tab=0;		// initialize tab index
 			<tr><td class="topbottombar" colspan="2"><?php print $pgv_lang["login"]; ?></td></tr>
 			<tr>
 				<td class="descriptionbox <?php print $TEXT_DIRECTION; ?> wrap width50"><?php print_help_link("username_help", "qm", "username"); print $pgv_lang["username"]; ?></td>
-				<td class="optionbox <?php print $TEXT_DIRECTION; ?>"><input type="text" tabindex="<?php echo ++$tab; ?>" name="username" value="<?php print htmlentities($username,ENT_COMPAT,'UTF-8'); ?>" size="20" class="formField" /></td>
+				<td class="optionbox <?php print $TEXT_DIRECTION; ?>"><input type="text" tabindex="<?php echo ++$tab; ?>" name="username" value="<?php print htmlentities((string)$username,ENT_COMPAT,'UTF-8'); ?>" size="20" class="formField" /></td>
 			</tr>
 			<tr>
 				<td class="descriptionbox <?php print $TEXT_DIRECTION; ?> wrap width50"><?php print_help_link("password_help", "qm", "password"); print $pgv_lang["password"]; ?></td>

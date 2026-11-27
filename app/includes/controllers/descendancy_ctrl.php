@@ -128,7 +128,7 @@ class DescendancyControllerRoot extends BaseController {
 	// Validate form variables
 	$this->pid=check_rootid($this->pid);
 
-	if (strlen($this->name)<30) $this->cellwidth="420";
+	if (strlen((string)$this->name)<30) $this->cellwidth="420";
 	else $this->cellwidth=(strlen($this->name)*14);
 
 	$this->descPerson = Person::getInstance($this->pid);

@@ -33,6 +33,7 @@ if (!defined('PGV_PHPGEDVIEW')) {
 
 define('PGV_CLASS_MUTEX_PHP', '');
 
+#[AllowDynamicProperties]
 class Mutex {
 	var $name; 	//-- the name of the mutex
 	var $waitCount;	//-- the number of cycles it we waited while trying to acquire the mutex

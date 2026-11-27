@@ -38,6 +38,7 @@ require_once PGV_ROOT.'includes/classes/class_date.php';
  * Event
  *
  */
+#[AllowDynamicProperties]
 class Event {
 //	These objects need further refinement in their implementations and parsing
 //	var $address = null;

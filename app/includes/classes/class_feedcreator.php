@@ -182,6 +182,7 @@ class FeedImage extends HtmlDescribable {
  * An HtmlDescribable is an item within a feed that can have a description that may
  * include HTML markup.
  */
+#[AllowDynamicProperties]
 class HtmlDescribable {
 	/**
 	 * Indicates whether the description field should be rendered in HTML.
@@ -216,6 +217,7 @@ class HtmlDescribable {
  * @author Pascal Van Hecke <feedcreator.class.php@vanhecke.info>
  * @version 1.6
  */
+#[AllowDynamicProperties]
 class FeedHtmlField {
 	/**
 	 * Mandatory attributes of a FeedHtmlField.
@@ -749,6 +751,7 @@ class FeedCreator extends HtmlDescribable {
  * FeedDate is an internal class that stores a date for a feed or feed item.
  * Usually, you won't need to use this.
  */
+#[AllowDynamicProperties]
 class FeedDate {
 	var $unix;
 

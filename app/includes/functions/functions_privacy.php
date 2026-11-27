@@ -348,7 +348,7 @@ function displayDetailsById($pid, $type = "INDI", $sitemap = false) {
 	global $GEDCOM;
 	$ged_id=get_id_from_gedcom($GEDCOM);
 
-	if ($_SESSION["pgv_user"]==PGV_USER_ID) {
+	if (getUserId()==PGV_USER_ID) {
 		// Normal operation
 		$pgv_GEDCOM            = PGV_GEDCOM;
 		$pgv_GED_ID            = PGV_GED_ID;
@@ -677,7 +677,7 @@ function showLivingNameById($pid) {
 	global $GEDCOM;
 	global $SHOW_LIVING_NAMES, $person_privacy, $user_privacy;
 
-	if ($_SESSION["pgv_user"]==PGV_USER_ID) {
+	if (getUserId()==PGV_USER_ID) {
 		// Normal operation
 		$pgv_USER_NAME			= PGV_USER_NAME;
 		$pgv_USER_ACCESS_LEVEL	= PGV_USER_ACCESS_LEVEL;
@@ -727,7 +727,7 @@ function showFact($fact, $pid, $type='INDI') {
 	global $GEDCOM;
 	global $global_facts, $person_facts, $SHOW_SOURCES;
 
-	if ($_SESSION["pgv_user"]==PGV_USER_ID) {
+	if (getUserId()==PGV_USER_ID) {
 		// Normal operation
 		$pgv_USER_ACCESS_LEVEL	= PGV_USER_ACCESS_LEVEL;
 	} else {
@@ -778,7 +778,7 @@ function showFactDetails($fact, $pid) {
 	global $GEDCOM;
 	global $global_facts, $person_facts;
 
-	if ($_SESSION["pgv_user"]==PGV_USER_ID) {
+	if (getUserId()==PGV_USER_ID) {
 		// Normal operation
 		$pgv_USER_ACCESS_LEVEL	= PGV_USER_ACCESS_LEVEL;
 	} else {
@@ -811,7 +811,7 @@ function privatize_gedcom($gedrec) {
 	global $pgv_lang, $factarray, $GEDCOM, $SHOW_PRIVATE_RELATIONSHIPS, $pgv_private_records;
 	global $global_facts, $person_facts;
 
-	if (preg_match('/^0 @('.PGV_REGEX_XREF.')@ ('.PGV_REGEX_TAG.')(.*)/', $gedrec, $match)) {
+	if (preg_match('/^0 @('.PGV_REGEX_XREF.')@ ('.PGV_REGEX_TAG.')(.*)/', (string)$gedrec, $match)) {
 		$gid = $match[1];
 		$type = $match[2];
 		$data = $match[3];
@@ -978,7 +978,7 @@ function FactEditRestricted($pid, $factrec) {
 * @return int Allowed or not allowed
 */
 function FactViewRestricted($pid, $factrec) {
-	if ($_SESSION['pgv_user']==PGV_USER_ID) {
+	if (getUserId()==PGV_USER_ID) {
 		// Normal operation
 		$pgv_GED_ID				= PGV_GED_ID;
 		$pgv_USER_GEDCOM_ADMIN	= PGV_USER_GEDCOM_ADMIN;

@@ -132,14 +132,14 @@ function gedcom_header($gedfile) {
 		}
 		// Link to SUBM/SUBN records, if they exist
 		$subn=
-			PGV_DB::prepare("SELECT o_id FROM ${TBLPREFIX}other WHERE o_type=? AND o_file=?")
+			PGV_DB::prepare("SELECT o_id FROM {$TBLPREFIX}other WHERE o_type=? AND o_file=?")
 			->execute(array('SUBN', $ged_id))
 			->fetchOne();
 		if ($subn) {
 			$SUBN="\n1 SUBN @{$subn}@";
 		}
 		$subm=
-			PGV_DB::prepare("SELECT o_id FROM ${TBLPREFIX}other WHERE o_type=? AND o_file=?")
+			PGV_DB::prepare("SELECT o_id FROM {$TBLPREFIX}other WHERE o_type=? AND o_file=?")
 			->execute(array('SUBM', $ged_id))
 			->fetchOne();
 		if ($subm) {

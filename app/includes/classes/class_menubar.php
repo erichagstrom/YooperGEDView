@@ -32,6 +32,7 @@ define('PGV_CLASS_MENUBAR_PHP', '');
 
 require_once PGV_ROOT.'includes/classes/class_menu.php';
 
+#[AllowDynamicProperties]
 class MenuBar
 {
 	/**

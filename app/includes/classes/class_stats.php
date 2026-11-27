@@ -40,6 +40,7 @@ require_once PGV_ROOT.'includes/functions/functions_print_lists.php';
 // Methods not allowed to be used in a statistic
 define('STATS_NOT_ALLOWED', 'stats,getAllTags,getTags');
 
+#[AllowDynamicProperties]
 class stats {
 	var $_gedcom;
 	var $_gedcom_url;
@@ -1054,13 +1055,13 @@ class stats {
 		if ($fact) {
 			if ($what=='INDI') {
 				$rows=
-					PGV_DB::prepare("SELECT i_gedcom AS ged FROM ${TBLPREFIX}individuals WHERE i_file=?")
+					PGV_DB::prepare("SELECT i_gedcom AS ged FROM {$TBLPREFIX}individuals WHERE i_file=?")
 					->execute(array($this->_ged_id))
 					->fetchAll();
 			}
 			else if ($what=='FAM') {
 				$rows=
-					PGV_DB::prepare("SELECT f_gedcom AS ged FROM ${TBLPREFIX}families WHERE f_file=?")
+					PGV_DB::prepare("SELECT f_gedcom AS ged FROM {$TBLPREFIX}families WHERE f_file=?")
 					->execute(array($this->_ged_id))
 					->fetchAll();
 			}
@@ -2833,7 +2834,7 @@ class stats {
 	function totalMarriedMales() {
 		global $TBLPREFIX;
 
-		$rows = PGV_DB::prepare("SELECT f_gedcom AS ged, f_husb AS husb FROM ${TBLPREFIX}families WHERE f_file=?")
+		$rows = PGV_DB::prepare("SELECT f_gedcom AS ged, f_husb AS husb FROM {$TBLPREFIX}families WHERE f_file=?")
 				->execute(array($this->_ged_id))
 				->fetchAll();
 		$husb = array();
@@ -2849,7 +2850,7 @@ class stats {
 	function totalMarriedFemales() {
 		global $TBLPREFIX;
 
-		$rows = PGV_DB::prepare("SELECT f_gedcom AS ged, f_wife AS wife FROM ${TBLPREFIX}families WHERE f_file=?")
+		$rows = PGV_DB::prepare("SELECT f_gedcom AS ged, f_wife AS wife FROM {$TBLPREFIX}families WHERE f_file=?")
 				->execute(array($this->_ged_id))
 				->fetchAll();
 		$wife = array();
@@ -3875,6 +3876,7 @@ class stats {
 		if (!is_array($a)) {$a = array($a);}
 		$encoding = '';
 		foreach ($a as $value) {
+			$value = (int)$value;
 			if ($value<0) $value = 0;
 			if ($value > 4095) $value = 4095;
 			$first = ($value >> 6) & 0x3F;
