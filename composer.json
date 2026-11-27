@@ -14,11 +14,22 @@
         "tecnickcom/tcpdf": "^6.7"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpstan/phpstan": "^2.1",
-        "friendsofphp/php-cs-fixer": "^3.64",
         "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^12.0",
         "spaze/phpstan-disallowed-calls": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "YooperGEDView\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "YooperGEDView\\Tests\\": "tests/Unit/"
+        }
     },
     "scripts": {
         "lint": "parallel-lint --exclude vendor app",
@@ -26,6 +37,7 @@
         "cs-fix": "php-cs-fixer fix",
         "stan": "phpstan analyse --memory-limit=2G --no-progress",
         "stan-src": "phpstan analyse --configuration=phpstan-src.neon --memory-limit=2G --no-progress",
+        "test": "phpunit",
         "check": [
             "@lint",
             "@cs",

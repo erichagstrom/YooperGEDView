@@ -285,6 +285,12 @@ try {
 	// Can't connect to the DB?  We'll get redirected to install.php later.....
 }
 
+// New code (src/) and the libraries are loaded by Composer, one folder above the program
+if (!file_exists(PGV_ROOT.'../vendor/autoload.php')) {
+	die('Libraries are missing. Run "composer install" in the folder above the program.');
+}
+require_once PGV_ROOT.'../vendor/autoload.php';
+
 // The authentication interface includes logging - which may be to the database
 require_once PGV_ROOT.'includes/authentication.php';
 
@@ -306,7 +312,13 @@ if (!empty($_SERVER['HTTP_USER_AGENT'])) {
 require PGV_ROOT.'includes/session_spider.php';
 
 // Start the php session
-session_set_cookie_params(0, PGV_SCRIPT_PATH);
+$PGV_SESSION_POLICY = new \YooperGEDView\Security\SessionPolicy($PGV_SESSION_TIME>0 ? (int)$PGV_SESSION_TIME : 7200);
+session_set_cookie_params($PGV_SESSION_POLICY->cookieOptions(PGV_SCRIPT_PATH, strpos(PGV_SERVER_NAME, 'https://')===0));
+// The session id comes from the cookie only, and only an id this site issued is accepted.
+// Search engines are the exception: session_spider.php gives each one a fixed id of its own.
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_trans_sid', '0');
+ini_set('session.use_strict_mode', $SEARCH_SPIDER ? '0' : '1');
 
 if ($PGV_SESSION_TIME>0) {
 	session_cache_expire($PGV_SESSION_TIME/60);
@@ -314,11 +326,21 @@ if ($PGV_SESSION_TIME>0) {
 if (!empty($PGV_SESSION_SAVE_PATH)) {
 	session_save_path($PGV_SESSION_SAVE_PATH);
 }
-if (isset($MANUAL_SESSION_START) && !empty($SID)) {
-	session_id($SID);
-}
 
 session_start();
+
+// A search engine's session is shared by everything that sends its name: it never carries a user
+if ($SEARCH_SPIDER) {
+	$_SESSION['pgv_user'] = '';
+}
+
+// A signed-in session that has not been used for the session time is ended
+if (!empty($_SESSION['pgv_user']) && $PGV_SESSION_POLICY->isIdle(isset($_SESSION['last_activity']) ? (int)$_SESSION['last_activity'] : 0, time())) {
+	$_SESSION = array();
+	session_regenerate_id(true);
+	$_SESSION['initiated'] = true;
+}
+$_SESSION['last_activity'] = time();
 
 // check whether it is necessary to regenerate a new session, destroying the current one
 // added SOAP_CONNECTED for SOAP session persistence (otherwise only one request per authentication is allowed)
@@ -329,9 +351,6 @@ if (!$SEARCH_SPIDER && !isset($_SESSION['initiated']) && !isset($_SESSION['SOAP_
 } else {
 	// An existing session
 }
-
-// MD-5 SALT for use in the crypt() function: use 1st 8 bytes of session ID padded with junk (in case it's too short)
-define ('PGV_SALT', '$1$'.substr(session_id().'padpadpa', 0, 8).'$');
 
 // Set the active GEDCOM
 if (isset($_REQUEST['ged'])) {

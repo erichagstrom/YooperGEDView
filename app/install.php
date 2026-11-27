@@ -342,7 +342,7 @@ switch($step) {
 		$lastname =safe_POST('lastname');
 		if ($username && $pass1 && $firstname && $lastname) {
 			if ($pass1==$pass2) {
-				if ($user_id=create_user($username, crypt($pass1, PGV_SALT))) {
+				if ($user_id=create_user($username, (new \YooperGEDView\Security\PasswordHasher())->hash($pass1))) {
 					set_user_setting($user_id, 'firstname',            $firstname);
 					set_user_setting($user_id, 'lastname',             $lastname);
 					set_user_setting($user_id, 'canadmin',             'Y');

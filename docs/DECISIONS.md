@@ -62,12 +62,43 @@ why, and what the alternative was.
 21. **Test data and tools are public-safe:** an invented family, a throw-away administrator, nothing from any
     real site.
 
+## Phase 2: security core
+
+22. **New code lives in `src/` and is loaded by Composer's autoloader on every request.** `includes/session.php`
+    loads `vendor/autoload.php` and stops with a plain message if it is missing, so `composer install` is now
+    needed to run the program at all, not only for mail and PDF. Unit tests use PHPUnit (`composer test`).
+23. **Passwords are Argon2id hashes; nothing else is accepted** (`YooperGEDView\Security\PasswordHasher`). A hash
+    in any other format (PhpGedView's MD5-crypt, bcrypt, plain text) never matches, so every account carried over
+    from PhpGedView needs a new password. Why not convert on next sign-in: that keeps the weak hashes usable for
+    as long as their owners stay away. Alternative: accept old hashes once and upgrade them.
+24. **A sign-in attempt costs the same whether or not the user exists.** A password is hashed even when there is
+    no such account, so answer times do not reveal which user names are real.
+25. **The salt taken from the session id is gone** (`PGV_SALT`). Each hash has its own random salt. The
+    registration code that was derived from that salt, and the password made up for "lost password", now come
+    from the system's random source instead of `rand()`.
+26. **Session cookie: HttpOnly, SameSite=Lax, and Secure when the site is reached over HTTPS**
+    (`YooperGEDView\Security\SessionPolicy`). Lax rather than Strict so that links in mail still arrive signed in.
+27. **Only session ids the site issued are accepted, and only from the cookie** (strict mode on, ids in the
+    address off). The path that let a caller name its own session id is removed. Search engines keep one fixed
+    session id each, as before, so they do not create a session per request; such a session can no longer carry
+    a signed-in user. Upstream meant to prevent that but did it before the session was loaded, so it had no
+    effect.
+28. **Signing in gives a new session id and deletes the old session; signing out empties it.**
+29. **A signed-in session unused for the session time (`$PGV_SESSION_TIME`, 2 hours by default) is signed out.**
+    Upstream only marked such users as "not logged in" in a list; the session itself carried on.
+
+### Left for later in Phase 2
+- "Lost password" still mails a new password. It should mail a one-time link instead.
+- Changing a password does not end that user's other sessions.
+- Basic HTTP authentication (`?auth=basic`) is still there and has no limit on attempts; it goes with the rate
+  limiting work.
+- `usermigrate*.php` can still import accounts with old hashes (which no longer work); the pages are due for
+  deletion.
+
 ### Found on the way, not changed (for Phase 2)
 - Calling `module.php` with a bad module name bans the caller's IP address for an hour, administrators included.
 - By default, names of living people are shown to visitors (`$SHOW_LIVING_NAMES = $PRIV_PUBLIC`); only their
   details are hidden. A safer default would hide the names too.
-- A password hash is accepted in any `crypt()` format the database holds, which is how the test administrator
-  gets a bcrypt hash today.
 
 ### Known risk: comparisons that changed meaning in PHP 8
 Item 8 is one case of a wider change: in PHP 8, `0 == ''` and `0 == 'abc'` are false where PHP 5 said true. Such

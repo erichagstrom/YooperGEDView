@@ -31,6 +31,7 @@ the web installer is blocked and its command-line replacement is not written.
 ```bash
 composer install
 composer check    # syntax, formatting, static analysis
+composer test     # unit tests of src/
 ```
 
 ## License

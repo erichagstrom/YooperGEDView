@@ -42,7 +42,7 @@ define('PGV_AUTHENTICATION_PHP', '');
  * authenticate a username and password
  *
  * This function takes the given <var>$username</var> and <var>$password</var> and authenticates
- * them against the database.  The passwords are encrypted using the crypt() function.
+ * them against the database.  The passwords are stored as Argon2id hashes (YooperGEDView\Security\PasswordHasher).
  * The username is stored in the <var>$_SESSION["pgv_user"]</var> session variable.
  * @param string $user_name the username for the user attempting to login
  * @param string $password the plain text password to test
@@ -55,13 +55,27 @@ function authenticateUser($user_name, $password, $basic=false) {
 		userLogout(getUserId());
 	}
 
-	if ($user_id=get_user_id($user_name)) {
-		$dbpassword=get_user_password($user_id);
-		if (crypt($password, $dbpassword)==$dbpassword) {
+	// Signing out may have ended the session
+	if (session_status()!==PHP_SESSION_ACTIVE) {
+		session_start();
+	}
+
+	// The password is checked even when there is no such user, so that the answer takes as long either way
+	$hasher=new \YooperGEDView\Security\PasswordHasher();
+	$user_id=get_user_id($user_name);
+	$dbpassword=$user_id ? (string)get_user_password($user_id) : '';
+	if ($hasher->verify((string)$password, $dbpassword)) {
+		if ($user_id) {
 			if (get_user_setting($user_id, 'verified')=='yes' && get_user_setting($user_id, 'verified_by_admin')=='yes' || get_user_setting($user_id, 'canadmin')=='Y') {
+				if ($hasher->needsRehash($dbpassword)) {
+					set_user_password($user_id, $hasher->hash($password));
+				}
 				set_user_setting($user_id, 'loggedin', 'Y');
-				//-- reset the user's session
+				//-- reset the user's session, under a new session id
 				$_SESSION = array();
+				session_regenerate_id(true);
+				$_SESSION['initiated'] = true;
+				$_SESSION['last_activity'] = time();
 				$_SESSION['pgv_user'] = $user_id;
 				AddToLog(($basic ? 'Basic HTTP Authentication' :'Login'). ' Successful');
 				return $user_id;
@@ -109,6 +123,7 @@ function userLogout($user_id) {
 
 	// If we are logging ourself out, then end our session too.
 	if (getUserId()==$user_id) {
+		$_SESSION = array();
 		session_destroy();
 	}
 }
