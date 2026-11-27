@@ -4,7 +4,7 @@
  *
  * The variables in this file are the main configuration variable for the site
  * Gedcom specific configuration variables are stored in the config_gedcom.php file.
- * Site administrators may edit these settings online through the install.php file.
+ * These settings are edited here, in this file: there is no page for changing them.
  *
  * phpGedView: Genealogy Viewer
  * Copyright (C) 2002 to 2009  PGV Development Team.  All rights reserved.
@@ -25,7 +25,6 @@
  *
  * @package PhpGedView
  * @subpackage Admin
- * @see install.php
  * @version $Id: config.dist 7054 2011-08-22 19:30:30Z canajun2eh $
  */
 

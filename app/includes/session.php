@@ -239,14 +239,24 @@ if (empty($_SERVER['QUERY_STRING'])) {
 //   during the hacking check in session_spider.php
 define('PGV_QUERY_STRING', $QUERY_STRING);
 
-//-- if not configured then redirect to the configuration script
+/**
+ * A site that cannot serve pages yet says so plainly.  There is no web installer: see README.md.
+ * @param string $message
+ */
+function site_not_ready($message) {
+	header('HTTP/1.1 503 Service Unavailable');
+	header('Content-Type: text/plain; charset=UTF-8');
+	header('Cache-Control: no-store');
+	echo $message;
+	exit;
+}
+
+//-- if not configured then say so
 if (!$CONFIGURED) {
 	if (PGV_SCRIPT_NAME!='admin.php'
 	&& PGV_SCRIPT_NAME!='login.php'
-	&& PGV_SCRIPT_NAME!='install.php'
 	&& PGV_SCRIPT_NAME!='editconfig_help.php') {
-		header('Location: install.php');
-		exit;
+		site_not_ready('This site is not configured yet. Its database settings belong in config.php or in the environment, and $CONFIGURED must then be true.');
 	}
 }
 //-- allow user to cancel
@@ -282,7 +292,7 @@ try {
 		die($ex);
 	}
 } catch (PDOException $ex) {
-	// Can't connect to the DB?  We'll get redirected to install.php later.....
+	// Can't connect to the DB?  The visitor is told so further down.
 }
 
 // New code (src/) and the libraries are loaded by Composer, one folder above the program
@@ -599,7 +609,7 @@ if (PGV_DB::isConnected()) {
 	define('PGV_USER_GEDCOM_ID',    getUserGedcomId   (PGV_USER_ID, PGV_GED_ID));
 	define('PGV_USER_ROOT_ID',      getUserRootId     (PGV_USER_ID, PGV_GED_ID));
 } else {
-	// No DB?  Just set the basics, for install.php
+	// No DB?  Just set the basics
 	define('PGV_ADMIN_USER_EXISTS', false);
 }
 
@@ -623,13 +633,15 @@ if (!isset($_SESSION['pgv_user'])) $_SESSION['pgv_user'] = '';
 if (isset($SHOW_CONTEXT_HELP) && $show_context_help==='yes') $_SESSION['show_context_help'] = true;
 if (isset($SHOW_CONTEXT_HELP) && $show_context_help==='no') $_SESSION['show_context_help'] = false;
 if (!isset($USE_THUMBS_MAIN)) $USE_THUMBS_MAIN = false;
-if (PGV_SCRIPT_NAME!='install.php' && PGV_SCRIPT_NAME!='editconfig_help.php') {
-	if (!PGV_DB::isConnected() || !PGV_ADMIN_USER_EXISTS) {
-		header('Location: install.php');
-		exit;
+if (PGV_SCRIPT_NAME!='editconfig_help.php') {
+	if (!PGV_DB::isConnected()) {
+		site_not_ready('This site cannot reach its database.');
+	}
+	if (!PGV_ADMIN_USER_EXISTS) {
+		site_not_ready('This site has no administrator yet. Create one on the server with: bin/yooper install');
 	}
 
-	if (!get_gedcom_setting(PGV_GED_ID, 'imported') && !in_array(PGV_SCRIPT_NAME, array('editconfig_gedcom.php', 'help_text.php', 'editconfig_help.php', 'editgedcoms.php', 'downloadgedcom.php', 'uploadgedcom.php', 'login.php', 'admin.php', 'config_download.php', 'addnewgedcom.php', 'validategedcom.php', 'addmedia.php', 'importgedcom.php', 'client.php', 'edit_privacy.php', 'gedcheck.php', 'printlog.php', 'editlang.php', 'editlang_edit.php' ,'useradmin.php', 'export_gedcom.php', 'edit_changes.php'))) {
+	if (!get_gedcom_setting(PGV_GED_ID, 'imported') && !in_array(PGV_SCRIPT_NAME, array('editconfig_gedcom.php', 'help_text.php', 'editconfig_help.php', 'editgedcoms.php', 'downloadgedcom.php', 'uploadgedcom.php', 'login.php', 'admin.php', 'addnewgedcom.php', 'validategedcom.php', 'addmedia.php', 'importgedcom.php', 'client.php', 'edit_privacy.php', 'gedcheck.php', 'printlog.php', 'useradmin.php', 'export_gedcom.php', 'edit_changes.php'))) {
 		header('Location: editgedcoms.php');
 		exit;
 	}
