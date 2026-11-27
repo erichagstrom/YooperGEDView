@@ -52,6 +52,7 @@ if ($export) {
 	$filename = get_gedcom_setting($ged_id, 'path');
 	echo '<h1>', $pgv_lang['ged_export'], '</h1>';
 	echo '<p>', htmlspecialchars(filename_decode($export)), ' => ', $filename, '</p>';
+	if (ob_get_level()) ob_flush();
 	flush();
 	$gedout = fopen($filename.'.tmp', 'w');
 	if ($gedout) {

@@ -352,6 +352,27 @@ if (!$SEARCH_SPIDER && !isset($_SESSION['initiated']) && !isset($_SESSION['SOAP_
 	// An existing session
 }
 
+// Forged requests: anything other than a plain read must send back the session's token (CsrfProtection)
+if (!in_array(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET', array('GET', 'HEAD', 'OPTIONS'))) {
+	if (isset($_POST['csrf']) && is_string($_POST['csrf'])) {
+		$csrf_sent = $_POST['csrf'];
+	} else {
+		$csrf_sent = isset($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : '';
+	}
+	if (!csrfProtection()->isValid(isset($_SESSION['csrf']) ? (string)$_SESSION['csrf'] : '', $csrf_sent)) {
+		header('HTTP/1.0 403 Forbidden');
+		header('Content-Type: text/plain; charset=UTF-8');
+		echo 'This form is no longer valid, most likely because you have signed in or out, or been away for a while, since the page was loaded. Go back, reload the page and try again.';
+		exit;
+	}
+	unset($csrf_sent);
+}
+// The token is added to every form sent by POST as the page goes out, so that no page can leave it out.
+// File downloads are not pages and are not held in memory for this.
+if (!in_array(PGV_SCRIPT_NAME, array('downloadbackup.php', 'mediafirewall.php', 'imageflush.php')) && !(PGV_SCRIPT_NAME=='downloadgedcom.php' && isset($_REQUEST['action']) && $_REQUEST['action']=='download')) {
+	ob_start('csrf_protect_page');
+}
+
 // Set the active GEDCOM
 if (isset($_REQUEST['ged'])) {
 	// .... from the URL or form action
