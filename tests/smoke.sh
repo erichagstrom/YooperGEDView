@@ -8,13 +8,15 @@ port=${PORT:-8099}
 base="http://127.0.0.1:$port"
 agent="Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/100.0"
 work=$(mktemp -d)
+log="$work/results.txt"
+report() { echo "$1" | tee -a "$log"; }
 "$here/serve.sh" "$port" "$work/site" >"$work/server.log" 2>&1 &
 server=$!
 trap 'kill $server 2>/dev/null; rm -rf "$work"' EXIT
 for _ in $(seq 50); do curl -s -o /dev/null "$base/GPL.txt" && break; sleep 0.2; done
 
 if ! php "$here/provision.php" "$base" "$work/site/app"; then
-  echo "FAIL  provisioning"
+  report "FAIL  provisioning"
   exit 1
 fi
 
@@ -24,8 +26,8 @@ check() {
   local code error
   code=$(curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" -w '%{http_code}' "$base/$2")
   error=$(grep -a -m1 -oE '((Fatal error|Parse error|Warning|Deprecated|Notice)(</b>)?|ERROR [0-9]+): .{0,160}' "$work/body" | sed 's#</b>##')
-  if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); echo "PASS  $1  $2"
-  else fail=$((fail + 1)); echo "FAIL  $1  $2 (HTTP $code) $error"; fi
+  if [ "$code" = 200 ] && [ -z "$error" ]; then pass=$((pass + 1)); report "PASS  $1  $2"
+  else fail=$((fail + 1)); report "FAIL  $1  $2 (HTTP $code) $error"; fi
 }
 
 pages() { grep -v '^#' "$here/$1" | grep -v '^$'; }
@@ -41,8 +43,8 @@ expect() {
   local found=lacks
   curl -s -g -m 120 -A "$agent" -b "$work/$1" -c "$work/$1" -o "$work/body" "$base/$2"
   grep -a -q -- "$4" "$work/body" && found=has
-  if [ "$found" = "$3" ]; then pass=$((pass + 1)); echo "PASS  $1  $2 $3 '$4'"
-  else fail=$((fail + 1)); echo "FAIL  $1  $2 should $3 '$4'"; fi
+  if [ "$found" = "$3" ]; then pass=$((pass + 1)); report "PASS  $1  $2 $3 '$4'"
+  else fail=$((fail + 1)); report "FAIL  $1  $2 should $3 '$4'"; fi
 }
 expect admin "individual.php?pid=I8" has "February 1975"
 expect admin "index.php" has "logout"
@@ -64,10 +66,10 @@ expect admin "reportengine.php?action=run&report=reports/individual.xml&$report_
 if [ -f "$here/../vendor/autoload.php" ]; then
   pdf_options=${report_options/output=HTML/output=PDF}
   curl -s -g -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/report.pdf" "$base/reportengine.php?action=run&report=reports/individual.xml&$pdf_options"
-  if [ "$(head -c 5 "$work/report.pdf")" = "%PDF-" ]; then pass=$((pass + 1)); echo "PASS  admin  individual report as PDF"
-  else fail=$((fail + 1)); echo "FAIL  admin  individual report as PDF: $(head -c 300 "$work/report.pdf" | tr -d '\n')"; fi
+  if [ "$(head -c 5 "$work/report.pdf")" = "%PDF-" ]; then pass=$((pass + 1)); report "PASS  admin  individual report as PDF"
+  else fail=$((fail + 1)); report "FAIL  admin  individual report as PDF: $(head -c 300 "$work/report.pdf" | tr -d '\n')"; fi
 else
-  echo "SKIP  admin  individual report as PDF (no vendor/ folder: run composer install)"
+  report "SKIP  admin  individual report as PDF (no vendor/ folder: run composer install)"
 fi
 
 # Exports: a full GEDCOM for the administrator, and living people's details left out of a "visitor" export.
@@ -81,10 +83,12 @@ expect visitor "$export&privatize_export=none" lacks "0 @I1@ INDI"
 # A zipped export is a real zip file holding the tree.
 curl -s -g -L -m 120 -A "$agent" -b "$work/admin" -c "$work/admin" -o "$work/export.zip" "$base/$export&privatize_export=none&zip=yes"
 if unzip -Z1 "$work/export.zip" 2>/dev/null | grep -qx "sample.ged"; then
-  pass=$((pass + 1)); echo "PASS  admin  zipped export"
+  pass=$((pass + 1)); report "PASS  admin  zipped export"
 else
-  fail=$((fail + 1)); echo "FAIL  admin  zipped export"
+  fail=$((fail + 1)); report "FAIL  admin  zipped export"
 fi
 
+# Repeat the failures at the end, where they are easy to find.
+grep "^FAIL" "$log" || true
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]
