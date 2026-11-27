@@ -322,14 +322,22 @@ why, and what the alternative was.
     backslashes are stripped from what is sent before it gets there. Only the user name, and the other
     fields written without escaping, were.
 
+83. **One rule for a new password: 12 to 1000 characters** (`YooperGEDView\Security\PasswordPolicy`), on the
+    account page, in user administration, at registration, behind the reset link and in `bin/yooper`. The
+    inherited pages asked for six. Nothing is asked about kinds of characters: length is what makes a
+    password hard to guess. The upper limit keeps hashing from being used to tie the server up. Signing in
+    takes whatever is typed, so the rule never locks out a password that already exists.
+84. **`bin/yooper set-password <user-name>`** sets a password from the server and ends that user's sessions.
+    It is for the accounts the reset link cannot reach: a site with no mail set up, a user with no address,
+    and above all the administrator of a site just moved from PhpGedView, whose old password no longer
+    works. Like `install`, it reads the password from standard input.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another
   web server needs the same setting.
 - The GEDCOM upload on the tree settings page takes its folder from the request. Only administrators reach it.
 - An add-on's language file that refers to other `GLOBALS` names in its texts will find them not replaced.
-- The rule for a new password is still the inherited one: six characters or more. `bin/yooper install` asks
-  for twelve. One rule for all places is still to be set.
 - The old language strings for the mailed password (`mail04_line03` to `05`, `pwreqinfo`) are unused.
 - Help texts and language strings for the deleted pages are still in the language files.
 - Administrator actions are still logged only to the files in `index/`, and there is no page for reading the

@@ -25,7 +25,8 @@ docker compose exec -T web php bin/yooper install anna --email=anna@example.org 
 Behind a reverse proxy, set `TRUSTED_PROXY` in `.env` to the proxy's address so that the site learns each
 visitor's own address and whether they came over HTTPS.
 
-`bin/yooper install` creates the first administrator; the password is the first line of its standard input. Then
+`bin/yooper install` creates the first administrator; the password is the first line of its standard input.
+`bin/yooper set-password <user-name>` gives an existing user a new one the same way. Then
 sign in at `http://127.0.0.1:8080/login.php` and add a family tree.
 
 ## Layout
