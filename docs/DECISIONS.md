@@ -363,6 +363,18 @@ why, and what the alternative was.
     real site's years of oddities. That needs the reference site, and before the first real site is moved,
     a trial on a copy of it.
 
+92. **First run on a real site's copy** (nine accounts, one tree, MariaDB): the command ran clean and changed
+    nothing, and the copy matched the original. Two things in its report were wrong and are corrected:
+    - It called every password that is not in this program's form "stored the way PhpGedView stored it" and
+      "weak". One was bcrypt, set by another tool, and eight were placeholders. The report now tells apart
+      weak hashes (MD5-crypt and older), other forms of hash, and no password at all. Only weak ones are
+      removed. 87 stands for those.
+    - It reported the guard at the top of the trees' settings files as "more than settings". Versions of
+      PhpGedView before 4.3 wrote a different guard from the one in 4.3.0's templates, and a site that
+      began on one keeps it. The inspector now knows both, and no longer reports the printing of one
+      fixed text.
+    The lesson for 91 held: a real site showed what made-up ones did not.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another

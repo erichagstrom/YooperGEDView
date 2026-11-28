@@ -68,8 +68,10 @@ final class PhpFileInspectorTest extends TestCase
             'a class used' => ['$X = Foo::BAR;', 'uses a class (::)'],
             'a function defined' => ['function f() {}', 'defines a function'],
             'a short function' => ['$f = fn($x) => $x;', 'defines a function'],
-            'echo' => ['echo "x";', 'prints something (echo)'],
-            'print' => ['print "x";', 'prints something (print)'],
+            'echo of a variable' => ['echo $x;', 'prints something (echo)'],
+            'print of a variable' => ['print $x;', 'prints something (print)'],
+            'print of a text PHP works on' => ['print "a $x b";', 'prints something (print)'],
+            'print of a text joined with something' => ['print "a" . $x;', 'prints something (print)'],
             'the file cut short' => ['__halt_compiler();', 'cuts the file short'],
             'a heredoc' => ["\$X = <<<A\nx\nA;\n", 'heredoc'],
         ];
@@ -91,6 +93,18 @@ final class PhpFileInspectorTest extends TestCase
             $php = file_get_contents(__DIR__ . '/../../../app/' . $template);
             self::assertIsString($php);
             self::assertSame([], (new PhpFileInspector())->findings($php), $template);
+        }
+    }
+
+    public function testTheGuardThatEarlierVersionsOfPhpGedViewWroteHasNoFindings(): void
+    {
+        $guards = [
+            "<?php\nif (stristr(\$_SERVER[\"SCRIPT_NAME\"], basename(__FILE__))!==false) {\n\tprint \"Naughty, Naughty, Naughty!\";\n\texit;\n}\n\$LANGUAGE = \"english\";\n",
+            "<?php\nif (preg_match(\"/\\Wconfig_gedcom\\.php/\", \$_SERVER[\"SCRIPT_NAME\"])>0) {\n\tprint \"Got your hand caught in the cookie jar.\";\n\texit;\n}\n",
+            "<?php\nif (stristr(\$_SERVER['SCRIPT_NAME'], basename(__FILE__))!==false) { echo 'No.'; exit; }\n",
+        ];
+        foreach ($guards as $guard) {
+            self::assertSame([], (new PhpFileInspector())->findings($guard), $guard);
         }
     }
 

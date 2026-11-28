@@ -48,25 +48,35 @@ final readonly class UpgradeFromPgv
         }
 
         $users = $this->site->users();
-        $withOldPassword = array_values(array_filter($users, fn(array $user): bool => $user['hash'] !== LegacySiteRepository::NO_PASSWORD && !$this->hasher->accepts($user['hash'])));
+        $weak = array_values(array_filter($users, fn(array $user): bool => $this->kindOfPassword($user['hash']) === 'weak'));
+        $otherFormat = array_values(array_filter($users, fn(array $user): bool => $this->kindOfPassword($user['hash']) === 'other'));
+        $none = array_values(array_filter($users, fn(array $user): bool => $this->kindOfPassword($user['hash']) === 'none'));
         $report[] = '';
         $report[] = 'Accounts';
         $report[] = '  ' . count($users) . ' in all.';
-        if ($withOldPassword !== []) {
-            $report[] = '  ' . count($withOldPassword) . ' have a password stored the way PhpGedView stored it. Those passwords no longer work here,';
-            $report[] = '  and the stored form is weak enough to be worth removing. ' . $done('They would be removed.', 'They have been removed.');
+        if ($weak !== []) {
+            $report[] = '  ' . count($weak) . ' have a password stored the way PhpGedView stored it (MD5-crypt or older). Those no longer work here,';
+            $report[] = '  and that form is weak enough to be worth removing from the copy. ' . $done('They would be removed.', 'They have been removed.');
             if ($apply) {
-                foreach ($withOldPassword as $user) {
+                foreach ($weak as $user) {
                     $this->site->removePassword($user['id']);
                 }
             }
+        }
+        if ($otherFormat !== []) {
+            $report[] = '  ' . count($otherFormat) . ' have a password stored in another form (bcrypt, for example), set by something other than PhpGedView.';
+            $report[] = '  This program takes only its own form, so they no longer work here either. They are left as they are.';
+        }
+        if ($none !== []) {
+            $report[] = '  ' . count($none) . ' have no password stored: nobody can sign in as them until one is set.';
         }
         $withoutPassword = array_values(array_filter($users, fn(array $user): bool => !$this->hasher->accepts($user['hash'])));
         if ($withoutPassword !== []) {
             $report[] = '  Each of these users needs a new password before they can sign in:';
             foreach ($withoutPassword as $user) {
                 $how = $user['email'] === '' ? 'no mail address: bin/yooper set-password' : 'by the "lost password" link on the sign-in page';
-                $report[] = '    ' . $user['name'] . ($user['administrator'] ? ' (administrator)' : '') . ': ' . $how;
+                $was = $this->kindOfPassword($user['hash']) === 'none' ? ' (no password stored)' : '';
+                $report[] = '    ' . $user['name'] . ($user['administrator'] ? ' (administrator)' : '') . $was . ': ' . $how;
             }
             $report[] = '  An administrator can always be given one with: bin/yooper set-password <user-name>';
         }
@@ -124,6 +134,25 @@ final readonly class UpgradeFromPgv
             : 'Nothing has been changed. Run again with --apply, on a copy of the site, to make the changes.';
 
         return $report;
+    }
+
+    /**
+     * What is stored as a user's password: "accepted" (this program's own form), "weak" (MD5-crypt, as
+     * PhpGedView 4.3.0 wrote it, or the still older DES, MD5 and SHA-1 forms), "other" (another form of hash,
+     * such as bcrypt), or "none" (a placeholder: nothing typed could ever have matched it).
+     *
+     * @return 'accepted'|'weak'|'other'|'none'
+     */
+    private function kindOfPassword(string $stored): string
+    {
+        if ($this->hasher->accepts($stored)) {
+            return 'accepted';
+        }
+        if (str_starts_with($stored, '$1$') || preg_match('~^(?:[./0-9A-Za-z]{13}|[0-9a-f]{32}|[0-9a-f]{40})$~', $stored) === 1) {
+            return 'weak';
+        }
+
+        return str_starts_with($stored, '$') && strlen($stored) >= 20 ? 'other' : 'none';
     }
 
     /**
