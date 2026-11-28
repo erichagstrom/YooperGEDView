@@ -112,6 +112,34 @@ Left over from Phase 1:
 - Statistics charts drawn on the site itself (they were Google chart images, removed in Phase 2).
 - Visual redesign, replacement of Prototype / script.aculo.us, JSON API, GEDCOM 7 import and export.
 
+### Phase 6. Checking and enriching the data
+Finding mistakes in a tree, and help from outside sources. In this order, each step useful without the next.
+
+- [ ] **Consistency checks, on the site's own data, sending nothing anywhere.** Dates out of order (died before
+  born, married after dying), parents too young or too old, children born after a parent died, people old
+  enough to be dead with no death recorded, possible duplicates, missing basics. A page for editors that lists
+  what was found; each finding leads to the record. A first form of these checks exists as SQL outside this
+  repository and has been tried on a real tree.
+- [ ] **Places.** Standard names and coordinates from a place gazetteer (GeoNames, or OpenStreetMap's Nominatim,
+  which can be run on the site's own server). Only place names are sent, never people.
+- [ ] **Suggestions from shared trees, for people who have died.** WikiTree first: its API is open and holds
+  public profiles only. Matches are shown to an editor as suggestions and go through the pending-changes
+  review like any other edit.
+- [ ] **FamilySearch**, if the steps above leave a need: the largest free tree and record index, but it needs a
+  registered application and each user's own sign-in.
+
+Rules for anything in this phase that talks to another service:
+- Nobody the program treats as living is ever sent, in any form.
+- For the dead, the least that finds a match: a name, a year, a place. Not whole records.
+- The site fetches; it never uploads the tree. Shared trees are public and anyone can edit them.
+- Nothing is changed without an editor's say.
+- Keys come from the environment, like the database password. The content security policy lists each service
+  by name.
+- Each service is off until the site's administrator turns it on.
+
+Not available as services to build on: Ancestry and Find a Grave publish no API; MyHeritage's is for partners.
+Terms change, so each provider's are read again before work starts.
+
 ## Order and size
 
 Phases 0 to 2 remove the known weaknesses and are the minimum before the site faces the internet, and even then
