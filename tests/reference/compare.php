@@ -101,21 +101,19 @@ function onlyIn(array $lines, array $others): array
 }
 
 /**
- * The lines only one of the two pages has, each with the line that comes before it, to show where on the page it is.
+ * Some lines of a page, each with the two lines that come before it, to show where on the page it is.
  *
- * @param list<string> $oldLines
- * @param list<string> $newLines
+ * @param list<string> $lines the page
+ * @param list<string> $only the lines of it to show
  */
-function inContext(array $oldLines, array $newLines): string
+function inContext(string $mark, array $lines, array $only): string
 {
     $text = '';
-    foreach ([['-', $oldLines, onlyIn($oldLines, $newLines)], ['+', $newLines, onlyIn($newLines, $oldLines)]] as [$mark, $lines, $only]) {
-        $wanted = array_count_values($only);
-        foreach ($lines as $number => $line) {
-            if (($wanted[$line] ?? 0) > 0 && strlen($text) < 6000) {
-                $wanted[$line]--;
-                $text .= '      ' . mb_substr($lines[$number - 1] ?? '(top of page)', 0, 120) . "\n    " . $mark . ' ' . mb_substr($line, 0, 200) . "\n";
-            }
+    $wanted = array_count_values($only);
+    foreach ($lines as $number => $line) {
+        if (($wanted[$line] ?? 0) > 0 && strlen($text) < 4000) {
+            $wanted[$line]--;
+            $text .= '      ' . mb_substr(($lines[$number - 2] ?? '') . ' / ' . ($lines[$number - 1] ?? '(top of page)'), 0, 160) . "\n    " . $mark . ' ' . mb_substr($line, 0, 200) . "\n";
         }
     }
 
@@ -179,7 +177,7 @@ foreach ($visits as [$who, $page]) {
         array_map(static fn(string $line): array => ['old', $line], onlyIn($oldLines, $newLines)),
         array_map(static fn(string $line): array => ['new', $line], onlyIn($newLines, $oldLines)),
     );
-    $left = 0;
+    $left = ['old' => [], 'new' => []];
     foreach ($differences as [$side, $line]) {
         foreach ($explained as $number => $rule) {
             if ($rule['side'] === $side && preg_match($rule['line'], $line) === 1 && (!isset($rule['page']) || preg_match($rule['page'], $page) === 1)) {
@@ -188,13 +186,13 @@ foreach ($visits as [$who, $page]) {
                 continue 2;
             }
         }
-        $left++;
+        $left[$side][] = $line;
         $unexplained[($side === 'old' ? 'only PhpGedView shows: ' : 'only this program shows: ') . mb_substr($line, 0, 200)][] = $who . ' ' . $page;
     }
-    if ($left === 0) {
+    if ($left === ['old' => [], 'new' => []]) {
         $same++;
     } elseif (count($context) < 12) {
-        $context[$who . ' ' . $page] = inContext($oldLines, $newLines);
+        $context[$who . ' ' . $page] = inContext('-', $oldLines, $left['old']) . inContext('+', $newLines, $left['new']);
     }
 }
 array_map(unlink(...), $jars);
@@ -204,7 +202,7 @@ foreach ($unexplained as $difference => $seenOn) {
     echo 'DIFF  ', $difference, "\n      on ", count($seenOn), ' of ', count($visits), ', such as: ', implode(' | ', array_slice($seenOn, 0, 2)), "\n";
 }
 foreach ($context as $visit => $text) {
-    echo "\n--- ", $visit, ": the lines that differ, each after the line before it (- PhpGedView, + this program)\n", $text;
+    echo "\n--- ", $visit, ": the lines that differ, each after the two lines before it (- PhpGedView, + this program)\n", $text;
 }
 $stale = 0;
 foreach ($explained as $number => $rule) {

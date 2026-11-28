@@ -31,6 +31,12 @@ return [
         'why' => 'What this program says instead of failing.'],
 
     // The two test sites, not the two programs.
+    ['side' => 'new', 'line' => '~^Circle Diagram$~',
+        'why' => 'The reference site\'s picture library has no FreeType, which cannot be added to that old image; PhpGedView then leaves the circle diagram out of its menus.'],
+    ['side' => 'old', 'page' => '~^fanchart\.php~', 'line' => '~^PHP server misconfiguration: FreeType library required~',
+        'why' => 'The same: PhpGedView says so on the page itself, and shows nothing else.'],
+    ['side' => 'new', 'page' => '~^fanchart\.php~', 'line' => '~~',
+        'why' => 'The same: this program shows the diagram, with its menus and the people in it.'],
     ['side' => 'new', 'page' => '~^admin\.php~', 'line' => '~^Your config\.php file is still writable\.~',
         'why' => 'The moved site runs from a throw-away copy that the test may write to; the reference site\'s files belong to root.'],
 ];
