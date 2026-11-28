@@ -29,6 +29,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "YooperGEDView\\MariaDbTests\\": "tests/MariaDb/",
             "YooperGEDView\\Tests\\": "tests/Unit/"
         }
     },
@@ -39,6 +40,7 @@
         "stan": "phpstan analyse --memory-limit=2G --no-progress",
         "stan-src": "phpstan analyse --configuration=phpstan-src.neon --memory-limit=2G --no-progress",
         "test": "phpunit",
+        "test-mariadb": "phpunit --testsuite mariadb",
         "check": [
             "@lint",
             "@cs",

@@ -10,6 +10,21 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-24.04
+    # For the tests of what the upgrade does to a database (composer test-mariadb). A throw-away server that
+    # lives as long as this job and holds made-up data only, so its password is no secret.
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: yooper_test
+          MARIADB_USER: yooper_test
+          MARIADB_PASSWORD: for-this-job-only
+          MARIADB_RANDOM_ROOT_PASSWORD: '1'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@v5
         with:
@@ -17,7 +32,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo_sqlite
+          extensions: pdo_sqlite, pdo_mysql
           tools: composer:v2
           coverage: none
       - run: composer validate --strict
@@ -32,6 +47,13 @@ jobs:
       # New code: highest level, strict rules, no baseline.
       - run: composer stan-src
       - run: composer test
+      - run: composer test-mariadb
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '3306'
+          DB_NAME: yooper_test
+          DB_USER: yooper_test
+          DB_PASSWORD: for-this-job-only
 
   smoke:
     runs-on: ubuntu-24.04

@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 // Usage: php provision.php <base-url> <site-dir>
+// The site's database is the SQLite file that tests/serve.sh sets up, unless DB_TYPE is set in the environment:
+// then it is the one named by DB_TYPE, DB_HOST, DB_PORT, DB_NAME, DB_USER and DB_PASSWORD, as for bin/yooper.
 // Turns a freshly started test site (tests/serve.sh) into a usable one: creates the administrator and imports
 // tests/fixtures/sample.ged through the program's own pages, the way a person would.
 // Test credentials only: user "admin", password "test-admin-password". A second user, "legacy", has the same
 // password stored the way PhpGedView 4.3.0 stored it (MD5-crypt), which must no longer be accepted.
 
 use YooperGEDView\Console\Yooper;
+use YooperGEDView\Database\ConnectionFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -119,8 +122,10 @@ function createLegacyUser(PDO $database): void
 
 /**
  * The administrator is created the way a person setting up a site does it: with "bin/yooper install".
+ *
+ * @param array<string, string> $settings where the site's database is, as bin/yooper takes it
  */
-function createAdministrator(string $databaseFile): void
+function createAdministrator(array $settings): void
 {
     $password = fopen('php://memory', 'r+');
     if ($password === false) {
@@ -130,7 +135,7 @@ function createAdministrator(string $databaseFile): void
     rewind($password);
     $code = (new Yooper(time()))->run(
         ['install', ADMIN_USER, '--email=admin@example.com', '--first-name=Test', '--last-name=Admin'],
-        ['DB_TYPE' => 'sqlite', 'DB_NAME' => $databaseFile],
+        $settings,
         $password,
         STDERR,
         STDERR,
@@ -159,8 +164,12 @@ if ($cookieJar === false) {
 
 // The first request makes the program create its tables.
 request($baseUrl . 'index.php', $cookieJar);
-$database = new PDO('sqlite:' . $siteDir . '/index/test.sqlite', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-createAdministrator($siteDir . '/index/test.sqlite');
+$settings = ['DB_TYPE' => 'sqlite', 'DB_NAME' => $siteDir . '/index/test.sqlite'];
+if (getenv('DB_TYPE') !== false) {
+    $settings = array_filter(getenv(), static fn(string $name): bool => str_starts_with($name, 'DB_'), ARRAY_FILTER_USE_KEY);
+}
+$database = (new ConnectionFactory())->fromEnvironment($settings);
+createAdministrator($settings);
 createLegacyUser($database);
 
 if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE)) {

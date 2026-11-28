@@ -40,6 +40,10 @@ The database is given through the same environment variables as for `install`. T
 has to do, and points out anything in the old site's files that is not what PhpGedView wrote. Before the old site
 is copied, accept or reject its pending changes if you can: fewer things to carry.
 
+On MySQL and MariaDB the upgrade also converts tables that hold their text in another character set (usually
+latin1) to utf8mb4, keeping letters such as "ö" right whichever way the old site stored them. On a large tree
+that step rewrites every table and can take minutes.
+
 This has been tried on made-up sites only. Try it on a copy of a real one before relying on it.
 
 ## Layout
@@ -57,6 +61,7 @@ This has been tried on made-up sites only. Try it on a copy of a real one before
 composer install
 composer check    # syntax, formatting, static analysis
 composer test     # unit tests of src/
+composer test-mariadb   # the tests that need a MariaDB server: see tests/README.md
 ```
 
 ## License

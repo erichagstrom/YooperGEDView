@@ -391,7 +391,25 @@ why, and what the alternative was.
     page size that was not a number; descendancy charts warned for people with no parents recorded; and the
     upgrade said "the changes above have been made" when there were none to make. A fifth, lists by surname
     letter failing on a database whose tables are in another character set than the connection, is not fixed
-    here: see the next entry when it is written.
+    here: see the next entry.
+96. **Tables in another character set are converted to utf8mb4 by the upgrade.** PhpGedView made its tables
+    in the database's default character set, on most old servers latin1, and sent them UTF-8 over a
+    connection that said latin1. So the columns hold UTF-8 bytes under the latin1 label. Asking such a column
+    for a letter latin1 does not have fails in the database ("illegal mix of collations"), which is what the
+    lists by surname letter do. `upgrade-from-pgv` now tells, column by column and from the data, which of
+    two things it holds: UTF-8 under the wrong label (the bytes are kept and the label put right, by way of a
+    binary type) or real latin1 (converted in the ordinary way). A column with both in it cannot be put right
+    by rule: its table is left alone and reported. If the server refuses a table, it is put back as it was.
+    The new comparison rules mirror the old (Swedish stays Swedish), so that two values a unique index held
+    apart stay apart. The database's default is changed too, so that tables added later match. The program's
+    own connection now always says utf8mb4, instead of taking the server's default.
+    *Alternatives:* connect as latin1 and leave the tables (keeps every sort and search wrong for non-ASCII
+    letters, and breaks the day a table is added in another character set); convert everything the ordinary
+    way (turns each "ö" stored as UTF-8 into two wrong letters, for good). *Side effects, both the database's
+    doing:* a TEXT column becomes MEDIUMTEXT, so that it holds as many letters as before, and on MyISAM an
+    ordinary (not unique) index on a long column covers its first 250 letters only. *Tested* on a MariaDB
+    server (`composer test-mariadb`, run in CI), and by hand on the sample tree imported into latin1 tables:
+    the list by surname letter failed before and worked after.
 
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless

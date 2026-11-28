@@ -4,6 +4,7 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          cacheDirectory=".phpunit.cache"
+         defaultTestSuite="unit"
          colors="true"
          failOnDeprecation="true"
          failOnNotice="true"
@@ -14,6 +15,10 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests/Unit</directory>
+        </testsuite>
+        <!-- Needs a MariaDB server (see tests/README.md), so it is run by name: composer test-mariadb -->
+        <testsuite name="mariadb">
+            <directory>tests/MariaDb</directory>
         </testsuite>
     </testsuites>
     <source>

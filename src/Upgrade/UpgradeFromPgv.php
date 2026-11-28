@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace YooperGEDView\Upgrade;
 
+use PDOException;
 use YooperGEDView\Security\PasswordHasher;
 
 /**
@@ -25,6 +26,7 @@ final readonly class UpgradeFromPgv
         private PendingChangesFile $pendingChanges = new PendingChangesFile(),
         private PhpFileInspector $inspector = new PhpFileInspector(),
         private PasswordHasher $hasher = new PasswordHasher(),
+        private ?CharacterSetConverter $characterSets = null,
     ) {}
 
     /**
@@ -100,6 +102,14 @@ final readonly class UpgradeFromPgv
         array_push($report, ...$pendingEdits);
         $changed = $apply && ($weak !== [] || $otherLanguage !== [] || str_contains(implode("\n", $pendingEdits), 'have been carried over'));
 
+        $characterSets = $this->characterSets($apply);
+        if ($characterSets !== []) {
+            $report[] = '';
+            $report[] = 'Text in the database';
+            array_push($report, ...$characterSets);
+            $changed = $changed || $apply;
+        }
+
         $report[] = '';
         $report[] = 'Settings files of the trees';
         $settingsFiles = array_merge($this->filesMatching('*_conf.php'), $this->filesMatching('*_priv.php'));
@@ -158,6 +168,66 @@ final readonly class UpgradeFromPgv
         }
 
         return str_starts_with($stored, '$') && strlen($stored) >= 20 ? 'other' : 'none';
+    }
+
+    /**
+     * @return list<string> nothing when every table already holds its text as utf8mb4, or the database has no such thing
+     */
+    private function characterSets(bool $apply): array
+    {
+        if ($this->characterSets === null || !$this->characterSets->applies()) {
+            return [];
+        }
+        $plan = $this->characterSets->plan();
+        $databaseCollation = $this->characterSets->databaseCollation();
+        $lines = [];
+        if ($plan !== []) {
+            $relabelled = array_sum(array_map(static fn(array $entry): int => count($entry['relabel']), $plan));
+            $rows = array_sum(array_map(static fn(array $entry): int => $entry['nonAscii'], $plan));
+            $lines[] = '  ' . count($plan) . (count($plan) === 1 ? ' table holds' : ' tables hold') . ' text in a character set other than utf8mb4, the one this program uses'
+                . ' (' . implode(', ', array_unique(array_map(static fn(array $entry): string => $entry['collation'], $plan))) . ').';
+            $lines[] = '  Until they are converted, some pages fail, the lists by surname letter among them. ' . ($apply ? 'Converting:' : 'They would be converted.');
+            $lines[] = '  ' . $rows . ($rows === 1 ? ' value has' : ' values have') . ' letters outside plain ASCII; all other text reads the same either way.';
+            if ($relabelled > 0) {
+                $lines[] = '  In ' . $relabelled . ($relabelled === 1 ? ' column' : ' columns') . ' those letters are UTF-8 that the old site stored under the wrong label. They are kept byte for byte and given the right label.';
+            }
+        }
+        $failed = 0;
+        foreach ($plan as $entry) {
+            if ($entry['mixed'] !== []) {
+                $failed++;
+                $lines[] = '  ! ' . $entry['table'] . ' is left alone: ' . implode(', ', $entry['mixed']) . ' holds UTF-8 in some rows and another character set in others.';
+                $lines[] = '    No rule can tell which is right. Correct those rows on the old site, copy it again, and run this again.';
+
+                continue;
+            }
+            if (!$apply) {
+                continue;
+            }
+            try {
+                $this->characterSets->convert($entry);
+            } catch (PDOException $exception) {
+                $failed++;
+                $lines[] = '  ! ' . $entry['table'] . ' could not be converted and is as it was: ' . $exception->getMessage();
+            }
+        }
+        if ($apply && $plan !== []) {
+            $lines[] = '  ' . (count($plan) - $failed) . ' of ' . count($plan) . ' have been converted to ' . $plan[0]['target'] . '.';
+        }
+        if ($databaseCollation !== '' && !str_starts_with($databaseCollation, 'utf8mb4')) {
+            if (!$apply) {
+                $lines[] = '  New tables in this database get ' . $databaseCollation . '. That would be changed to utf8mb4 as well.';
+            } else {
+                try {
+                    $this->characterSets->convertDatabase();
+                    $lines[] = '  New tables in this database now get utf8mb4 as well.';
+                } catch (PDOException $exception) {
+                    $lines[] = '  ! New tables in this database still get ' . $databaseCollation . ': ' . $exception->getMessage();
+                }
+            }
+        }
+
+        return $lines;
     }
 
     /**
