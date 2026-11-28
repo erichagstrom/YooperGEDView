@@ -80,6 +80,9 @@ expect() {
 }
 expect admin "individual.php?pid=I8" has "February 1975"
 expect admin "index.php" has "logout"
+# The test site does not let visitors ask for an account, and the "lost password" link must be there all the same.
+expect visitor "login.php" has "login_register.php?action=pwlost"
+expect visitor "login.php" lacks "login_register.php?action=register"
 expect visitor "individual.php?pid=I1" has "March 1890"
 expect visitor "individual.php?pid=I8" lacks "February 1975"
 expect visitor "family.php?famid=F3" lacks "June 1970"
