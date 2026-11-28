@@ -105,3 +105,10 @@ source.php?sid=NOPE
 family.php?famid=F4
 individual.php?action=ajax&pid=I1&tab=
 individual.php?action=ajax&pid=I1&tab=10
+# Found by a sweep of a real tree: unknown surnames, a page size that is not a number, a descendancy chart of people with no parents recorded
+famlist.php?alpha=%40
+famlist.php?alpha=P
+indilist.php?alpha=M
+medialist.php?action=filter&search=yes&folder=ALL&max=all&sortby=title&ged=sample.ged
+descendancy.php?pid=I1&chart_style=1&generations=4
+descendancy.php?pid=I9&chart_style=1&generations=4

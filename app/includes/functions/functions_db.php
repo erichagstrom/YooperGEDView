@@ -569,7 +569,7 @@ function get_famlist_fams($surn, $salpha, $galpha, $marnm, $ged_id=null) {
 	// with missing spouses
 	if ($surn=='@N.N.' || $salpha=='@') {
 		$rows=
-			PGV_DB::prepare("SELECT 'FAM' AS type, f_id AS xref, f_file AS ged_id, f_gedcom AS gedrec, f_husb, f_wife, f_chil, f_numchil FROM {$TBLPREFIX}families f WHERE f_file={$ged_id} AND (f_husb='' OR f_wife='')")
+			PGV_DB::prepare("SELECT 'FAM' AS type, f_id AS xref, f_file AS ged_id, f_gedcom AS gedrec, f_husb, f_wife, f_chil, f_numchil FROM {$TBLPREFIX}families f WHERE f_file=? AND (f_husb='' OR f_wife='')")
 			->execute(array($ged_id))
 			->fetchAll(PDO::FETCH_ASSOC);
 

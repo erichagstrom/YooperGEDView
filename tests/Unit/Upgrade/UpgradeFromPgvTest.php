@@ -239,6 +239,8 @@ final class UpgradeFromPgvTest extends TestCase
         self::assertStringContainsString('2 have no password stored', $output);
         self::assertStringContainsString('anna (administrator) (no password stored)', $output);
         self::assertStringContainsString('No pgv_changes.php: nothing to carry over.', $output);
+        self::assertStringContainsString('Nothing needed changing.', $output);
+        self::assertStringNotContainsString('The changes above have been made.', $output);
         self::assertSame($before, [$this->passwords(), $this->languages(), file_get_contents($this->folder . '/index/pgv_changes.json')]);
     }
 
