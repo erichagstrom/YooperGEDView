@@ -1,0 +1,32 @@
+# The reference site: see Dockerfile. Started by tests/reference/up.sh, which sets REFERENCE_CONTEXT.
+name: yooper-reference
+services:
+  db:
+    image: mariadb:11.4
+    # As on the servers PhpGedView ran on: latin1 unless told otherwise, so its tables come out latin1.
+    command: ["--character-set-server=latin1", "--collation-server=latin1_swedish_ci"]
+    environment:
+      MARIADB_DATABASE: pgv
+      MARIADB_USER: pgv
+      MARIADB_PASSWORD: for-tests-only
+      MARIADB_ROOT_PASSWORD: for-tests-only-root
+    ports:
+      - "127.0.0.1:${REFERENCE_DB_PORT:-3399}:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  web:
+    build:
+      context: ${REFERENCE_CONTEXT:?}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${REFERENCE_PORT:-8098}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1/GPL.txt"]
+      interval: 5s
+      timeout: 5s
+      retries: 30

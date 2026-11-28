@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 // Usage: php provision.php <base-url> <site-dir>
+//    or: php provision.php <base-url> --phpgedview
+// With --phpgedview the site is the reference site, PhpGedView 4.3.0 itself (tests/reference): its administrator
+// is made the way that release stored one, the sample tree is already in its index folder, and the DB_ variables
+// must name its database.
 // The site's database is the SQLite file that tests/serve.sh sets up, unless DB_TYPE is set in the environment:
 // then it is the one named by DB_TYPE, DB_HOST, DB_PORT, DB_NAME, DB_USER and DB_PASSWORD, as for bin/yooper.
 // Turns a freshly started test site (tests/serve.sh) into a usable one: creates the administrator and imports
@@ -108,14 +112,16 @@ function formDefaults(string $html, string $formName): array
 
 /**
  * An account whose password is stored the way PhpGedView 4.3.0 stored it, which must no longer be accepted.
+ *
+ * @param array<string, string> $settings further settings of the user, by name
  */
-function createLegacyUser(PDO $database): void
+function createLegacyUser(PDO $database, string $userName = LEGACY_USER, array $settings = []): void
 {
     $database->prepare('INSERT INTO pgv_user (user_name, password) VALUES (?, ?)')
-        ->execute([LEGACY_USER, crypt(ADMIN_PASSWORD, '$1$padpadpa$')]);
+        ->execute([$userName, crypt(ADMIN_PASSWORD, '$1$padpadpa$')]);
     $userId = $database->lastInsertId();
     $insert = $database->prepare('INSERT INTO pgv_user_setting (user_id, setting_name, setting_value) VALUES (?, ?, ?)');
-    foreach (['canadmin' => 'Y', 'verified' => 'yes', 'verified_by_admin' => 'yes'] as $name => $value) {
+    foreach ($settings + ['canadmin' => 'Y', 'verified' => 'yes', 'verified_by_admin' => 'yes'] as $name => $value) {
         $insert->execute([$userId, $name, $value]);
     }
 }
@@ -156,6 +162,7 @@ if ($argc !== 3) {
     fail('usage: php provision.php <base-url> <site-dir>');
 }
 $baseUrl = rtrim($argv[1], '/') . '/';
+$oldRelease = $argv[2] === '--phpgedview';
 $siteDir = rtrim($argv[2], '/');
 $cookieJar = tempnam(sys_get_temp_dir(), 'provision');
 if ($cookieJar === false) {
@@ -165,15 +172,30 @@ if ($cookieJar === false) {
 // The first request makes the program create its tables.
 request($baseUrl . 'index.php', $cookieJar);
 $settings = ['DB_TYPE' => 'sqlite', 'DB_NAME' => $siteDir . '/index/test.sqlite'];
+if ($oldRelease && getenv('DB_TYPE') === false) {
+    fail('with --phpgedview, the DB_ variables must name the reference site\'s database');
+}
 if (getenv('DB_TYPE') !== false) {
     $settings = array_filter(getenv(), static fn(string $name): bool => str_starts_with($name, 'DB_'), ARRAY_FILTER_USE_KEY);
 }
 $database = (new ConnectionFactory())->fromEnvironment($settings);
-createAdministrator($settings);
-createLegacyUser($database);
-
-if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE)) {
-    fail('cannot copy the sample tree');
+if ($oldRelease) {
+    // PhpGedView's own way to make the first administrator is its installer, which is a page to click through.
+    // The rows are the ones it writes (install.php of that release, where it makes the first user). A second
+    // user chose a language this program no longer has.
+    createLegacyUser($database, ADMIN_USER, [
+        'firstname' => 'Test', 'lastname' => 'Admin', 'email' => 'admin@example.com', 'language' => 'english',
+        'reg_timestamp' => '1262304000', 'loggedin' => 'N', 'sessiontime' => '0', 'contactmethod' => 'messaging2',
+        'visibleonline' => 'Y', 'editaccount' => 'Y', 'defaulttab' => '0', 'sync_gedcom' => 'N',
+        'relationship_privacy' => 'N', 'max_relation_path' => '2', 'auto_accept' => 'N',
+    ]);
+    createLegacyUser($database, LEGACY_USER, ['canadmin' => 'N', 'email' => 'legacy@example.com', 'language' => 'german']);
+} else {
+    createAdministrator($settings);
+    createLegacyUser($database);
+    if (!copy(__DIR__ . '/fixtures/' . TREE_FILE, $siteDir . '/index/' . TREE_FILE)) {
+        fail('cannot copy the sample tree');
+    }
 }
 
 // Sign in through the form, as a browser would: the form carries the token that the program asks for.

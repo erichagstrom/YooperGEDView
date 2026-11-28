@@ -16,6 +16,10 @@ test checks that it comes out as written.
 | `proxy-check.sh` | Run inside the web container by the image job in CI: acts as a reverse proxy would | the container image |
 | `make-site-old.php` | Makes the test site look as PhpGedView 4.3.0 would have left it, for trying the upgrade; used by `smoke.sh` | PHP `pdo_sqlite` |
 | `rename-user.php` | Changes a user name in the test site; used by `smoke.sh` | PHP `pdo_sqlite` |
+| `checks.sh` | The check functions that `smoke.sh` and `reference/moved.sh` share | sourced, not run |
+| `reference/up.sh <folder>` | Builds and starts the reference site: PhpGedView 4.3.0 exactly as released (taken from this repository's history), on PHP 5.6 and MariaDB with latin1 tables, at `127.0.0.1:8098`. Loads the sample tree through its own pages and saves a database dump and the index folder: the "old site" | Docker, the full git history, PHP `pdo_mysql` |
+| `reference/moved.sh <folder>` | Moves that old site to this program on a copy (`upgrade-from-pgv`, a new password) and requests the smoke test's pages from the result | the reference site running |
+| `reference/down.sh` | Stops the reference site and deletes its database | Docker |
 | `smoke.sh` | Starts and provisions a site, requests the main pages as visitor and administrator, fails on any PHP error or warning, and checks what each may see, that every POST form carries its token, and the sign-in, session, forged-request and cross-site link rules, the security headers, the lost-password link, what may be uploaded, pending edits, and moving a site over from PhpGedView | the same, plus `curl` |
 
 The test administrator is `admin` / `test-admin-password`. A second account, `legacy`, has the same password stored
