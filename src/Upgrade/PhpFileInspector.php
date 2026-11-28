@@ -12,8 +12,15 @@ namespace YooperGEDView\Upgrade;
  */
 final class PhpFileInspector
 {
-    /** The functions that PhpGedView's own settings files call: all of them, from its two templates. */
-    private const array EXPECTED_CALLS = ['defined', 'header', 'array', 'substr', 'set_time_limit'];
+    /**
+     * The functions that PhpGedView's own settings files call: those in the two templates of 4.3.0, and those in
+     * the guard that earlier versions put at the top of the file, which answers a request for the file itself:
+     *
+     *     if (stristr($_SERVER["SCRIPT_NAME"], basename(__FILE__))!==false) { print "..."; exit; }
+     *
+     * A site that began on an earlier version still has that guard in its files.
+     */
+    private const array EXPECTED_CALLS = ['defined', 'header', 'array', 'substr', 'set_time_limit', 'stristr', 'basename', 'preg_match'];
 
     /** @var array<int, string> */
     private const array UNEXPECTED_TOKENS = [
@@ -64,6 +71,12 @@ final class PhpFileInspector
                 continue;
             }
             [$id, $source, $line] = $token;
+            // Printing one fixed text, as the old guard does, cannot do anything but show that text.
+            $printsFixedText = in_array($id, [T_PRINT, T_ECHO], true)
+                && is_array($next) && $next[0] === T_CONSTANT_ENCAPSED_STRING && ($tokens[$index + 2] ?? null) === ';';
+            if ($printsFixedText) {
+                continue;
+            }
             if (isset(self::UNEXPECTED_TOKENS[$id])) {
                 $findings[] = 'line ' . $line . ': ' . self::UNEXPECTED_TOKENS[$id];
             } elseif ($id === T_STRING && $next === '(' && !in_array(strtolower($source), self::EXPECTED_CALLS, true)) {
