@@ -147,7 +147,7 @@ final class UpgradeFromPgvTest extends TestCase
         self::assertSame(Yooper::OK, $code, $errors);
         self::assertStringContainsString('The tables are at version 14.', $output);
         self::assertStringContainsString('3 in all.', $output);
-        self::assertStringContainsString('2 have a password stored the way PhpGedView stored it.', $output);
+        self::assertStringContainsString('2 have a password stored the way PhpGedView stored it (MD5-crypt or older).', $output);
         self::assertStringContainsString('They would be removed.', $output);
         self::assertStringContainsString('anna (administrator): by the "lost password" link', $output);
         self::assertStringContainsString('bertil: no mail address: bin/yooper set-password', $output);
@@ -192,6 +192,33 @@ final class UpgradeFromPgvTest extends TestCase
         );
     }
 
+    public function testOtherFormsOfPasswordAreToldApartAndOnlyTheWeakOnesAreRemoved(): void
+    {
+        $bcrypt = password_hash('set by another tool', PASSWORD_BCRYPT, ['cost' => 4]);
+        $this->user('dagny', $bcrypt, ['canadmin' => 'Y', 'email' => 'dagny@example.org']);
+        $this->user('edvin', 'x', ['email' => 'edvin@example.org']);
+        $this->user('frida', '', ['email' => '']);
+        $this->user('gustav', '5f4dcc3b5aa765d61d8327deb882cf99', ['email' => 'gustav@example.org']);
+
+        [, $output] = $this->upgrade(['--apply']);
+
+        self::assertStringContainsString('7 in all.', $output);
+        self::assertStringContainsString('3 have a password stored the way PhpGedView stored it (MD5-crypt or older).', $output);
+        self::assertStringContainsString('1 have a password stored in another form (bcrypt, for example)', $output);
+        self::assertStringContainsString('They are left as they are.', $output);
+        self::assertStringContainsString('2 have no password stored', $output);
+        self::assertStringContainsString('dagny (administrator): by the "lost password" link', $output);
+        self::assertStringContainsString('edvin (no password stored): by the "lost password" link', $output);
+        self::assertStringContainsString('frida (no password stored): no mail address: bin/yooper set-password', $output);
+
+        $passwords = $this->passwords();
+        self::assertSame($bcrypt, $passwords['dagny']);
+        self::assertSame('x', $passwords['edvin']);
+        self::assertSame('', $passwords['frida']);
+        self::assertSame('*', $passwords['gustav']);
+        self::assertSame('*', $passwords['anna']);
+    }
+
     public function testARemovedPasswordCanNeverBeSignedInWith(): void
     {
         $this->upgrade(['--apply']);
@@ -209,7 +236,8 @@ final class UpgradeFromPgvTest extends TestCase
 
         self::assertSame(Yooper::OK, $code);
         self::assertStringNotContainsString('stored the way PhpGedView stored it', $output);
-        self::assertStringContainsString('anna (administrator)', $output);
+        self::assertStringContainsString('2 have no password stored', $output);
+        self::assertStringContainsString('anna (administrator) (no password stored)', $output);
         self::assertStringContainsString('No pgv_changes.php: nothing to carry over.', $output);
         self::assertSame($before, [$this->passwords(), $this->languages(), file_get_contents($this->folder . '/index/pgv_changes.json')]);
     }
