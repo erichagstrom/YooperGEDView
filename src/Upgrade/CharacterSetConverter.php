@@ -27,6 +27,9 @@ use PDOException;
  */
 final readonly class CharacterSetConverter
 {
+    /** The server's error number for "Specified key was too long". */
+    private const int KEY_TOO_LONG = 1071;
+
     private const array BINARY_TYPES = ['tinytext' => 'tinyblob', 'text' => 'blob', 'mediumtext' => 'mediumblob', 'longtext' => 'longblob'];
 
     /**
@@ -93,14 +96,45 @@ final readonly class CharacterSetConverter
      *
      * @param array{table: string, collation: string, target: string, relabel: list<string>, mixed: list<string>, nonAscii: int} $entry
      *
+     * @return bool true when the table also had to be moved to the InnoDB storage engine: a letter takes up to
+     *              four bytes in utf8mb4, and a unique index on a long column no longer fits in what the older
+     *              MyISAM engine allows an index (1000 bytes)
+     *
      * @throws PDOException when the database refuses, for example because two values become equal under the
-     *                      new comparison rules and a unique index forbids that
+     *                      new comparison rules and a unique index forbids that. The table is then as it was.
      */
-    public function convert(array $entry): void
+    public function convert(array $entry): bool
     {
         if ($entry['mixed'] !== []) {
             throw new InvalidArgumentException('Table ' . $entry['table'] . ' has text of both kinds in one column.');
         }
+        try {
+            $this->convertInPlace($entry);
+
+            return false;
+        } catch (PDOException $exception) {
+            $engine = $this->rows('SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?', [$entry['table']])[0][0] ?? '';
+            if (($exception->errorInfo[1] ?? null) !== self::KEY_TOO_LONG || preg_match('/^\w+$/', $engine) !== 1 || strcasecmp($engine, 'InnoDB') === 0) {
+                throw $exception;
+            }
+        }
+        $this->database->exec('ALTER TABLE `' . $entry['table'] . '` ENGINE=InnoDB');
+        try {
+            $this->convertInPlace($entry);
+        } catch (PDOException $exception) {
+            $this->database->exec('ALTER TABLE `' . $entry['table'] . '` ENGINE=' . $engine);
+
+            throw $exception;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array{table: string, collation: string, target: string, relabel: list<string>, mixed: list<string>, nonAscii: int} $entry
+     */
+    private function convertInPlace(array $entry): void
+    {
         $table = $entry['table'];
         if ($entry['relabel'] !== []) {
             $toBinary = [];
@@ -142,13 +176,32 @@ final readonly class CharacterSetConverter
     }
 
     /**
-     * Makes utf8mb4 what new tables get, so that the ones this program adds later match the converted ones.
+     * The comparison rules that new tables should get, so that the ones this program adds later match the
+     * converted ones: text under two sets of rules cannot always be compared.
+     *
+     * @param list<array{table: string, collation: string, target: string, relabel: list<string>, mixed: list<string>, nonAscii: int}> $plan
+     *
+     * @return ?string null when the database's default is right as it is
+     */
+    public function databaseTarget(array $plan): ?string
+    {
+        $current = $this->databaseCollation();
+        $target = $plan !== [] ? $plan[0]['target'] : (str_starts_with($current, 'utf8mb4') ? $current : $this->targetCollation($current));
+
+        return $current === '' || $current === $target ? null : $target;
+    }
+
+    /**
+     * @param string $collation from databaseTarget()
      *
      * @throws PDOException when the database refuses, for example because the account may not alter the database
      */
-    public function convertDatabase(): void
+    public function convertDatabase(string $collation): void
     {
-        $this->database->exec('ALTER DATABASE CHARACTER SET utf8mb4 COLLATE ' . $this->targetCollation($this->databaseCollation()));
+        if (preg_match('/^utf8mb4_\w+$/', $collation) !== 1) {
+            throw new InvalidArgumentException('Not a utf8mb4 collation: ' . $collation);
+        }
+        $this->database->exec('ALTER DATABASE CHARACTER SET utf8mb4 COLLATE ' . $collation);
     }
 
     /**

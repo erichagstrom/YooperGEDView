@@ -410,6 +410,14 @@ why, and what the alternative was.
     ordinary (not unique) index on a long column covers its first 250 letters only. *Tested* on a MariaDB
     server (`composer test-mariadb`, run in CI), and by hand on the sample tree imported into latin1 tables:
     the list by surname letter failed before and worked after.
+97. **The first conversion of a real copy left two tables behind**, both from the research module and both
+    empty: their primary key holds a 255-letter column, which at four bytes a letter is more than the 1000
+    bytes MyISAM allows an index. The sample tree has no such table. A table refused for that reason is now
+    moved to InnoDB, which allows three times as much, and converted there; if that fails too it goes back,
+    engine included. *Alternative:* shorten the column or the index (changes what the table can hold, or
+    what it keeps unique). The same run showed a database whose own default was already utf8mb4 under other
+    comparison rules than the converted tables got: the default is now set to the converted tables' rules,
+    so that tables added later can be compared with them.
 
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless

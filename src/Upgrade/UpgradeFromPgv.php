@@ -180,6 +180,7 @@ final readonly class UpgradeFromPgv
         }
         $plan = $this->characterSets->plan();
         $databaseCollation = $this->characterSets->databaseCollation();
+        $databaseTarget = $this->characterSets->databaseTarget($plan);
         $lines = [];
         if ($plan !== []) {
             $relabelled = array_sum(array_map(static fn(array $entry): int => count($entry['relabel']), $plan));
@@ -193,6 +194,7 @@ final readonly class UpgradeFromPgv
             }
         }
         $failed = 0;
+        $moved = [];
         foreach ($plan as $entry) {
             if ($entry['mixed'] !== []) {
                 $failed++;
@@ -205,7 +207,9 @@ final readonly class UpgradeFromPgv
                 continue;
             }
             try {
-                $this->characterSets->convert($entry);
+                if ($this->characterSets->convert($entry)) {
+                    $moved[] = $entry['table'];
+                }
             } catch (PDOException $exception) {
                 $failed++;
                 $lines[] = '  ! ' . $entry['table'] . ' could not be converted and is as it was: ' . $exception->getMessage();
@@ -214,13 +218,16 @@ final readonly class UpgradeFromPgv
         if ($apply && $plan !== []) {
             $lines[] = '  ' . (count($plan) - $failed) . ' of ' . count($plan) . ' have been converted to ' . $plan[0]['target'] . '.';
         }
-        if ($databaseCollation !== '' && !str_starts_with($databaseCollation, 'utf8mb4')) {
+        if ($moved !== []) {
+            $lines[] = '  Also moved to the InnoDB storage engine, because an index of theirs is too long for the older one once a letter can take four bytes: ' . implode(', ', $moved) . '.';
+        }
+        if ($databaseTarget !== null) {
             if (!$apply) {
-                $lines[] = '  New tables in this database get ' . $databaseCollation . '. That would be changed to utf8mb4 as well.';
+                $lines[] = '  New tables in this database get ' . $databaseCollation . '. That would be changed to ' . $databaseTarget . ', to match.';
             } else {
                 try {
-                    $this->characterSets->convertDatabase();
-                    $lines[] = '  New tables in this database now get utf8mb4 as well.';
+                    $this->characterSets->convertDatabase($databaseTarget);
+                    $lines[] = '  New tables in this database now get ' . $databaseTarget . ', to match.';
                 } catch (PDOException $exception) {
                     $lines[] = '  ! New tables in this database still get ' . $databaseCollation . ': ' . $exception->getMessage();
                 }

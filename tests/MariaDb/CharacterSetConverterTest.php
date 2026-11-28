@@ -183,20 +183,77 @@ final class CharacterSetConverterTest extends TestCase
         self::assertStringContainsString('They would be converted.', $report);
         self::assertStringContainsString('  1 value has letters outside plain ASCII', $report);
         self::assertStringContainsString('  In 1 column those letters are UTF-8 that the old site stored under the wrong label.', $report);
-        self::assertStringContainsString('New tables in this database get latin1_swedish_ci. That would be changed to utf8mb4 as well.', $report);
+        self::assertStringContainsString('New tables in this database get latin1_swedish_ci. That would be changed to utf8mb4_swedish_ci, to match.', $report);
         self::assertStringContainsString('Nothing has been changed.', $report);
         self::assertCount(2, $this->converter()->plan());
         self::assertSame('latin1_swedish_ci', $this->converter()->databaseCollation());
 
         $report = implode("\n", $this->upgrade()->run(true));
         self::assertStringContainsString('  2 of 2 have been converted to utf8mb4_swedish_ci.', $report);
-        self::assertStringContainsString('New tables in this database now get utf8mb4 as well.', $report);
+        self::assertStringContainsString('New tables in this database now get utf8mb4_swedish_ci, to match.', $report);
         self::assertStringContainsString('The changes above have been made.', $report);
         self::assertSame([], $this->converter()->plan());
         self::assertSame('utf8mb4_swedish_ci', $this->converter()->databaseCollation());
         self::assertSame('1', $this->value($search));
 
         self::assertStringNotContainsString('Text in the database', implode("\n", $this->upgrade()->run(false)));
+    }
+
+    public function testATableWhoseIndexNoLongerFitsItsStorageEngineIsMovedToOneWhereItDoes(): void
+    {
+        // 255 letters of four bytes, and the number: more than the 1000 bytes MyISAM allows an index.
+        $this->database->exec('CREATE TABLE cst_tasks (task INT NOT NULL, person VARCHAR(255) NOT NULL, PRIMARY KEY (task, person)) ENGINE=MyISAM DEFAULT CHARSET=latin1');
+        $this->database->exec('CREATE TABLE cst_labels (label VARCHAR(255) NOT NULL, PRIMARY KEY (label)) ENGINE=MyISAM DEFAULT CHARSET=latin1');
+        $this->database->exec('CREATE TABLE cst_short (label VARCHAR(40) NOT NULL, PRIMARY KEY (label)) ENGINE=MyISAM DEFAULT CHARSET=latin1');
+        $this->database->prepare('INSERT INTO cst_tasks VALUES (1, ?)')->execute(['I1']);
+        $this->oldSite->prepare('INSERT INTO cst_labels VALUES (?)')->execute([self::BJORK]);
+
+        $report = implode("\n", $this->upgrade()->run(true));
+
+        self::assertStringContainsString('  3 of 3 have been converted to utf8mb4_swedish_ci.', $report);
+        self::assertStringContainsString('once a letter can take four bytes: cst_labels, cst_tasks.', $report);
+        self::assertStringNotContainsString('!', $report);
+        self::assertSame('InnoDB', $this->value("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cst_tasks'"));
+        self::assertSame('MyISAM', $this->value("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cst_short'"));
+        self::assertSame('I1', $this->value('SELECT person FROM cst_tasks WHERE task = 1'));
+        self::assertSame(self::BJORK, $this->value('SELECT label FROM cst_labels'));
+        self::assertSame([], $this->converter()->plan());
+    }
+
+    public function testADatabaseAlreadyUtf8mb4UnderOtherRulesIsBroughtIntoLineWithItsConvertedTables(): void
+    {
+        $this->database->exec('ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
+        self::assertNull($this->converter()->databaseTarget([]));
+        $this->database->exec('CREATE TABLE cst_old (name VARCHAR(40) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=latin1');
+
+        $report = implode("\n", $this->upgrade()->run(true));
+
+        self::assertStringContainsString('New tables in this database now get utf8mb4_swedish_ci, to match.', $report);
+        self::assertSame('utf8mb4_swedish_ci', $this->converter()->databaseCollation());
+    }
+
+    public function testAnIndexTooLongAndValuesThatBecomeEqualLeaveTheTableAsItWasEngineIncluded(): void
+    {
+        $this->database->exec('CREATE TABLE cst_refused (name VARCHAR(255) NOT NULL, PRIMARY KEY (name)) ENGINE=MyISAM DEFAULT CHARSET=latin1');
+        $insert = $this->oldSite->prepare('INSERT INTO cst_refused VALUES (?)');
+        $insert->execute(["\xC3\xA9"]);
+        $insert->execute(["\xC3\x89"]);
+        $before = $this->columns('cst_refused');
+
+        try {
+            $this->converter()->convert($this->converter()->plan()[0]);
+            self::fail('The server should have refused.');
+        } catch (PDOException) {
+            self::assertSame($before, $this->columns('cst_refused'));
+            self::assertSame('MyISAM', $this->value("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cst_refused'"));
+        }
+    }
+
+    public function testADatabaseDefaultIsOnlyEverSetToUtf8mb4(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->converter()->convertDatabase('latin1_swedish_ci; DROP DATABASE x');
     }
 
     private function converter(): CharacterSetConverter
