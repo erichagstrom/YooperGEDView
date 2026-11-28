@@ -230,11 +230,15 @@ $tab=0;		// initialize tab index
 $sessname = session_name();
 if (!isset($_COOKIE[$sessname])) print "<center><div class=\"error width50\">".$pgv_lang["cookie_help"]."</div></center><br /><br />";
 
-if ($USE_REGISTRATION_MODULE) { ?>
+// The "lost password" link is always shown: it is the only way most users of a moved site can set a password.
+// Only asking for a new account depends on the site allowing that.
+{ ?>
 	<table class="center facts_table width50">
 	<tr><td class="topbottombar" colspan="2"><?php print $pgv_lang["account_information"]; ?></td></tr>
+	<?php if ($USE_REGISTRATION_MODULE) { ?>
 	<tr><td class="descriptionbox <?php print $TEXT_DIRECTION; ?> wrap width50"><?php print_help_link("new_user_help", "qm", "requestaccount"); print $pgv_lang["no_account_yet"]; ?></td>
 	<td class="optionbox <?php print $TEXT_DIRECTION; ?> wrap"><a href="login_register.php?action=register"><?php print $pgv_lang["requestaccount"]; ?></a></td></tr>
+	<?php } ?>
 	<tr><td class="descriptionbox <?php print $TEXT_DIRECTION; ?> wrap width50"><?php print_help_link("new_password_help", "qm", "lost_password"); print $pgv_lang["lost_password"]; ?></td>
 	<td class="optionbox <?php print $TEXT_DIRECTION; ?> wrap"><a href="login_register.php?action=pwlost"><?php print $pgv_lang["requestpassword"]; ?></a></td></tr>
 	<tr><td class="topbottombar ltr" colspan="2">&nbsp;</td></tr>
