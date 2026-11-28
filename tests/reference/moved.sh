@@ -75,5 +75,9 @@ expect visitor "admin.php" lacks "useradmin.php"
 collations=$(compose exec -T db sh -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -N -u"$MARIADB_USER" -e "SELECT DISTINCT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"moved\""' | tr '\n' ' ')
 if [ "$collations" = "utf8mb4_swedish_ci " ]; then result ok "every table is utf8mb4_swedish_ci"; else result other "every table is utf8mb4_swedish_ci: $collations"; fi
 
+# What a person reads on each page, here and on the reference site.
+if php "$here/reference/compare.php" "http://127.0.0.1:${REFERENCE_PORT:-8098}" "$base" "moved-admin-password"; then result ok "the pages read as they do on PhpGedView, but for the explained differences"
+else result other "the pages read as they do on PhpGedView, but for the explained differences"; fi
+
 echo "$pass passed, $fail failed"
 if [ "$fail" != 0 ]; then echo "--- the moved site's server log"; tail -n 40 "$work/server.log"; exit 1; fi

@@ -2177,7 +2177,8 @@ function format_fact_date(&$eventObj, $anchor=false, $time=false) {
 			if (GedcomDate::Compare($date, $death_date)<=0) {
 				$age=GedcomDate::GetAgeGedcom($birth_date, $date);
 				// Only show calculated age if it differs from recorded age
-				if ($age!='' && $age>0) {
+				// An age is text such as "57y", or a warning picture for an event before the birth: only a number counts.
+				if ($age!='' && (int)$age>0) {
 					if (
 						$fact_age!='' && $fact_age!=$age ||
 						$fact_age=='' && $husb_age=='' && $wife_age=='' ||

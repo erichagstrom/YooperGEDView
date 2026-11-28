@@ -50,7 +50,7 @@ Each phase ends with the test suite passing, and with a site that still works.
 - [ ] PHPStan baseline file, then make that check blocking
 - [x] CI on every push: syntax check, static analysis, dependency audit (`.github/workflows/checks.yml`); tests join when they exist
 - [x] Sample tree, local server and smoke test (`tests/`)
-- [ ] Reference site and page comparison (see "Test infrastructure")
+- [x] Reference site and page comparison (see "Test infrastructure")
 - [ ] Unit tests for the privacy rules (`functions_privacy.php`) before anything touches them
 
 ### Phase 1. Run on a supported PHP (8.3)
@@ -181,7 +181,7 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
 | Smoke test (`tests/smoke.sh`) | 224 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
 | Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | Done (`tests/reference/`) |
-| Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
+| Page comparison | Same requests against the reference site and the current code; differences must be explained | In CI, blocking (`tests/reference/compare.php`, explanations in `differences.php`): the words on the smoke test's pages, as visitor and administrator. Still to add: more pages and more shapes of data |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
 | Upgrade test | `upgrade-from-pgv` on a made-up old site (unit tests), and on the test site made to look old (smoke test): the old password is refused, the administrator gets in with `set-password`, the carried-over pending edit is there | In CI, blocking |
 | Upgrade test on real 4.3.0 data | `upgrade-from-pgv` on the reference dump, then the smoke test's pages and its checks of what a visitor may see, on the result | In CI, blocking (`tests/reference/moved.sh`). Still to add: a pending edit made on 4.3.0, the privacy tests |
