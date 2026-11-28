@@ -96,7 +96,9 @@ final readonly class UpgradeFromPgv
 
         $report[] = '';
         $report[] = 'Pending edits';
-        array_push($report, ...$this->pendingEdits($apply));
+        $pendingEdits = $this->pendingEdits($apply);
+        array_push($report, ...$pendingEdits);
+        $changed = $apply && ($weak !== [] || $otherLanguage !== [] || str_contains(implode("\n", $pendingEdits), 'have been carried over'));
 
         $report[] = '';
         $report[] = 'Settings files of the trees';
@@ -130,9 +132,11 @@ final readonly class UpgradeFromPgv
         }
 
         $report[] = '';
-        $report[] = $apply
-            ? 'The changes above have been made. Start the program on this database and index folder.'
-            : 'Nothing has been changed. Run again with --apply, on a copy of the site, to make the changes.';
+        $report[] = match (true) {
+            !$apply => 'Nothing has been changed. Run again with --apply, on a copy of the site, to make the changes.',
+            $changed => 'The changes above have been made. Start the program on this database and index folder.',
+            default => 'Nothing needed changing. The program can be started on this database and index folder.',
+        };
 
         return $report;
     }

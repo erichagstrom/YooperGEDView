@@ -208,8 +208,9 @@ if ($sortby=='file') usort($sortedMediaList, 'filesort');
 $ct=count($sortedMediaList);
 $start = 0;
 $max = 20;
-if (isset($_GET["start"])) $start = $_GET["start"];
-if (isset($_GET["max"])) $max = $_GET["max"];
+if (isset($_GET["start"])) $start = max(0, (int)$_GET["start"]);
+if (isset($_GET["max"])) $max = (int)$_GET["max"];
+if ($max<1) $max = 20;
 $count = $max;
 if ($start+$count > $ct) $count = $ct-$start;
 

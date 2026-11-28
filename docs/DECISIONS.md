@@ -385,6 +385,14 @@ why, and what the alternative was.
 94. **The sample tree grows when a real site shows a shape it lacks.** That keeps the finding as a test
     without putting anything from the real site in this repository.
 
+95. **A sweep of every page of the real copy** (all people, families, lists, charts, some reports) found four
+    more things, all fixed and all now in the smoke test: the list of families with an unknown surname failed
+    because its query was given a value it had no place for, which PHP 8 refuses; the media list failed on a
+    page size that was not a number; descendancy charts warned for people with no parents recorded; and the
+    upgrade said "the changes above have been made" when there were none to make. A fifth, lists by surname
+    letter failing on a database whose tables are in another character set than the connection, is not fixed
+    here: see the next entry when it is written.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another

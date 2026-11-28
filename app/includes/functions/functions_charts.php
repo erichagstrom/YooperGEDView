@@ -166,7 +166,7 @@ function print_family_parents($famid, $sosa = 0, $label="", $parid="", $gparid="
 			// husband's father
 			print "\n\t<table style=\"width: " . ($pbwidth) . "px; height: " . $pbheight . "px;\" border=\"0\"><tr>";
 			if ($sosa > 0) print_sosa_number($sosa * 4, ($hparents ? $hparents['HUSB'] : null), "down");
-			if (!empty($gparid) and $hparents['HUSB']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
+			if (!empty($gparid) and $hparents and $hparents['HUSB']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
 			print "\n\t<td valign=\"top\">";
 			print_pedigree_person(($hparents ? $hparents['HUSB'] : null), 1, $show_famlink, 4, $personcount);
 			print "</td></tr></table>";
@@ -183,7 +183,7 @@ function print_family_parents($famid, $sosa = 0, $label="", $parid="", $gparid="
 		print "</tr><tr><td><img src=\"".$PGV_IMAGE_DIR."/".$PGV_IMAGES["hline"]["other"]."\" alt=\"\" /></td><td>";
 		print "\n\t<table style=\"width: " . ($pbwidth) . "px; height: " . $pbheight . "px;\" border=\"0\"><tr>";
 		if ($sosa > 0) print_sosa_number($sosa * 4 + 1, ($hparents ? $hparents['WIFE'] : null), "down");
-		if (!empty($gparid) and $hparents['WIFE']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
+		if (!empty($gparid) and $hparents and $hparents['WIFE']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
 		print "\n\t<td valign=\"top\">";
 		print_pedigree_person(($hparents ? $hparents['WIFE'] : null), 1, $show_famlink, 5, $personcount);
 		print "</td></tr></table>";
@@ -241,7 +241,7 @@ function print_family_parents($famid, $sosa = 0, $label="", $parid="", $gparid="
 			// wife's father
 			print "\n\t<table style=\"width: " . ($pbwidth) . "px; height: " . $pbheight . "px;\"><tr>";
 			if ($sosa > 0) print_sosa_number($sosa * 4 + 2, ($hparents ? $hparents['HUSB'] : null), "down");
-			if (!empty($gparid) and $hparents['HUSB']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
+			if (!empty($gparid) and $hparents and $hparents['HUSB']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
 			print "\n\t<td valign=\"top\">";
 			print_pedigree_person(($hparents ? $hparents['HUSB'] : null), 1, $show_famlink, 6, $personcount);
 			print "</td></tr></table>";
@@ -258,7 +258,7 @@ function print_family_parents($famid, $sosa = 0, $label="", $parid="", $gparid="
 		print "</tr><tr><td><img src=\"".$PGV_IMAGE_DIR."/".$PGV_IMAGES["hline"]["other"]."\" alt=\"\" /></td><td>";
 		print "\n\t<table style=\"width: " . ($pbwidth) . "px; height: " . $pbheight . "px;\"><tr>";
 		if ($sosa > 0) print_sosa_number($sosa * 4 + 3, ($hparents ? $hparents['WIFE'] : null), "down");
-		if (!empty($gparid) and $hparents['WIFE']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
+		if (!empty($gparid) and $hparents and $hparents['WIFE']==$gparid) print_sosa_number(trim(substr($label,0,-3),".").".");
 		print "\n\t<td valign=\"top\">";
 		print_pedigree_person(($hparents ? $hparents['WIFE'] : null), 1, $show_famlink, 7, $personcount);
 		print "</td></tr></table>\n";
