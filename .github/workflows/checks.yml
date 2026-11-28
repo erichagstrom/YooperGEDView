@@ -92,8 +92,10 @@ jobs:
           cd "$RUNNER_TEMP/old-site"
           ls -l index
           test -f index/sample.ged_conf.php
+          grep -c 'ENGINE=MyISAM DEFAULT CHARSET=latin1' database.sql
           test "$(grep -c 'ENGINE=MyISAM DEFAULT CHARSET=latin1' database.sql)" -ge 25
-          grep -q "'admin','\$1\$" database.sql
+          # The administrator's password as PhpGedView stored it: MD5-crypt.
+          grep -c -F "'admin','\$1\$" database.sql
       - run: tests/reference/moved.sh "$RUNNER_TEMP/old-site"
       - name: Logs of the reference site
         if: failure()
