@@ -165,6 +165,14 @@ foreach (array_merge(pages('pages-visitor.txt'), pages('pages-admin.txt')) as $p
     $visits[] = ['admin', $page];
 }
 
+// Both programs work some things out the first time a page needs them and keep the answer, such as whether a
+// person is taken to be alive. So every page is asked for once on both sites before any is compared: otherwise
+// the site that has been looked at more knows more, and its statistics differ.
+foreach ($visits as [$who, $page]) {
+    request($old . $page, $jars['old-' . $who]);
+    request($new . $page, $jars['new-' . $who]);
+}
+
 /** @var array<string, list<string>> $unexplained difference => the visits it was seen on */
 $unexplained = [];
 /** @var array<string, string> $context visit => its unexplained differences, each with the line before it */

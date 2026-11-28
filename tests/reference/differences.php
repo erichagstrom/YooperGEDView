@@ -21,6 +21,8 @@ return [
         'why' => 'The reference site has one user who chose German. The move sets them to English, so the list shows no German and one count fewer.'],
     ['side' => 'new', 'page' => '~^useradmin\.php~', 'line' => '~^(English|2)$~',
         'why' => 'The other half of the same: both users now have English.'],
+    ['side' => 'old', 'page' => '~^statistics\.php~', 'line' => '~^(Individual distribution chart|Highest population|Lowest population|Nobody at all)$~',
+        'why' => 'The map of where people lived was drawn by sending the tree\'s numbers to Google; that was removed.'],
 
     // The old release fails on these pages and shows its own error text; this program does not.
     ['side' => 'old', 'page' => '~^medialist\.php\?action=filter$~', 'line' => '~usort\(\)|^\d Error occurred on|^\d called from line~',
