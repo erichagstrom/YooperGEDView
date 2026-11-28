@@ -9,8 +9,9 @@ test checks that it comes out as written.
 | Script | What it does | Needs |
 |---|---|---|
 | `composer test` | PHPUnit tests in `Unit/` for the new code in `src/` | `composer install` |
+| `composer test-mariadb` | PHPUnit tests in `MariaDb/`: what the upgrade does to tables in another character set. They make and drop tables whose names start with `cst_`, and change the database's default character set | an empty MariaDB database of its own, given as `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`; PHP `pdo_mysql` |
 | `serve.sh [port]` | Runs the program from a throw-away copy with an SQLite database, on `127.0.0.1` only | PHP 8.3 with `pdo_sqlite`, `composer install` |
-| `provision.php` | Creates the test administrator with `bin/yooper install`'s code and imports the sample tree through the program's own pages | PHP `curl` and `dom` |
+| `provision.php` | Creates the test administrator with `bin/yooper install`'s code and imports the sample tree through the program's own pages. Uses the SQLite database of `serve.sh`, or the one named by `DB_TYPE` and the other `DB_` variables when those are set | PHP `curl` and `dom` |
 | `failed-sign-ins.php` | Counts the failed sign-ins recorded for a user name, and can forget them; used by `smoke.sh` | PHP `pdo_sqlite` |
 | `proxy-check.sh` | Run inside the web container by the image job in CI: acts as a reverse proxy would | the container image |
 | `make-site-old.php` | Makes the test site look as PhpGedView 4.3.0 would have left it, for trying the upgrade; used by `smoke.sh` | PHP `pdo_sqlite` |

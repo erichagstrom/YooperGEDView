@@ -48,6 +48,10 @@ final class ConnectionFactory
             }
         }
         $dsn = $type . ':host=' . $host . ';dbname=' . $name . ($port === '' ? '' : ';port=' . $port);
+        if ($type === 'mysql') {
+            // Said outright, so that text goes to and from the database as UTF-8 whatever the server's default is.
+            $dsn .= ';charset=utf8mb4';
+        }
 
         return $this->open($dsn, $environment['DB_USER'] ?? '', $environment['DB_PASSWORD'] ?? '');
     }

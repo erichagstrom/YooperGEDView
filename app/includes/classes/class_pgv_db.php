@@ -132,8 +132,10 @@ class PGV_DB {
 			self::$TEXT_TYPE    ='TEXT';
 			self::$LONGTEXT_TYPE='LONGTEXT';
 			self::$DB_ENGINE    ='ENGINE=MyISAM'; /* this should be made configurable, similar to the UTF-8 option */
+			// Text always goes to and from the database as UTF-8, whatever the server's own default is.
+			self::$pdo->exec("SET NAMES 'utf8mb4'");
 			if ($DB_UTF8_COLLATION) {
-				self::$pdo->exec("SET NAMES 'utf8', SQL_BIG_SELECTS=1");
+				self::$pdo->exec("SET SQL_BIG_SELECTS=1");
 				self::$UTF8_TABLE   ='CHARACTER SET utf8 COLLATE utf8_unicode_ci';
 			} else {
 				self::$UTF8_TABLE   ='';

@@ -9,6 +9,7 @@ use PDOException;
 use YooperGEDView\Database\ConnectionFactory;
 use YooperGEDView\Security\PasswordHasher;
 use YooperGEDView\Security\PasswordPolicy;
+use YooperGEDView\Upgrade\CharacterSetConverter;
 use YooperGEDView\Upgrade\LegacySiteRepository;
 use YooperGEDView\Upgrade\UpgradeFromPgv;
 use YooperGEDView\User\Administrator;
@@ -163,7 +164,7 @@ final readonly class Yooper
             throw new CommandFailed('The database has no user tables. Is this the database of the PhpGedView site?');
         }
 
-        return implode("\n", (new UpgradeFromPgv(new LegacySiteRepository($database, $prefix), $index))->run($apply));
+        return implode("\n", (new UpgradeFromPgv(new LegacySiteRepository($database, $prefix), $index, characterSets: new CharacterSetConverter($database, $prefix)))->run($apply));
     }
 
     /**
