@@ -418,6 +418,22 @@ why, and what the alternative was.
     what it keeps unique). The same run showed a database whose own default was already utf8mb4 under other
     comparison rules than the converted tables got: the default is now set to the converted tables' rules,
     so that tables added later can be compared with them.
+98. **The reference site, and the comparison with it.** PhpGedView 4.3.0 as released runs in CI on PHP 5.6
+    with the sample tree, and its database and index folder are moved to this program on every change
+    (`tests/reference/`). Then the same pages are asked of both and the words on them compared: not the HTML,
+    which differs everywhere for good reasons (form tokens, removed scripts). Each difference is either a
+    fault to fix or is written down with its reason in `differences.php`; an entry that no longer matches
+    anything fails too, so the list cannot rot. *Alternative:* comparing HTML (too many meant differences
+    to see a fault among them); comparing pictures of pages (the same, and slow).
+    What the first runs showed: one fault of the kind this was built for (an event of a family dated before
+    the person's birth showed "(Age )" with a warning picture, because PHP 8 compares text with a number
+    otherwise than PHP 5 did); the program's own image lacked PHP's calendar functions, without which the
+    Jewish calendar is quietly left out; and two things about comparing at all. The sites must have been
+    looked at equally, because both programs work out on first need whether a person is alive and keep the
+    answer, so the statistics of a much-visited site differ from a fresh one's. And the reference site should
+    have what a server of its time had (picture and calendar libraries), or the comparison finds the server,
+    not the program. One such gap remains and is in the list: no FreeType in the old image, so no circle
+    diagram there.
 
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless

@@ -19,6 +19,8 @@ test checks that it comes out as written.
 | `checks.sh` | The check functions that `smoke.sh` and `reference/moved.sh` share | sourced, not run |
 | `reference/up.sh <folder>` | Builds and starts the reference site: PhpGedView 4.3.0 exactly as released (taken from this repository's history), on PHP 5.6 and MariaDB with latin1 tables, at `127.0.0.1:8098`. Loads the sample tree through its own pages and saves a database dump and the index folder: the "old site" | Docker, the full git history, PHP `pdo_mysql` |
 | `reference/moved.sh <folder>` | Moves that old site to this program on a copy (`upgrade-from-pgv`, a new password) and requests the smoke test's pages from the result | the reference site running |
+| `reference/compare.php` | Run by `moved.sh`: asks both sites for the smoke test's pages and compares the words a person would read. A difference must be explained in `reference/differences.php`, and an explanation there must still be needed | both sites running |
+| `browser.php` | Requests pages and fills in forms as a browser would; used by `provision.php` and `reference/compare.php` | loaded, not run |
 | `reference/down.sh` | Stops the reference site and deletes its database | Docker |
 | `smoke.sh` | Starts and provisions a site, requests the main pages as visitor and administrator, fails on any PHP error or warning, and checks what each may see, that every POST form carries its token, and the sign-in, session, forged-request and cross-site link rules, the security headers, the lost-password link, what may be uploaded, pending edits, and moving a site over from PhpGedView | the same, plus `curl` |
 
