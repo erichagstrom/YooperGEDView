@@ -101,3 +101,7 @@ ajax_block.php
 individual.php?pid=NOPE
 family.php?famid=NOPE
 source.php?sid=NOPE
+# A family with no father recorded; a person's tabs asked for with no number and with one that does not exist
+family.php?famid=F4
+individual.php?action=ajax&pid=I1&tab=
+individual.php?action=ajax&pid=I1&tab=10

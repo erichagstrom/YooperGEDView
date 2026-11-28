@@ -76,7 +76,7 @@ class Event {
 	function getValue($code) {
 		if (is_null($this->values)) {
 			$this->values=array();
-			preg_match_all('/\n2 ('.PGV_REGEX_TAG.') (.+)/', $this->gedcomRecord, $matches, PREG_SET_ORDER);
+			preg_match_all('/\n2 ('.PGV_REGEX_TAG.') (.+)/', (string)$this->gedcomRecord, $matches, PREG_SET_ORDER);
 			foreach ($matches as $match) {
 				// If this is a link, remove the "@"
 				if (preg_match('/^@'.PGV_REGEX_XREF.'@$/', $match[2])) {

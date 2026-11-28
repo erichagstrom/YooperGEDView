@@ -247,7 +247,7 @@ class IndividualControllerRoot extends BaseController {
 		//-- handle ajax calls
 		if ($this->action=="ajax") {
 			$tab = 0;
-			if (isset($_REQUEST['tab'])) $tab = $_REQUEST['tab']-1;
+			if (isset($_REQUEST['tab'])) $tab = (int)$_REQUEST['tab']-1;
 			header("Content-Type: text/html; charset=$CHARACTER_SET");//AJAX calls do not have the meta tag headers and need this set
 			$this->getTab($tab);
 			//-- only get the requested tab and then exit
@@ -1344,7 +1344,7 @@ class IndividualControllerRoot extends BaseController {
 		}else{
 			$tab_array = array("facts", "notes", "sources", "media", "relatives", "tree", "research", "lightbox", "spare", "nav");
 		}
-		$tabType = $tab_array[$tab];
+		$tabType = isset($tab_array[$tab]) ? $tab_array[$tab] : '';
 
 // ================================================================================================
 
@@ -1379,9 +1379,6 @@ class IndividualControllerRoot extends BaseController {
 				break;
 			case "spare":
 				$this->print_spare_tab();
-				break;
-			case "nav":
-				$this->print_navigator_tab();
 				break;
 			default:
 				print "No tab found";

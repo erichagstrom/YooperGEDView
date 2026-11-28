@@ -35,6 +35,7 @@ final readonly class UpgradeFromPgv
     public function run(bool $apply): array
     {
         $done = static fn(string $would, string $did): string => $apply ? $did : $would;
+        $has = static fn(int $count): string => $count . ($count === 1 ? ' has' : ' have');
         $report = [];
 
         $report[] = 'Database';
@@ -55,7 +56,7 @@ final readonly class UpgradeFromPgv
         $report[] = 'Accounts';
         $report[] = '  ' . count($users) . ' in all.';
         if ($weak !== []) {
-            $report[] = '  ' . count($weak) . ' have a password stored the way PhpGedView stored it (MD5-crypt or older). Those no longer work here,';
+            $report[] = '  ' . $has(count($weak)) . ' a password stored the way PhpGedView stored it (MD5-crypt or older). Those no longer work here,';
             $report[] = '  and that form is weak enough to be worth removing from the copy. ' . $done('They would be removed.', 'They have been removed.');
             if ($apply) {
                 foreach ($weak as $user) {
@@ -64,11 +65,11 @@ final readonly class UpgradeFromPgv
             }
         }
         if ($otherFormat !== []) {
-            $report[] = '  ' . count($otherFormat) . ' have a password stored in another form (bcrypt, for example), set by something other than PhpGedView.';
+            $report[] = '  ' . $has(count($otherFormat)) . ' a password stored in another form (bcrypt, for example), set by something other than PhpGedView.';
             $report[] = '  This program takes only its own form, so they no longer work here either. They are left as they are.';
         }
         if ($none !== []) {
-            $report[] = '  ' . count($none) . ' have no password stored: nobody can sign in as them until one is set.';
+            $report[] = '  ' . $has(count($none)) . ' no password stored: nobody can sign in as them until one is set.';
         }
         $withoutPassword = array_values(array_filter($users, fn(array $user): bool => !$this->hasher->accepts($user['hash'])));
         if ($withoutPassword !== []) {
@@ -85,7 +86,7 @@ final readonly class UpgradeFromPgv
         if ($otherLanguage !== []) {
             $report[] = '';
             $report[] = 'Languages';
-            $report[] = '  ' . count($otherLanguage) . ' users chose a language other than English, the only one this program has. ' . $done('They would be set to English.', 'They have been set to English.');
+            $report[] = '  ' . count($otherLanguage) . (count($otherLanguage) === 1 ? ' user' : ' users') . ' chose a language other than English, the only one this program has. ' . $done('They would be set to English.', 'They have been set to English.');
             if ($apply) {
                 foreach ($otherLanguage as $user) {
                     $this->site->setLanguage($user['id'], 'english');

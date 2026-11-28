@@ -1,7 +1,8 @@
 # Tests
 
 Everything here uses made-up data. `fixtures/sample.ged` is an invented family: three generations, with people who
-are dead and people who would still be living, so the privacy rules have something to hide. Its one source has an
+are dead and people who would still be living, so the privacy rules have something to hide, and one family with
+only a mother recorded. Its one source has an
 author written in a form that PHP would run as code if the text were ever made part of a line of PHP; the smoke
 test checks that it comes out as written.
 

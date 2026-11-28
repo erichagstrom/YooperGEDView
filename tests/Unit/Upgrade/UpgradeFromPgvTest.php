@@ -204,7 +204,7 @@ final class UpgradeFromPgvTest extends TestCase
 
         self::assertStringContainsString('7 in all.', $output);
         self::assertStringContainsString('3 have a password stored the way PhpGedView stored it (MD5-crypt or older).', $output);
-        self::assertStringContainsString('1 have a password stored in another form (bcrypt, for example)', $output);
+        self::assertStringContainsString('1 has a password stored in another form (bcrypt, for example)', $output);
         self::assertStringContainsString('They are left as they are.', $output);
         self::assertStringContainsString('2 have no password stored', $output);
         self::assertStringContainsString('dagny (administrator): by the "lost password" link', $output);

@@ -673,7 +673,7 @@ function print_fam_table($datalist, $legend="", $option="") {
 			}
 			echo '<div>', $factarray["_NMAR"], '<a name="9999999"></a></div>';
 		} else {
-			$factdetail = explode(' ', trim($family->getMarriageRecord()));
+			$factdetail = explode(' ', trim((string)$family->getMarriageRecord()));
 			if (isset($factdetail)) {
 				if (count($factdetail) >= 3) {
 					if (strtoupper($factdetail[2]) != "N")
