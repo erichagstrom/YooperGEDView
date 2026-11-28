@@ -181,8 +181,14 @@ if (getenv('DB_TYPE') !== false) {
 $database = (new ConnectionFactory())->fromEnvironment($settings);
 if ($oldRelease) {
     // PhpGedView's own way to make the first administrator is its installer, which is a page to click through.
-    // The rows are what it writes. A second user chose a language this program no longer has.
-    createLegacyUser($database, ADMIN_USER, ['email' => 'admin@example.com', 'firstname' => 'Test', 'lastname' => 'Admin', 'language' => 'english']);
+    // The rows are the ones it writes (install.php of that release, where it makes the first user). A second
+    // user chose a language this program no longer has.
+    createLegacyUser($database, ADMIN_USER, [
+        'firstname' => 'Test', 'lastname' => 'Admin', 'email' => 'admin@example.com', 'language' => 'english',
+        'reg_timestamp' => '1262304000', 'loggedin' => 'N', 'sessiontime' => '0', 'contactmethod' => 'messaging2',
+        'visibleonline' => 'Y', 'editaccount' => 'Y', 'defaulttab' => '0', 'sync_gedcom' => 'N',
+        'relationship_privacy' => 'N', 'max_relation_path' => '2', 'auto_accept' => 'N',
+    ]);
     createLegacyUser($database, LEGACY_USER, ['canadmin' => 'N', 'email' => 'legacy@example.com', 'language' => 'german']);
 } else {
     createAdministrator($settings);
