@@ -167,7 +167,7 @@ Goal: anyone with a PhpGedView 4.3.0 site gets to YooperGEDView with one command
   - [ ] `config.php` is not read: the database settings are given through the environment
   - [ ] media is left where it is; no checksums are recorded
 - Every later schema change is a numbered migration that runs on start-up, so upgrades between YooperGEDView versions use the same mechanism.
-- The upgrade is tested in CI on a made-up site shaped like one PhpGedView 4.3.0 left (no real family data). It is not yet tested on a database that 4.3.0 itself wrote: that needs the reference site.
+- The upgrade is tested in CI on a made-up site shaped like one PhpGedView 4.3.0 left (no real family data). It is also tested on a database and index folder that 4.3.0 itself wrote: the reference site's (`tests/reference/moved.sh`).
 - GEDCOM export and import stays as the fallback route in and out.
 
 ## Test infrastructure
@@ -180,11 +180,11 @@ All of it uses made-up data (`tests/fixtures/sample.ged`), so it can live in thi
 | Local server (`tests/serve.sh`) | Run the program on PHP 8.3 with SQLite; no Docker or database server needed | Works |
 | Container image | Builds, starts with MariaDB, creates its tables, refuses the settings folder, sets up an administrator with `bin/yooper install`, limits sign-ins | In CI, blocking |
 | Smoke test (`tests/smoke.sh`) | 224 checks on a freshly set-up site: about 115 pages and all 19 reports as visitor and administrator, no PHP error or warning, every POST form carrying its token, nothing loaded from another site; what each may see; exports; sign-in, session and forged-request rules | In CI, blocking |
-| Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | To build |
+| Reference site | The untouched 4.3.0 release on PHP 5.6 + MariaDB in CI, loaded with the sample tree; its database dump is the "old site" every upgrade test starts from | Done (`tests/reference/`) |
 | Page comparison | Same requests against the reference site and the current code; differences must be explained | To build |
 | Privacy tests | Who can see which person in the sample tree, as visitor, member and administrator | To build |
 | Upgrade test | `upgrade-from-pgv` on a made-up old site (unit tests), and on the test site made to look old (smoke test): the old password is refused, the administrator gets in with `set-password`, the carried-over pending edit is there | In CI, blocking |
-| Upgrade test on real 4.3.0 data | `upgrade-from-pgv` on the reference dump, then the smoke and privacy tests on the result | To build with the reference site |
+| Upgrade test on real 4.3.0 data | `upgrade-from-pgv` on the reference dump, then the smoke test's pages and its checks of what a visitor may see, on the result | In CI, blocking (`tests/reference/moved.sh`). Still to add: a pending edit made on 4.3.0, the privacy tests |
 
 ## Who uses what
 - **This repository** is the product: what gets released and deployed.

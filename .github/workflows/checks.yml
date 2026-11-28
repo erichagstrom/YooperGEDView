@@ -40,7 +40,7 @@ jobs:
       - run: composer audit
       - run: composer lint
       - run: composer cs
-      - run: shellcheck tests/*.sh
+      - run: shellcheck -x tests/*.sh tests/reference/*.sh
       # Reports only: app/ has findings at level 0 and no baseline of them has been recorded yet.
       - run: composer stan
         continue-on-error: true
@@ -69,6 +69,35 @@ jobs:
           coverage: none
       - run: composer install --no-dev --no-interaction --no-progress
       - run: tests/smoke.sh
+
+  # PhpGedView 4.3.0 as released, on PHP 5.6, loaded with the sample tree; then that site moved to this program.
+  reference:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          # up.sh takes the release from the commit that added it.
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, gd, mbstring, zip, dom, curl
+          tools: composer:v2
+          coverage: none
+      - run: composer install --no-dev --no-interaction --no-progress
+      - run: tests/reference/up.sh "$RUNNER_TEMP/old-site"
+      - name: The old site is what an old server would hold
+        run: |
+          cd "$RUNNER_TEMP/old-site"
+          ls -l index
+          test -f index/sample.ged_conf.php
+          test "$(grep -c 'ENGINE=MyISAM DEFAULT CHARSET=latin1' database.sql)" -ge 25
+          grep -q "'admin','\$1\$" database.sql
+      - run: tests/reference/moved.sh "$RUNNER_TEMP/old-site"
+      - name: Logs of the reference site
+        if: failure()
+        run: REFERENCE_CONTEXT=tests/reference docker compose -f tests/reference/compose.yaml logs --tail 80
 
   image:
     runs-on: ubuntu-24.04
