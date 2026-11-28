@@ -39,6 +39,10 @@ for page in $(pages pages-visitor.txt) $(pages pages-admin.txt); do check admin 
 
 expect admin "individual.php?pid=I8" has "February 1975"
 expect admin "index.php" has "logout"
+# A marriage before the person's own birth has no age to show. PHP 8 compares text with a number otherwise than
+# PHP 5 did, and "(Age )" with a warning picture appeared here (found by tests/reference/compare.php).
+expect admin "ancestry.php?rootid=I8&chart_style=1" lacks "Age <img"
+expect admin "family.php?famid=F1" has "(Age 83)"
 # The test site does not let visitors ask for an account, and the "lost password" link must be there all the same.
 expect visitor "login.php" has "login_register.php?action=pwlost"
 expect visitor "login.php" lacks "login_register.php?action=register"

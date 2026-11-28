@@ -100,6 +100,28 @@ function onlyIn(array $lines, array $others): array
     return $only;
 }
 
+/**
+ * The lines only one of the two pages has, each with the line that comes before it, to show where on the page it is.
+ *
+ * @param list<string> $oldLines
+ * @param list<string> $newLines
+ */
+function inContext(array $oldLines, array $newLines): string
+{
+    $text = '';
+    foreach ([['-', $oldLines, onlyIn($oldLines, $newLines)], ['+', $newLines, onlyIn($newLines, $oldLines)]] as [$mark, $lines, $only]) {
+        $wanted = array_count_values($only);
+        foreach ($lines as $number => $line) {
+            if (($wanted[$line] ?? 0) > 0 && strlen($text) < 6000) {
+                $wanted[$line]--;
+                $text .= '      ' . mb_substr($lines[$number - 1] ?? '(top of page)', 0, 120) . "\n    " . $mark . ' ' . mb_substr($line, 0, 200) . "\n";
+            }
+        }
+    }
+
+    return $text;
+}
+
 function signIn(string $base, string $cookieJar, string $password): void
 {
     $form = formDefaults(request($base . 'login.php?url=index.php', $cookieJar), 'loginform');
@@ -147,6 +169,8 @@ foreach (array_merge(pages('pages-visitor.txt'), pages('pages-admin.txt')) as $p
 
 /** @var array<string, list<string>> $unexplained difference => the visits it was seen on */
 $unexplained = [];
+/** @var array<string, string> $context visit => its unexplained differences, each with the line before it */
+$context = [];
 $same = 0;
 foreach ($visits as [$who, $page]) {
     $oldLines = readableLines(request($old . $page, $jars['old-' . $who]), $old);
@@ -169,6 +193,8 @@ foreach ($visits as [$who, $page]) {
     }
     if ($left === 0) {
         $same++;
+    } elseif (count($context) < 12) {
+        $context[$who . ' ' . $page] = inContext($oldLines, $newLines);
     }
 }
 array_map(unlink(...), $jars);
@@ -176,6 +202,9 @@ array_map(unlink(...), $jars);
 uasort($unexplained, static fn(array $a, array $b): int => count($b) <=> count($a));
 foreach ($unexplained as $difference => $seenOn) {
     echo 'DIFF  ', $difference, "\n      on ", count($seenOn), ' of ', count($visits), ', such as: ', implode(' | ', array_slice($seenOn, 0, 2)), "\n";
+}
+foreach ($context as $visit => $text) {
+    echo "\n--- ", $visit, ": the lines that differ, each after the line before it (- PhpGedView, + this program)\n", $text;
 }
 $stale = 0;
 foreach ($explained as $number => $rule) {
