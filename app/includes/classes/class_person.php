@@ -1646,7 +1646,9 @@ class Person extends GedcomRecord {
 		global $UNDERLINE_NAME_QUOTES, $NAME_REVERSE, $unknownNN, $unknownPN, $pgv_lang;
 
 		// Look for GIVN/SURN at level n+1
-		$sublevel=1+(int)$gedrec[0];
+		// A family with no husband or no wife asks for the name of nobody: there is no record then
+		$gedrec=(string)$gedrec;
+		$sublevel=1+(int)substr($gedrec, 0, 1);
 
 		// Fix bad slashes.  e.g. 'John/Smith' => 'John/Smith/'
 		if (substr_count($full, '/')%2==1) {

@@ -352,7 +352,7 @@ class GedcomRecord {
 			if ($target) {
 				$target='target="'.$target.'"';
 			}
-			return '<a href="'.encode_url($this->getLinkUrl()).'#content" name="'.preg_replace('/\D/','',$this->getXref()).'" '.$target.'>'.$this->getXref().'</a>';
+			return '<a href="'.encode_url($this->getLinkUrl()).'#content" name="'.preg_replace('/\D/','',(string)$this->getXref()).'" '.$target.'>'.$this->getXref().'</a>';
 		} else {
 			return $this->getXref();
 		}

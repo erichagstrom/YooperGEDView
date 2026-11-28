@@ -375,6 +375,16 @@ why, and what the alternative was.
       fixed text.
     The lesson for 91 held: a real site showed what made-up ones did not.
 
+93. **The first trial on a copy of a real site found what the sample tree could not: a family with only one
+    parent recorded.** Every such family's page showed a PHP warning, because the name of the missing parent
+    was asked of a record that is not there; PHP 5 let that pass in silence. The sample tree now has such a
+    family, which turned up six more places of the same kind (lists, statistics, privacy, events), all
+    fixed with a cast as in 4. Two addresses for a person's tabs that a browser does not ask for, but
+    anyone can type, ended in a fatal error: a tab with no number, and a tab type whose code was never
+    there. Both now answer "No tab found".
+94. **The sample tree grows when a real site shows a shape it lacks.** That keeps the finding as a test
+    without putting anything from the real site in this repository.
+
 ### Left for later in Phase 2
 - Uploaded files keep the names their senders gave them and stay in a folder the web server serves, unless
   the media firewall is switched on for the tree. The container image does not run PHP in that folder; another
